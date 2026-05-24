@@ -96,6 +96,16 @@ print_files_matching() {
       done
 }
 
+print_files_if_dir_exists() {
+  local title="$1"
+  local dir="$2"
+  shift 2
+
+  if [ -d "$dir" ]; then
+    print_files_matching "$title" "$dir" "$@"
+  fi
+}
+
 print_tree
 
 print_files_matching "RUNTIME SOURCE FILES" \
@@ -117,6 +127,17 @@ print_files_matching "SMOKE TEST FILES" \
 
 print_files_matching "PROJECT SCRIPTS" \
   ./scripts
+
+print_files_if_dir_exists "PROJECT DOCS" \
+  ./docs \
+  -name "*.md"
+
+print_files_if_dir_exists "GITHUB WORKFLOWS" \
+  ./.github/workflows \
+  \( \
+    -name "*.yml" \
+    -o -name "*.yaml" \
+  \)
 
 print_files_matching "PROJECT CONFIG FILES" \
   . \

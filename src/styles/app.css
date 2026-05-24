@@ -10,8 +10,10 @@ body {
 }
 
 #app {
+  position: relative;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
 }
 
 #geometry-canvas {
@@ -19,4 +21,45 @@ body {
   width: 100%;
   height: 100%;
   background: #0f172a;
+  touch-action: none;
+}
+
+#help-overlay {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  display: grid;
+  gap: 4px;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid rgb(148 163 184 / 0.25);
+  border-radius: 12px;
+  background: rgb(15 23 42 / 0.72);
+  color: #cbd5e1;
+  font: 13px system-ui, sans-serif;
+  line-height: 1.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+#help-overlay strong {
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+#help-overlay span {
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  #help-overlay {
+    left: 8px;
+    top: 8px;
+    max-width: calc(100vw - 16px);
+    font-size: 12px;
+  }
+
+  #help-overlay span {
+    white-space: normal;
+  }
 }
