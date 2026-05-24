@@ -1,14 +1,19 @@
-import { hitCircleValue } from "../hitGeometry";
-import type { EvaluatedGeometry } from "../../evaluation/evaluated";
-import type { EvaluatedCircle } from "../../evaluation/evaluated";
+import type { EvaluatedCircle, EvaluatedGeometry } from "../../evaluation/evaluated";
+import { circleNode } from "../../representation/node";
+import type { GeometryNode, NodeId } from "../../representation/node";
 import { renderCircle } from "../../rendering/circleRenderer";
+import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
-import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
+import { hitCircleValue } from "../hitGeometry";
+import type {
+  GeometryHitCandidate,
+  GeometryHitContext,
+} from "../interactionContext";
+import type { GeometryRenderContext } from "../renderingContext";
 
 export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
   kind: "CIRCLE",
@@ -38,26 +43,26 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
     },
   }),
 
-    interaction: Object.freeze({
-      hitClass: "AREA",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "CIRCLE") {
-          return null;
-        }
+  interaction: Object.freeze({
+    hitClass: "AREA",
+    hitTest: (
+      value: EvaluatedGeometry,
+      context: GeometryHitContext,
+    ): GeometryHitCandidate | null => {
+      if (value.kind !== "CIRCLE") {
+        return null;
+      }
 
-        const target = hitCircleValue(value, context);
+      const target = hitCircleValue(value, context);
 
-        return target
-          ? {
-              hitClass: "AREA" as const,
-              target,
-            }
-          : null;
-      },
-    }),
+      return target
+        ? {
+            hitClass: "AREA" as const,
+            target,
+          }
+        : null;
+    },
+  }),
 
   rendering: Object.freeze({
     render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
@@ -70,4 +75,64 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
       renderCircle(context.ctx, context.viewport, value, context.options);
     },
   }),
+
+  construction: Object.freeze({
+    factories: Object.freeze({
+      circle: (
+        { graph }: ConstructionContext,
+        center: NodeId,
+        through: NodeId,
+      ): readonly GeometryNode[] =>
+        circleConstructionNodes(graph, center, through),
+    }),
+  }),
 });
+
+function circleConstructionNodes(
+  graph: Readonly<{ nodes: readonly GeometryNode[]; byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  center: NodeId,
+  through: NodeId,
+): readonly GeometryNode[] {
+  if (center === through) {
+    throw new Error("Cannot create circle from duplicate points");
+  }
+
+  for (const id of [center, through]) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot create circle with missing point: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot create circle with constrained point: ${id}`);
+    }
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "CIRCLE" &&
+      candidate.center === center &&
+      candidate.through === through,
+  );
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  const id = nextCircleId(graph);
+
+  return Object.freeze([circleNode(id, center, through)]);
+}
+
+function nextCircleId(
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+): NodeId {
+  let index = 1;
+
+  while (graph.byId.has(`C${index}`)) {
+    index += 1;
+  }
+
+  return `C${index}`;
+}

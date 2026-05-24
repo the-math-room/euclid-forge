@@ -1,9 +1,7 @@
+import { constructionFactoryForGeometryKind } from "../geometry/geometryRegistry";
 import {
-  centroidNode,
-  circleNode,
   midpointNode,
   segmentNode,
-  triangleNode,
 } from "./node";
 import type {
   GeometryNode,
@@ -19,91 +17,33 @@ export function circleConstruction(
   center: NodeId,
   through: NodeId,
 ): readonly GeometryNode[] {
-  if (center === through) {
-    throw new Error("Cannot create circle from duplicate points");
-  }
-
-  for (const id of [center, through]) {
-    const node = graph.byId.get(id);
-
-    if (!node) {
-      throw new Error(`Cannot create circle with missing point: ${id}`);
-    }
-
-    if (node.kind !== "FREE_POINT") {
-      throw new Error(`Cannot create circle with constrained point: ${id}`);
-    }
-  }
-
-  const existing = graph.nodes.find(
-    (candidate) =>
-      candidate.kind === "CIRCLE" &&
-      candidate.center === center &&
-      candidate.through === through,
+  return constructionFactoryForGeometryKind("CIRCLE", "circle")(
+    { graph },
+    center,
+    through,
   );
-
-  if (existing) {
-    return Object.freeze([]);
-  }
-
-  const id = nextCircleId(graph);
-
-  return Object.freeze([circleNode(id, center, through)]);
 }
 
 export function triangleConstruction(
   graph: Graph,
   vertices: readonly [NodeId, NodeId, NodeId],
 ): readonly GeometryNode[] {
-  const uniqueVertices = new Set(vertices);
-
-  if (uniqueVertices.size !== 3) {
-    throw new Error("Cannot create triangle from duplicate vertices");
-  }
-
-  for (const id of vertices) {
-    const node = graph.byId.get(id);
-
-    if (!node) {
-      throw new Error(`Cannot create triangle with missing vertex: ${id}`);
-    }
-
-    if (node.kind !== "FREE_POINT") {
-      throw new Error(`Cannot create triangle with constrained vertex: ${id}`);
-    }
-  }
-
-  return Object.freeze([
-    triangleNode(nextTriangleId(graph), vertices[0], vertices[1], vertices[2]),
-  ]);
+  return constructionFactoryForGeometryKind("TRIANGLE", "triangle")(
+    { graph },
+    vertices[0],
+    vertices[1],
+    vertices[2],
+  );
 }
 
 export function centroidConstruction(
   graph: Graph,
   triangle: NodeId,
 ): readonly GeometryNode[] {
-  const node = graph.byId.get(triangle);
-
-  if (!node) {
-    throw new Error(`Cannot create centroid for missing triangle: ${triangle}`);
-  }
-
-  if (node.kind !== "TRIANGLE") {
-    throw new Error(`Cannot create centroid for non-triangle node: ${triangle}`);
-  }
-
-  const existing = graph.nodes.find(
-    (candidate) =>
-      candidate.kind === "CENTROID" && candidate.triangle === triangle,
+  return constructionFactoryForGeometryKind("CENTROID", "centroid")(
+    { graph },
+    triangle,
   );
-
-  if (existing) {
-    return Object.freeze([]);
-  }
-
-  const id = nextCentroidId(graph);
-
-  return Object.freeze([centroidNode(id, triangle, id)]);
 }
 
 export function triangleSideMidpointConstruction(
@@ -187,36 +127,6 @@ function triangleEdges(
 
 function endpointKey(a: NodeId, b: NodeId): string {
   return [a, b].sort().join("_");
-}
-
-function nextTriangleId(graph: Graph): NodeId {
-  let index = 1;
-
-  while (graph.byId.has(`T${index}`)) {
-    index += 1;
-  }
-
-  return `T${index}`;
-}
-
-function nextCentroidId(graph: Graph): NodeId {
-  let index = 1;
-
-  while (graph.byId.has(`G${index}`)) {
-    index += 1;
-  }
-
-  return `G${index}`;
-}
-
-function nextCircleId(graph: Graph): NodeId {
-  let index = 1;
-
-  while (graph.byId.has(`C${index}`)) {
-    index += 1;
-  }
-
-  return `C${index}`;
 }
 
 function nextSegmentId(

@@ -1,15 +1,20 @@
-import { hitPointValue } from "../hitGeometry";
-import type { EvaluatedGeometry } from "../../evaluation/evaluated";
-import type { EvaluatedPoint } from "../../evaluation/evaluated";
+import type { EvaluatedGeometry, EvaluatedPoint } from "../../evaluation/evaluated";
 import { centroid } from "../../meaning/vec2";
+import { centroidNode } from "../../representation/node";
+import type { GeometryNode, NodeId } from "../../representation/node";
 import { renderPoint } from "../../rendering/pointRenderer";
+import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
-import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
+import { hitPointValue } from "../hitGeometry";
+import type {
+  GeometryHitCandidate,
+  GeometryHitContext,
+} from "../interactionContext";
+import type { GeometryRenderContext } from "../renderingContext";
 
 export const centroidDefinition: GeometryDefinition<"CENTROID"> =
   Object.freeze({
@@ -58,7 +63,10 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
     }),
 
     rendering: Object.freeze({
-      render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+      render: (
+        value: EvaluatedGeometry,
+        context: GeometryRenderContext,
+      ): void => {
         if (value.kind !== "POINT") {
           throw new Error(
             `Expected POINT evaluated value for CENTROID, got ${value.kind}`,
@@ -68,4 +76,54 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
         renderPoint(context.ctx, context.viewport, value, context.options);
       },
     }),
+
+    construction: Object.freeze({
+      factories: Object.freeze({
+        centroid: (
+        { graph }: ConstructionContext,
+        triangle: NodeId,
+      ): readonly GeometryNode[] =>
+          centroidConstructionNodes(graph, triangle),
+      }),
+    }),
   });
+
+function centroidConstructionNodes(
+  graph: Readonly<{ nodes: readonly GeometryNode[]; byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  triangle: NodeId,
+): readonly GeometryNode[] {
+  const node = graph.byId.get(triangle);
+
+  if (!node) {
+    throw new Error(`Cannot create centroid for missing triangle: ${triangle}`);
+  }
+
+  if (node.kind !== "TRIANGLE") {
+    throw new Error(`Cannot create centroid for non-triangle node: ${triangle}`);
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "CENTROID" && candidate.triangle === triangle,
+  );
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  const id = nextCentroidId(graph);
+
+  return Object.freeze([centroidNode(id, triangle, id)]);
+}
+
+function nextCentroidId(
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+): NodeId {
+  let index = 1;
+
+  while (graph.byId.has(`G${index}`)) {
+    index += 1;
+  }
+
+  return `G${index}`;
+}

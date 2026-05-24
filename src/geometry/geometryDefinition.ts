@@ -1,5 +1,6 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { GeometryNode, NodeId } from "../representation/node";
+import type { GeometryConstructionFactories } from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
 import type {
   GeometryHitCandidate,
@@ -43,6 +44,10 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
       context: GeometryHitContext,
     ) => GeometryHitCandidate | null;
   }>;
+
+  construction?: Readonly<{
+    factories: GeometryConstructionFactories;
+  }>;
 }>;
 
 export type AnyGeometryDefinition = Readonly<{
@@ -72,6 +77,10 @@ export type AnyGeometryDefinition = Readonly<{
       value: EvaluatedGeometry,
       context: GeometryHitContext,
     ) => GeometryHitCandidate | null;
+  }>;
+
+  construction?: Readonly<{
+    factories: GeometryConstructionFactories;
   }>;
 }>;
 

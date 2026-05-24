@@ -123,3 +123,18 @@ export function hitClassForGeometryValue(
 
   return definition.interaction?.hitClass ?? null;
 }
+
+
+export function constructionFactoryForGeometryKind(
+  kind: GeometryKind,
+  name: string,
+): import("./constructionContext").ConstructionFactory {
+  const definition = requireAnyGeometryDefinition(kind);
+  const factory = definition.construction?.factories[name];
+
+  if (!factory) {
+    throw new Error(`Missing ${name} construction factory for kind: ${kind}`);
+  }
+
+  return factory;
+}
