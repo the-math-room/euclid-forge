@@ -865,4 +865,21 @@ describe("app/appController", () => {
     expect(transition.history).toBe("commit");
   });
 
+  test("delete key deletes selected nodes and requests a history commit", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 1, "B"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "Delete",
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.has("A")).toBe(false);
+    expect(transition.state.graph.byId.get("B")).toEqual(freePoint("B", 1, 1, "B"));
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+  });
+
 });

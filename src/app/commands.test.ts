@@ -153,4 +153,65 @@ describe("app/commands", () => {
       appCommandForKey("u")?.run(appState(graph, emptyViewState(), null)),
     ).toBeNull();
   });
+  test("deletes selected nodes when no unselected dependents exist", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 1, "B"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    const result = appCommandForKey("Delete")?.run(
+      appState(graph, viewState, null),
+    );
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.has("A")).toBe(false);
+    expect(result?.state.graph.byId.get("B")).toEqual(freePoint("B", 1, 1, "B"));
+    expect([...(result?.state.viewState.selectedNodeIds ?? [])]).toEqual([]);
+  });
+
+  test("deletes a selected subgraph when all dependents are selected", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "ABC"),
+      "G",
+    );
+
+    const result = appCommandForKey("Backspace")?.run(
+      appState(graph, viewState, null),
+    );
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.has("ABC")).toBe(false);
+    expect(result?.state.graph.byId.has("G")).toBe(false);
+  });
+
+  test("delete selected is disabled when unselected dependents exist", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    expect(
+      appCommandForKey("Delete")?.run(appState(graph, viewState, null)),
+    ).toBeNull();
+  });
+
+  test("delete selected is disabled when selection is empty", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    expect(
+      appCommandForKey("Delete")?.run(appState(graph, emptyViewState(), null)),
+    ).toBeNull();
+  });
+
 });

@@ -1,4 +1,4 @@
-import { applyGraphEdit } from "../representation/edit";
+import { applyGraphEdit, canDeleteNodes } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
@@ -184,6 +184,26 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
         }),
         clearSelection(state.viewState),
         state.dragState,
+      ),
+    );
+  }),
+
+
+  command("delete-selected", ["delete", "backspace"], (state) => {
+    const selected = [...state.viewState.selectedNodeIds];
+
+    if (!canDeleteNodes(state.graph, selected)) {
+      return null;
+    }
+
+    return commit(
+      appState(
+        applyGraphEdit(state.graph, {
+          kind: "DELETE_NODES",
+          ids: selected,
+        }),
+        clearSelection(state.viewState),
+        null,
       ),
     );
   }),

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
-import { applyGraphEdit } from "./edit";
+import { applyGraphEdit, canDeleteNodes } from "./edit";
 import { createGraph } from "./graph";
 import {
   centroidNode,
@@ -342,6 +342,81 @@ describe("representation/applyGraphEdit", () => {
         positions: new Map([["ABC", vec2(1, 1)]]),
       }),
     ).toThrow("Cannot directly set constrained node position: ABC");
+  });
+
+  test("deletes isolated nodes", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 1, "B"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "DELETE_NODES",
+      ids: ["A"],
+    });
+
+    expect(next.byId.has("A")).toBe(false);
+    expect(next.byId.get("B")).toEqual(freePoint("B", 1, 1, "B"));
+  });
+
+  test("deletes a selected subgraph when all dependents are included", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "DELETE_NODES",
+      ids: ["ABC", "G"],
+    });
+
+    expect(next.byId.has("ABC")).toBe(false);
+    expect(next.byId.has("G")).toBe(false);
+    expect(next.byId.get("A")).toEqual(freePoint("A", -2, -1, "A"));
+  });
+
+  test("rejects deleting nodes with unselected dependents", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    expect(canDeleteNodes(graph, ["A"])).toBe(false);
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "DELETE_NODES",
+        ids: ["A"],
+      }),
+    ).toThrow("Cannot delete nodes with unselected dependents");
+  });
+
+  test("rejects deleting missing nodes", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    expect(canDeleteNodes(graph, ["missing"])).toBe(false);
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "DELETE_NODES",
+        ids: ["missing"],
+      }),
+    ).toThrow("Cannot delete nodes with unselected dependents");
+  });
+
+  test("rejects deleting an empty node set", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    expect(canDeleteNodes(graph, [])).toBe(false);
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "DELETE_NODES",
+        ids: [],
+      }),
+    ).toThrow("Cannot delete nodes with unselected dependents");
   });
 
 });
