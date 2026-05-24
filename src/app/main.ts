@@ -79,6 +79,23 @@ function applyPointerCaptureEffect(
   }
 }
 
+
+function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  );
+}
+
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
@@ -98,6 +115,10 @@ function main(): void {
   });
 
   window.addEventListener("keydown", (event) => {
+    if (shouldIgnoreKeyDownTarget(event.target)) {
+      return;
+    }
+
     applyTransition(
       canvas,
       event,
