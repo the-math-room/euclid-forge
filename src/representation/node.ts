@@ -1,10 +1,13 @@
 export type NodeId = string;
 
+export type TriangleSide = "AB" | "BC" | "CA";
+
 export type GeometryNode =
   | FreePointNode
   | SegmentNode
   | TriangleNode
   | MidpointNode
+  | TriangleSideMidpointNode
   | CentroidNode;
 
 export type FreePointNode = Readonly<{
@@ -34,6 +37,14 @@ export type MidpointNode = Readonly<{
   kind: "MIDPOINT";
   id: NodeId;
   segment: NodeId;
+  label: string;
+}>;
+
+export type TriangleSideMidpointNode = Readonly<{
+  kind: "TRIANGLE_SIDE_MIDPOINT";
+  id: NodeId;
+  triangle: NodeId;
+  side: TriangleSide;
   label: string;
 }>;
 
@@ -96,6 +107,21 @@ export function midpointNode(
     kind: "MIDPOINT",
     id,
     segment,
+    label,
+  });
+}
+
+export function triangleSideMidpointNode(
+  id: NodeId,
+  triangle: NodeId,
+  side: TriangleSide,
+  label: string,
+): TriangleSideMidpointNode {
+  return Object.freeze({
+    kind: "TRIANGLE_SIDE_MIDPOINT",
+    id,
+    triangle,
+    side,
     label,
   });
 }

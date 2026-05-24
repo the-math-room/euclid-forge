@@ -5,9 +5,8 @@ import { createGraph } from "../representation/graph";
 import {
   centroidNode,
   freePoint,
-  midpointNode,
-  segmentNode,
   triangleNode,
+  triangleSideMidpointNode,
 } from "../representation/node";
 import { updateFreePoint } from "./updateFreePoint";
 
@@ -18,13 +17,20 @@ describe("interaction/updateFreePoint", () => {
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      segmentNode("AB", "A", "B"),
-      midpointNode("M_AB", "AB", "M"),
+      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
       centroidNode("G", "ABC", "G"),
     ]);
 
     const next = updateFreePoint(graph, "A", vec2(-4, 2));
     const evaluated = evaluateGraph(next);
+
+    expect(evaluated.values.get("M_AB")).toEqual({
+      kind: "POINT",
+      id: "M_AB",
+      point: vec2(-1, 0.5),
+      label: "M",
+      role: "MIDPOINT",
+    });
 
     expect(evaluated.values.get("G")).toEqual({
       kind: "POINT",
