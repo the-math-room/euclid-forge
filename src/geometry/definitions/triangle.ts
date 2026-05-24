@@ -1,5 +1,8 @@
+import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedTriangle } from "../../evaluation/evaluated";
+import { renderTriangle } from "../../rendering/triangleRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
@@ -29,6 +32,18 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
           b: b.point,
           c: c.point,
         };
+      },
+    }),
+
+    rendering: Object.freeze({
+      render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+        if (value.kind !== "TRIANGLE") {
+          throw new Error(
+            `Expected TRIANGLE evaluated value for TRIANGLE, got ${value.kind}`,
+          );
+        }
+
+        renderTriangle(context.ctx, context.viewport, value, context.options);
       },
     }),
   });

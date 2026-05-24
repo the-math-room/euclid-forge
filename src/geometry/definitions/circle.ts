@@ -1,5 +1,8 @@
+import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedCircle } from "../../evaluation/evaluated";
+import { renderCircle } from "../../rendering/circleRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
@@ -30,6 +33,18 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
         center: center.point,
         radius,
       };
+    },
+  }),
+
+  rendering: Object.freeze({
+    render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+      if (value.kind !== "CIRCLE") {
+        throw new Error(
+          `Expected CIRCLE evaluated value for CIRCLE, got ${value.kind}`,
+        );
+      }
+
+      renderCircle(context.ctx, context.viewport, value, context.options);
     },
   }),
 });

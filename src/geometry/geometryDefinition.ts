@@ -1,6 +1,7 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type { EvaluationContext } from "./evaluationContext";
+import type { GeometryRenderContext } from "./renderingContext";
 
 export type GeometryKind = GeometryNode["kind"];
 
@@ -22,6 +23,13 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
       context: EvaluationContext,
     ) => EvaluatedGeometry;
   }>;
+
+  rendering?: Readonly<{
+    render: (
+      value: EvaluatedGeometry,
+      context: GeometryRenderContext,
+    ) => void;
+  }>;
 }>;
 
 export type AnyGeometryDefinition = Readonly<{
@@ -36,6 +44,13 @@ export type AnyGeometryDefinition = Readonly<{
       node: GeometryNode,
       context: EvaluationContext,
     ) => EvaluatedGeometry;
+  }>;
+
+  rendering?: Readonly<{
+    render: (
+      value: EvaluatedGeometry,
+      context: GeometryRenderContext,
+    ) => void;
   }>;
 }>;
 

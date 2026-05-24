@@ -58,3 +58,46 @@ function requireAnyGeometryDefinition(kind: GeometryKind): AnyGeometryDefinition
 
   return definition;
 }
+
+
+export function renderGeometryValue(
+  value: import("../evaluation/evaluated").EvaluatedGeometry,
+  context: import("./renderingContext").GeometryRenderContext,
+): void {
+  const definition = requireAnyGeometryDefinition(
+    evaluatedValueToGeometryKind(value),
+  );
+
+  if (!definition.rendering) {
+    throw new Error(`Missing renderer for evaluated kind: ${value.kind}`);
+  }
+
+  definition.rendering.render(value, context);
+}
+
+function evaluatedValueToGeometryKind(
+  value: import("../evaluation/evaluated").EvaluatedGeometry,
+): GeometryKind {
+  switch (value.kind) {
+    case "POINT":
+      switch (value.role) {
+        case "FREE":
+          return "FREE_POINT";
+
+        case "MIDPOINT":
+          return "MIDPOINT";
+
+        case "CENTROID":
+          return "CENTROID";
+      }
+
+    case "SEGMENT":
+      return "SEGMENT";
+
+    case "CIRCLE":
+      return "CIRCLE";
+
+    case "TRIANGLE":
+      return "TRIANGLE";
+  }
+}

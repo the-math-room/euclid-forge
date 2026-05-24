@@ -1,30 +1,16 @@
-import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import {
-  visibleEvaluatedScene,
-} from "../evaluation/visibleScene";
 import type {
   EvaluatedCircle,
+  EvaluatedGeometry,
   EvaluatedPoint,
   EvaluatedSegment,
   EvaluatedTriangle,
 } from "../evaluation/evaluated";
-import { renderPoints } from "./pointRenderer";
-import type { PointRenderOptions } from "./pointRenderer";
-import { renderSegments } from "./segmentRenderer";
-import type { SegmentRenderOptions } from "./segmentRenderer";
-import { renderTriangles } from "./triangleRenderer";
-import type { TriangleRenderOptions } from "./triangleRenderer";
-import { renderCircles } from "./circleRenderer";
-import type { CircleRenderOptions } from "./circleRenderer";
+import type { EvaluatedScene } from "../evaluation/evaluateGraph";
+import { renderGeometryValue } from "../geometry/geometryRegistry";
+import type { GeometryRenderOptions } from "../geometry/renderingContext";
 import type { Viewport } from "./viewport";
 
-export type RenderSceneOptions = PointRenderOptions &
-  SegmentRenderOptions &
-  CircleRenderOptions &
-  TriangleRenderOptions &
-  Readonly<{
-    hiddenNodeIds?: ReadonlySet<string>;
-  }>;
+export type RenderSceneOptions = GeometryRenderOptions;
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -32,16 +18,8 @@ export function renderScene(
   scene: EvaluatedScene,
   options: RenderSceneOptions = {},
 ): void {
-  const visibleScene = visibleEvaluatedScene(
-    scene,
-    options.hiddenNodeIds
-      ? {
-          hiddenNodeIds: options.hiddenNodeIds,
-        }
-      : {},
-  );
-
-  const visible = visibleScene.ordered;
+  const hidden = options.hiddenNodeIds ?? new Set<string>();
+  const visible = scene.ordered.filter((value) => !hidden.has(value.id));
 
   const triangles = visible.filter(
     (value): value is EvaluatedTriangle => value.kind === "TRIANGLE",
@@ -59,8 +37,32 @@ export function renderScene(
     (value): value is EvaluatedPoint => value.kind === "POINT",
   );
 
-  renderTriangles(ctx, viewport, triangles, options);
-  renderCircles(ctx, viewport, circles, options);
-  renderSegments(ctx, viewport, segments, options);
-  renderPoints(ctx, viewport, points, options);
+  for (const value of triangles) {
+    renderSceneValue(ctx, viewport, value, options);
+  }
+
+  for (const value of circles) {
+    renderSceneValue(ctx, viewport, value, options);
+  }
+
+  for (const value of segments) {
+    renderSceneValue(ctx, viewport, value, options);
+  }
+
+  for (const value of points) {
+    renderSceneValue(ctx, viewport, value, options);
+  }
+}
+
+function renderSceneValue(
+  ctx: CanvasRenderingContext2D,
+  viewport: Viewport,
+  value: EvaluatedGeometry,
+  options: RenderSceneOptions,
+): void {
+  renderGeometryValue(value, {
+    ctx,
+    viewport,
+    options,
+  });
 }

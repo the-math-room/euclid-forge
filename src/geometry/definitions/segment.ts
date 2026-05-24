@@ -1,5 +1,8 @@
+import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedSegment } from "../../evaluation/evaluated";
+import { renderSegment } from "../../rendering/segmentRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
@@ -26,6 +29,18 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
         a: a.point,
         b: b.point,
       };
+    },
+  }),
+
+  rendering: Object.freeze({
+    render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+      if (value.kind !== "SEGMENT") {
+        throw new Error(
+          `Expected SEGMENT evaluated value for SEGMENT, got ${value.kind}`,
+        );
+      }
+
+      renderSegment(context.ctx, context.viewport, value, context.options);
     },
   }),
 });

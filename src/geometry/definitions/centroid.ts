@@ -1,6 +1,9 @@
-import { centroid } from "../../meaning/vec2";
+import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedPoint } from "../../evaluation/evaluated";
+import { centroid } from "../../meaning/vec2";
+import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
@@ -28,6 +31,18 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
           label: node.label,
           role: "CENTROID",
         };
+      },
+    }),
+
+    rendering: Object.freeze({
+      render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+        if (value.kind !== "POINT") {
+          throw new Error(
+            `Expected POINT evaluated value for CENTROID, got ${value.kind}`,
+          );
+        }
+
+        renderPoint(context.ctx, context.viewport, value, context.options);
       },
     }),
   });

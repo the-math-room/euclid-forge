@@ -1,6 +1,9 @@
-import { midpoint } from "../../meaning/vec2";
+import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedPoint } from "../../evaluation/evaluated";
+import { midpoint } from "../../meaning/vec2";
+import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
@@ -28,6 +31,18 @@ export const midpointDefinition: GeometryDefinition<"MIDPOINT"> =
           label: node.label,
           role: "MIDPOINT",
         };
+      },
+    }),
+
+    rendering: Object.freeze({
+      render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+        if (value.kind !== "POINT") {
+          throw new Error(
+            `Expected POINT evaluated value for MIDPOINT, got ${value.kind}`,
+          );
+        }
+
+        renderPoint(context.ctx, context.viewport, value, context.options);
       },
     }),
   });
