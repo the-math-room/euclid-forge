@@ -3,6 +3,7 @@ import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   segmentNode,
   triangleNode,
@@ -41,6 +42,78 @@ describe("app/commands", () => {
 
     expect(result?.history).toBe("ignore");
     expect(result?.state.viewState.viewportCenter).toEqual(vec2(-0.5, 0));
+  });
+
+  test("creates a circle from two selected free points", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+    const command = appCommandForKey("c");
+    const state = appState(graph, viewState, null);
+
+    expect(command && appCommandDisabledReason(command, state)).toBeNull();
+
+    const result = command?.run(state);
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.get("C1")).toEqual(
+      circleNode("C1", "A", "B"),
+    );
+    expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+  test("create circle is disabled unless exactly two free points are selected", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const command = appCommandForKey("c");
+
+    expect(
+      command &&
+        appCommandDisabledReason(
+          command,
+          appState(graph, toggleSelectedNode(emptyViewState(), "A"), null),
+        ),
+    ).toBe("");
+
+    expect(
+      command &&
+        appCommandDisabledReason(
+          command,
+          appState(
+            graph,
+            toggleSelectedNode(
+              toggleSelectedNode(toggleSelectedNode(emptyViewState(), "A"), "B"),
+              "C",
+            ),
+            null,
+          ),
+        ),
+    ).toBe("");
+
+    expect(
+      command &&
+        appCommandDisabledReason(
+          command,
+          appState(
+            graph,
+            toggleSelectedNode(
+              toggleSelectedNode(emptyViewState(), "ABC"),
+              "A",
+            ),
+            null,
+          ),
+        ),
+    ).toBe("");
   });
 
   test("creates a triangle from three selected free points", () => {

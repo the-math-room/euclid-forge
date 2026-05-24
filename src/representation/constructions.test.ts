@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createGraph } from "./graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -9,11 +10,41 @@ import {
 } from "./node";
 import {
   centroidConstruction,
+  circleConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
 } from "./constructions";
 
 describe("representation/constructions", () => {
+  test("creates a circle construction", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+
+    expect(circleConstruction(graph, "A", "B")).toEqual([
+      circleNode("C1", "A", "B"),
+    ]);
+  });
+
+  test("does not duplicate an existing circle construction", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      circleNode("C1", "A", "B"),
+    ]);
+
+    expect(circleConstruction(graph, "A", "B")).toEqual([]);
+  });
+
+  test("rejects duplicate circle points", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    expect(() => circleConstruction(graph, "A", "A")).toThrow(
+      "Cannot create circle from duplicate points",
+    );
+  });
+
   test("creates a triangle construction", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),

@@ -1,5 +1,6 @@
 import {
   centroidNode,
+  circleNode,
   midpointNode,
   segmentNode,
   triangleNode,
@@ -12,6 +13,43 @@ import type {
   TriangleNode,
 } from "./node";
 import type { Graph } from "./graph";
+
+export function circleConstruction(
+  graph: Graph,
+  center: NodeId,
+  through: NodeId,
+): readonly GeometryNode[] {
+  if (center === through) {
+    throw new Error("Cannot create circle from duplicate points");
+  }
+
+  for (const id of [center, through]) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot create circle with missing point: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot create circle with constrained point: ${id}`);
+    }
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "CIRCLE" &&
+      candidate.center === center &&
+      candidate.through === through,
+  );
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  const id = nextCircleId(graph);
+
+  return Object.freeze([circleNode(id, center, through)]);
+}
 
 export function triangleConstruction(
   graph: Graph,
@@ -169,6 +207,16 @@ function nextCentroidId(graph: Graph): NodeId {
   }
 
   return `G${index}`;
+}
+
+function nextCircleId(graph: Graph): NodeId {
+  let index = 1;
+
+  while (graph.byId.has(`C${index}`)) {
+    index += 1;
+  }
+
+  return `C${index}`;
 }
 
 function nextSegmentId(

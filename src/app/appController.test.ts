@@ -3,6 +3,7 @@ import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -28,6 +29,27 @@ import {
 const viewport = testViewport();
 
 describe("app/appController", () => {
+  test("creates a circle from two selected free points with C", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "c",
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.get("C1")).toEqual(
+      circleNode("C1", "A", "B"),
+    );
+    expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
   test("creates a triangle from three selected free points with T", () => {
     const graph = createGraph([
       freePoint("P1", 0, 0, "P1"),

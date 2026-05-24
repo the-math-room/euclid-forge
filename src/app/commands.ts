@@ -1,5 +1,6 @@
 import {
   centroidConstruction,
+  circleConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
 } from "../representation/constructions";
@@ -192,6 +193,27 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   }),
 
   command({
+    id: "create-circle",
+    keys: ["c"],
+    disabledReason: (state) => (selectedCirclePoints(state) ? null : ""),
+    run: (state) => {
+      const [center, through] = requireSelectedCirclePoints(state);
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes: circleConstruction(state.graph, center, through),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+
+  command({
     id: "create-centroid",
     keys: ["g"],
     disabledReason: (state) => (selectedTriangle(state) ? null : ""),
@@ -333,6 +355,43 @@ function ignore(state: AppState): AppCommandResult {
 
 function viewportPanStep(state: AppState): number {
   return 40 / state.viewState.viewportZoom;
+}
+
+function selectedCirclePoints(
+  state: AppState,
+): readonly [NodeId, NodeId] | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== 2) {
+    return null;
+  }
+
+  const [center, through] = selected;
+
+  if (!center || !through) {
+    return null;
+  }
+
+  if (
+    state.graph.byId.get(center)?.kind !== "FREE_POINT" ||
+    state.graph.byId.get(through)?.kind !== "FREE_POINT"
+  ) {
+    return null;
+  }
+
+  return [center, through];
+}
+
+function requireSelectedCirclePoints(
+  state: AppState,
+): readonly [NodeId, NodeId] {
+  const points = selectedCirclePoints(state);
+
+  if (!points) {
+    throw new Error("Cannot run create-circle while disabled");
+  }
+
+  return points;
 }
 
 function selectedFreePointVertices(
