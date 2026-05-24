@@ -4,6 +4,7 @@ import { worldToScreen } from "./viewport";
 
 export type CircleRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
+  selectedNodeIds?: ReadonlySet<string>;
 }>;
 
 export function renderCircle(
@@ -19,11 +20,12 @@ export function renderCircle(
   });
   const radiusPx = Math.hypot(edge.x - center.x, edge.y - center.y);
   const hovered = options.hoveredNodeId === circle.id;
+  const selected = options.selectedNodeIds?.has(circle.id) ?? false;
 
   ctx.save();
 
-  if (hovered) {
-    ctx.strokeStyle = "#94a3b8";
+  if (selected || hovered) {
+    ctx.strokeStyle = selected ? "#fbbf24" : "#94a3b8";
     ctx.lineWidth = 5;
 
     ctx.beginPath();

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   segmentNode,
   triangleNode,

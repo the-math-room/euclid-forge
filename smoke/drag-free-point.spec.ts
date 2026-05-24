@@ -146,3 +146,4 @@ test("deletes an isolated point and undo restores it", async ({ page }) => {
 
   await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
 });
+
