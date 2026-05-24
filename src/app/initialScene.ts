@@ -1,6 +1,7 @@
 import { createGraph } from "../representation/graph";
 import type { Graph } from "../representation/graph";
 import {
+  centroidNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -18,5 +19,7 @@ export function initialScene(): Graph {
     // Keep AB for now because midpoint is still defined over a segment.
     segmentNode("AB", "A", "B"),
     midpointNode("M_AB", "AB", "M"),
+
+    centroidNode("G", "ABC", "G"),
   ]);
 }

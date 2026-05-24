@@ -4,7 +4,8 @@ export type GeometryNode =
   | FreePointNode
   | SegmentNode
   | TriangleNode
-  | MidpointNode;
+  | MidpointNode
+  | CentroidNode;
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -33,6 +34,13 @@ export type MidpointNode = Readonly<{
   kind: "MIDPOINT";
   id: NodeId;
   segment: NodeId;
+  label: string;
+}>;
+
+export type CentroidNode = Readonly<{
+  kind: "CENTROID";
+  id: NodeId;
+  triangle: NodeId;
   label: string;
 }>;
 
@@ -88,6 +96,19 @@ export function midpointNode(
     kind: "MIDPOINT",
     id,
     segment,
+    label,
+  });
+}
+
+export function centroidNode(
+  id: NodeId,
+  triangle: NodeId,
+  label: string,
+): CentroidNode {
+  return Object.freeze({
+    kind: "CENTROID",
+    id,
+    triangle,
     label,
   });
 }

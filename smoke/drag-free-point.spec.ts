@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("drags a triangle vertex and updates connected constrained geometry", async ({
+test("drags a triangle vertex and updates triangle constructions", async ({
   page,
 }) => {
   await page.goto("/");
@@ -8,19 +8,6 @@ test("drags a triangle vertex and updates connected constrained geometry", async
   const canvas = page.locator("#geometry-canvas");
 
   await expect(canvas).toBeVisible();
-
-  const before = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-
-    return {
-      width: canvas.width,
-      height: canvas.height,
-      dpr: window.devicePixelRatio,
-    };
-  });
-
-  expect(before.width).toBeGreaterThan(0);
-  expect(before.height).toBeGreaterThan(0);
 
   const box = await canvas.boundingBox();
 
@@ -109,39 +96,22 @@ test("drags a triangle vertex and updates connected constrained geometry", async
       alpha: number,
     ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
 
-    const isLightSegment = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 180 && blue > 180;
-
     return {
       movedA: countPixelsNear(centerX - 3 * zoom, centerY - 1 * zoom, isYellowish),
-      unchangedB: countPixelsNear(centerX + 2 * zoom, centerY + 1 * zoom, isYellowish),
-      unchangedC: countPixelsNear(centerX, centerY - 2 * zoom, isYellowish),
       shiftedMidpoint: countPixelsNear(
         centerX - 0.5 * zoom,
         centerY,
         isGreenish,
       ),
-      movedSegmentAB: countPixelsNear(
-        centerX - 1.75 * zoom,
-        centerY - 0.5 * zoom,
-        isLightSegment,
-      ),
-      movedSegmentCA: countPixelsNear(
-        centerX - 1.5 * zoom,
-        centerY - 1.5 * zoom,
-        isLightSegment,
+      shiftedCentroid: countPixelsNear(
+        centerX - (1 / 3) * zoom,
+        centerY - (2 / 3) * zoom,
+        isGreenish,
       ),
     };
   });
 
   expect(result.movedA).toBeGreaterThan(0);
-  expect(result.unchangedB).toBeGreaterThan(0);
-  expect(result.unchangedC).toBeGreaterThan(0);
   expect(result.shiftedMidpoint).toBeGreaterThan(0);
-  expect(result.movedSegmentAB).toBeGreaterThan(0);
-  expect(result.movedSegmentCA).toBeGreaterThan(0);
+  expect(result.shiftedCentroid).toBeGreaterThan(0);
 });

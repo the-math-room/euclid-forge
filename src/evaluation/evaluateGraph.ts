@@ -1,4 +1,4 @@
-import { midpoint, vec2 } from "../meaning/vec2";
+import { centroid, midpoint, vec2 } from "../meaning/vec2";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type {
@@ -69,6 +69,19 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
         });
         break;
       }
+
+      case "CENTROID": {
+        const triangle = requireEvaluatedTriangle(values, node.triangle);
+
+        values.set(node.id, {
+          kind: "POINT",
+          id: node.id,
+          point: centroid(triangle.a, triangle.b, triangle.c),
+          label: node.label,
+          source: "CONSTRAINED",
+        });
+        break;
+      }
     }
   }
 
@@ -90,6 +103,13 @@ function requireEvaluatedSegment(
   id: NodeId,
 ): EvaluatedSegment {
   return requireEvaluated(values, id, "SEGMENT");
+}
+
+function requireEvaluatedTriangle(
+  values: ReadonlyMap<NodeId, EvaluatedGeometry>,
+  id: NodeId,
+): EvaluatedTriangle {
+  return requireEvaluated(values, id, "TRIANGLE");
 }
 
 function requireEvaluated<K extends EvaluatedGeometry["kind"]>(

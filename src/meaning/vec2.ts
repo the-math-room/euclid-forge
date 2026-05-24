@@ -10,3 +10,7 @@ export function vec2(x: number, y: number): Vec2 {
 export function midpoint(a: Vec2, b: Vec2): Vec2 {
   return vec2((a.x + b.x) / 2, (a.y + b.y) / 2);
 }
+
+export function centroid(a: Vec2, b: Vec2, c: Vec2): Vec2 {
+  return vec2((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
+}

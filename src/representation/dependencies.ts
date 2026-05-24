@@ -13,5 +13,8 @@ export function dependenciesOf(node: GeometryNode): readonly NodeId[] {
 
     case "MIDPOINT":
       return [node.segment];
+
+    case "CENTROID":
+      return [node.triangle];
   }
 }
