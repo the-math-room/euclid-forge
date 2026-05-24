@@ -813,4 +813,70 @@ describe("app/appController", () => {
     expect(transition.state.viewState.viewportRotation).toBe(0);
   });
 
+  test("durable graph commands request history commits", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+    ]);
+
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(toggleSelectedNode(emptyViewState(), "P1"), "P2"),
+      "P3",
+    );
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "T",
+    });
+
+    expect(transition.history).toBe("commit");
+  });
+
+  test("viewport navigation does not request history commits", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const transition = handleKeyDown(appState(graph, emptyViewState(), null), {
+      key: "ArrowLeft",
+    });
+
+    expect(transition.history).toBe("ignore");
+  });
+
+  test("selection changes request history commits", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect(transition.history).toBe("commit");
+  });
+
+  test("hover changes do not request history commits", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+
+    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.history).toBe("ignore");
+  });
+
+  test("completed drags request history commits", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+    const state = appState(graph, emptyViewState(), {
+      kind: "FREE_POINT",
+      nodeId: "A",
+    });
+
+    const transition = handlePointerUp(state, 1);
+
+    expect(transition.history).toBe("commit");
+  });
+
 });

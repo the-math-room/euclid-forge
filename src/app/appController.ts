@@ -43,12 +43,20 @@ export type PointerCaptureEffect = Readonly<
     }
 >;
 
+export type AppTransitionHistoryPolicy = "commit" | "ignore";
+
 export type AppTransition = Readonly<{
   state: AppState;
   shouldRender: boolean;
   shouldPreventDefault: boolean;
+  history: AppTransitionHistoryPolicy;
   pointerCapture?: PointerCaptureEffect;
 }>;
+
+type AppTransitionInit = Omit<AppTransition, "history"> &
+  Readonly<{
+    history?: AppTransitionHistoryPolicy;
+  }>;
 
 export type KeyInput = Readonly<{
   key: string;
@@ -183,6 +191,7 @@ export function handleKeyDown(
         clearSelection(state.viewState),
         state.dragState,
       ),
+      "commit",
     );
   }
 
@@ -202,6 +211,7 @@ export function handleKeyDown(
         clearSelection(state.viewState),
         state.dragState,
       ),
+      "commit",
     );
   }
 
@@ -221,6 +231,7 @@ export function handleKeyDown(
         clearSelection(state.viewState),
         state.dragState,
       ),
+      "commit",
     );
   }
 
@@ -234,7 +245,7 @@ export function handleKeyDown(
       return unchanged(state);
     }
 
-    return changed(appState(state.graph, viewState, state.dragState));
+    return changed(appState(state.graph, viewState, state.dragState), "commit");
   }
 
   if (key === "u") {
@@ -244,7 +255,7 @@ export function handleKeyDown(
       return unchanged(state);
     }
 
-    return changed(appState(state.graph, viewState, state.dragState));
+    return changed(appState(state.graph, viewState, state.dragState), "commit");
   }
 
   return unchanged(state);
@@ -273,6 +284,7 @@ export function handlePointerDown(
           toggleSelectedNode(viewState, pointSelectionHit),
           null,
         ),
+        "commit",
       );
     }
 
@@ -289,6 +301,7 @@ export function handlePointerDown(
           toggleSelectedNode(viewState, segmentSelectionHit),
           null,
         ),
+        "commit",
       );
     }
 
@@ -305,6 +318,7 @@ export function handlePointerDown(
           toggleSelectedNode(viewState, triangleSelectionHit.id),
           null,
         ),
+        "commit",
       );
     }
 
@@ -366,9 +380,10 @@ export function handlePointerDown(
         kind: "ADD_FREE_POINT",
         point: screenToWorld(input.viewport, input.point),
       }),
-      clearSelection(state.viewState),
+      clearSelection(viewState),
       null,
     ),
+    "commit",
   );
 }
 
@@ -447,6 +462,7 @@ export function handlePointerUp(
     state: appState(state.graph, state.viewState, null),
     shouldRender: false,
     shouldPreventDefault: true,
+    history: "commit",
     pointerCapture: {
       kind: "RELEASE_POINTER_CAPTURE",
       pointerId,
@@ -630,14 +646,21 @@ function preventOnly(state: AppState): AppTransition {
   });
 }
 
-function changed(state: AppState): AppTransition {
+function changed(
+  state: AppState,
+  history: AppTransitionHistoryPolicy = "ignore",
+): AppTransition {
   return transition({
     state,
     shouldRender: true,
     shouldPreventDefault: true,
+    history,
   });
 }
 
-function transition(value: AppTransition): AppTransition {
-  return Object.freeze(value);
+function transition(value: AppTransitionInit): AppTransition {
+  return Object.freeze({
+    history: "ignore",
+    ...value,
+  });
 }

@@ -20,6 +20,13 @@ import {
   viewportForCanvas,
 } from "./canvasSurface";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
+import {
+  appStateFromHistory,
+  commitHistory,
+  initialHistory,
+  redoHistory,
+  undoHistory,
+} from "./history";
 import { createRenderScheduler } from "./renderScheduler";
 import { renderScene } from "../rendering/renderScene";
 import {
@@ -55,8 +62,13 @@ function applyTransition(
   transition: AppTransition,
   setState: (state: AppState) => void,
   requestRender: () => void,
+  commitStateToHistory: (state: AppState) => void,
 ): void {
   setState(transition.state);
+
+  if (transition.history === "commit") {
+    commitStateToHistory(transition.state);
+  }
 
   if (transition.pointerCapture) {
     applyPointerCaptureEffect(canvas, transition.pointerCapture);
@@ -89,6 +101,25 @@ function applyPointerCaptureEffect(
 }
 
 
+
+
+function isUndoShortcut(event: KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === "z"
+  );
+}
+
+function isRedoShortcut(event: KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    ((event.shiftKey && event.key.toLowerCase() === "z") ||
+      (!event.shiftKey && event.key.toLowerCase() === "y"))
+  );
+}
 
 function viewportRotationDirectionForKey(key: string): -1 | 1 | null {
   if (key === "[") {
@@ -123,11 +154,16 @@ function main(): void {
   const ctx = get2DContext(canvas);
 
   let state = initialAppState();
+  let history = initialHistory(state);
   let viewportMotion = emptyViewportMotionState();
   let viewportMotionFrame: number | null = null;
 
   const setState = (next: AppState): void => {
     state = next;
+  };
+
+  const commitStateToHistory = (next: AppState): void => {
+    history = commitHistory(history, next);
   };
 
   const requestRender = createRenderScheduler(() => {
@@ -168,6 +204,22 @@ function main(): void {
       return;
     }
 
+    if (isUndoShortcut(event)) {
+      history = undoHistory(history);
+      state = appStateFromHistory(history);
+      requestRender();
+      event.preventDefault();
+      return;
+    }
+
+    if (isRedoShortcut(event)) {
+      history = redoHistory(history);
+      state = appStateFromHistory(history);
+      requestRender();
+      event.preventDefault();
+      return;
+    }
+
     const rotateDirection = viewportRotationDirectionForKey(event.key);
 
     if (rotateDirection !== null) {
@@ -183,6 +235,7 @@ function main(): void {
       handleKeyDown(state, { key: event.key }),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
@@ -209,6 +262,7 @@ function main(): void {
       }),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
@@ -224,6 +278,7 @@ function main(): void {
       }),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
@@ -234,6 +289,7 @@ function main(): void {
       handlePointerUp(state, event.pointerId),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
@@ -244,6 +300,7 @@ function main(): void {
       handlePointerCancel(state, event.pointerId),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
@@ -254,6 +311,7 @@ function main(): void {
       handlePointerLeave(state),
       setState,
       requestRender,
+      commitStateToHistory,
     );
   });
 
