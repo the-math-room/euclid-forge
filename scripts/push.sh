@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p src/app
+
+cat > src/app/initialScene.ts <<'EOF'
+import type { Scene } from "../evaluation/evaluateScene";
+import { freePoint, midpointNode, segmentNode } from "../representation/node";
+
+export function initialScene(): Scene {
+  return {
+    nodes: [
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M", "AB", "M"),
+    ],
+  };
+}
+EOF
+
+cat > src/app/main.ts <<'EOF'
+import "../styles/app.css";
+
+import { evaluateScene } from "../evaluation/evaluateScene";
+import type { Scene } from "../evaluation/evaluateScene";
+import type {
+  EvaluatedPoint,
+  EvaluatedSegment,
+} from "../evaluation/evaluated";
+import { vec2 } from "../meaning/vec2";
+import { renderPoints } from "../rendering/pointRenderer";
+import { renderSegments } from "../rendering/segmentRenderer";
+import type { Viewport } from "../rendering/viewport";
+import { initialScene } from "./initialScene";
+
+function getCanvas(): HTMLCanvasElement {
+  const canvas = document.querySelector<HTMLCanvasElement>("#geometry-canvas");
+
+  if (!canvas) {
+    throw new Error("Missing #geometry-canvas");
+  }
+
+  return canvas;
+}
+
+function get2DContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) {
+    throw new Error("Could not create 2D canvas context");
+  }
+
+  return ctx;
+}
+
+function resizeCanvasToDisplaySize(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+): void {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function render(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  scene: Scene,
+): void {
+  resizeCanvasToDisplaySize(canvas, ctx);
+
+  const rect = canvas.getBoundingClientRect();
+
+  const viewport: Viewport = {
+    width: rect.width,
+    height: rect.height,
+    center: vec2(0, 0),
+    zoom: 80,
+  };
+
+  const evaluated = evaluateScene(scene);
+
+  const segments = evaluated.ordered.filter(
+    (value): value is EvaluatedSegment => value.kind === "SEGMENT",
+  );
+
+  const points = evaluated.ordered.filter(
+    (value): value is EvaluatedPoint => value.kind === "POINT",
+  );
+
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  renderSegments(ctx, viewport, segments);
+  renderPoints(ctx, viewport, points);
+}
+
+function main(): void {
+  const canvas = getCanvas();
+  const ctx = get2DContext(canvas);
+  const scene = initialScene();
+
+  window.addEventListener("resize", () => {
+    render(canvas, ctx, scene);
+  });
+
+  render(canvas, ctx, scene);
+}
+
+main();
+EOF
+
+npm run check
