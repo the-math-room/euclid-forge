@@ -13,6 +13,7 @@ import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { screenToWorld } from "../rendering/viewport";
 import { appState } from "./appState";
+import { effectiveHiddenNodeIds } from "./effectiveVisibility";
 import type { AppState } from "./appState";
 import {
   clearSelection,
@@ -140,11 +141,12 @@ export function handlePointerDown(
   state: AppState,
   input: PointerInput,
 ): AppTransition {
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
   const evaluated = visibleEvaluatedScene(
     evaluateGraph(state.graph),
-    state.viewState.hiddenNodeIds.size > 0
+    hiddenNodeIds.size > 0
       ? {
-          hiddenNodeIds: state.viewState.hiddenNodeIds,
+          hiddenNodeIds,
         }
       : {},
   );

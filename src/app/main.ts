@@ -18,6 +18,7 @@ import {
   resizeCanvasToDisplaySize,
   viewportForCanvas,
 } from "./canvasSurface";
+import { effectiveHiddenNodeIds } from "./effectiveVisibility";
 import { createRenderScheduler } from "./renderScheduler";
 import { renderScene } from "../rendering/renderScene";
 
@@ -35,7 +36,7 @@ function render(
   ctx.clearRect(0, 0, rect.width, rect.height);
   renderScene(ctx, viewport, evaluated, {
     selectedNodeIds: state.viewState.selectedNodeIds,
-    hiddenNodeIds: state.viewState.hiddenNodeIds,
+    hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
   });
 }
 
