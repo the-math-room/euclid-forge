@@ -47,7 +47,7 @@ transitiveDependentsOf
 
 The graph is the mathematical construction document. It is not view state.
 
-Graph edits are the only way app interactions change mathematical construction state.
+Derived geometry is not stored as coordinates in the graph.
 
 ## `evaluation/`
 
@@ -59,13 +59,7 @@ Graph → EvaluatedScene
 
 Evaluation derives geometry. It does not mutate the graph.
 
-Visibility projections over evaluated geometry also live here when they are independent of browser effects. For example:
-
-```txt
-visibleEvaluatedScene
-```
-
-This keeps rendering and hit testing aligned around the same visible evaluated scene.
+Visibility over evaluated geometry lives here when it is independent of browser effects.
 
 ## `rendering/`
 
@@ -75,13 +69,13 @@ Draws evaluated geometry.
 EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
-Rendering may respect view options such as selection, hover, and hidden nodes. It does not edit constructions.
+Rendering may respect selection, hover, and hidden nodes. It does not edit constructions.
 
-Labels are screen-space annotations. Geometry positions are transformed through the viewport; label glyphs remain upright for readability.
+Labels are screen annotations. View rotation moves label anchor points, but labels stay upright.
 
 ## `interaction/`
 
-Pure hit testing and gesture-adjacent logic.
+Pure hit testing.
 
 Examples:
 
@@ -95,34 +89,36 @@ hitTestTriangleInterior
 
 Hit testing consumes an evaluated scene and a viewport. It does not own app state, DOM state, or graph mutations.
 
-Hit testing follows the explicit visual priority policy:
+Hit priority:
 
 ```txt
-shift-click / shift-hover:
-  point > segment > triangle
-
-normal click / normal hover:
-  free point > triangle body > empty canvas
-
-same-kind tie-breaks:
-  later-rendered objects win exact ties
-  nearest point/segment still wins non-ties
+normal click: free point → triangle body → add point
+shift-click:  point → segment → triangle
 ```
+
+Within a kind, later visual order wins exact ties. Triangles use reverse visual order for overlapping interiors.
 
 ## `app/`
 
-Browser shell and interaction transitions.
+Browser shell and user transitions.
 
 ```txt
-main.ts                 DOM wiring and browser effects
-appController.ts        user input → AppTransition
-appState.ts             Graph + ViewState + DragState
-effectiveVisibility.ts  graph-aware view projections
-viewState.ts            selected/hidden/hovered node IDs and viewport intent
-dragState.ts            active drag description
-canvasSurface.ts        canvas/viewport DOM utilities
-renderScheduler.ts      requestAnimationFrame coalescing
-viewportMotion.ts       transient frame-based viewport motion
+main.ts                  DOM wiring and runtime state
+appController.ts         pointer input → AppTransition
+commands.ts              keyboard command definitions
+appState.ts              Graph + ViewState + DragState
+viewState.ts             view state helpers
+dragState.ts             active drag description
+history.ts               linear undo/redo snapshots
+workspace.ts             pure workspace serialization
+workspaceFiles.ts        file/JSON primitives
+workspaceActions.ts      save/open orchestration
+keyboardShortcuts.ts     keyboard shortcut classification
+transitionEffects.ts     AppTransition side effects
+viewportMotion.ts        smooth transient viewport rotation
+effectiveVisibility.ts   graph-aware view projections
+canvasSurface.ts         canvas/viewport DOM utilities
+renderScheduler.ts       requestAnimationFrame coalescing
 ```
 
 ## Core rules
@@ -133,13 +129,14 @@ User effects become GraphEdit values or ViewState changes.
 GraphEdit values produce new validated Graphs.
 Selection, visibility, hover, and viewport intent are view state.
 Rendering consumes evaluated geometry.
+DOM effects stay at the app edge.
 ```
 
-## Viewport ownership
+## Viewport
 
 Viewport center, zoom, and rotation are view state.
 
-Canvas width and height are environmental facts derived from the canvas at render/input time.
+Canvas width and height are environmental facts derived at render/input time.
 
 ```txt
 Graph says what exists mathematically.
@@ -147,29 +144,7 @@ Evaluation says where mathematical things are.
 Viewport says how the user is looking at them.
 ```
 
-The complete `Viewport` value is assembled at the app edge from:
-
-```txt
-canvas dimensions + ViewState viewport center/zoom/rotation
-```
-
-Rendering and interaction receive a complete viewport, but they do not own it.
-
-View rotation is around the screen center, which corresponds to `viewport.center` in world coordinates. Rotation is implemented in the world/screen coordinate transforms rather than by rotating the canvas context globally, so geometry rotates rigidly while labels stay upright.
-
-## Viewport motion
-
-Discrete viewport intent lives in `ViewState`.
-
-Temporal input state, such as smooth hold-to-rotate behavior, lives in the app layer.
-
-```txt
-keydown [ / ]  → start transient viewport rotation motion
-animation step → update ViewState.viewportRotation
-keyup [ / ]    → stop transient viewport rotation motion
-```
-
-Velocity and animation timestamps are not durable view state.
+Smooth hold-to-rotate is transient app state. It changes `viewportRotation` over animation frames, but the motion state itself is not durable.
 
 ## Visibility
 
@@ -182,32 +157,82 @@ effectively hidden nodes  explicitly hidden nodes plus graph dependents
 
 `ViewState.hiddenNodeIds` stores explicit user intent.
 
-`effectiveHiddenNodeIds(graph, viewState)` computes dependency-aware visibility for rendering and hit testing.
+`effectiveHiddenNodeIds(graph, viewState)` computes dependency-aware visibility.
 
-Rendering and interaction should consume the same effective visibility projection. A hidden or effectively hidden object should not be visible, selectable, hovered, or draggable.
+Rendering and interaction should consume the same effective visibility projection. Hidden or effectively hidden objects should not be visible, selectable, or draggable.
 
-Selection is cleaned so that no effectively hidden node remains selected.
+Selection is cleaned so no effectively hidden node remains selected.
 
 ## Hover
 
-Hover is view state, not graph state.
+Hover is preview state.
 
 ```txt
-ViewState.hoveredNodeId
+hoveredNodeId
 ```
 
-Hover preview uses the same effective-visible hit policy as pointerdown. It should not mutate constructions.
-
-Hover is cleared when dragging starts, while dragging, and when the pointer leaves the canvas.
+Hover is not durable. It is not serialized. It is not stored in history. It clears on drag, pointerdown, pointerleave, and workspace load.
 
 ## Dragging
 
 Free points are directly draggable.
 
-Triangle body dragging translates its free vertices.
+Triangle body dragging translates its free vertices. It stores the initial pointer world position and initial vertex positions, then computes absolute positions from the drag start.
 
-Triangle drag stores the initial pointer world position and initial vertex positions, then computes every frame from the drag start. This avoids accumulated floating-point drift.
-
-Side midpoints are modeled as segment midpoints. Shared sides should reuse the same segment and midpoint nodes.
+This avoids frame-to-frame drift.
 
 Triangles with constrained vertices are not body-draggable unless an explicit inverse edit is later defined.
+
+## History
+
+Undo/redo is a linear timeline.
+
+```txt
+past ← present → future
+```
+
+A snapshot contains:
+
+```txt
+graph
+viewState with hover cleared
+```
+
+A snapshot does not contain:
+
+```txt
+drag state
+pointer capture
+viewport motion
+history
+```
+
+Committing after undo discards the redo future.
+
+Snapshots do not have their own undo/redo history.
+
+## Workspace serialization
+
+A workspace stores durable project state:
+
+```txt
+version
+graph nodes
+selected node IDs
+hidden node IDs
+viewport center
+viewport zoom
+viewport rotation
+```
+
+It does not store:
+
+```txt
+hover
+drag state
+history
+pointer capture
+smooth viewport motion
+```
+
+Loading validates through `createGraph` before mutating app state. Successful load resets history to the loaded workspace.

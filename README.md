@@ -1,6 +1,6 @@
 # Euclid Forge
 
-An experimental 2D geometry construction engine.
+An experimental 2D geometry construction editor.
 
 Core shape:
 
@@ -34,7 +34,7 @@ denotational boundary check
 Playwright smoke tests
 ```
 
-Useful individual commands:
+Useful commands:
 
 ```bash
 npm test
@@ -55,26 +55,61 @@ npm run build
 ```txt
 click empty canvas         add free point
 drag free point            move free point
-drag triangle body         translate its free vertices
-hover geometry             preview the object that would be targeted
+drag triangle body         translate free vertices
+hover object               preview hit target
+
 shift-click point          toggle point selection
 shift-click segment        toggle segment selection
 shift-click triangle body  toggle triangle selection
+
 T                          create triangle from 3 selected free points
 G                          create centroid for selected triangle
 M                          create/reuse side segments and midpoints
+
 H                          hide selected nodes
 U                          unhide all hidden nodes
+
 Arrow keys                 pan viewport
 + / =                      zoom in
 - / _                      zoom out
-[                          smooth rotate view counterclockwise while held
-]                          smooth rotate view clockwise while held
-\\                          reset view rotation only
-0                          reset viewport center, zoom, and rotation
+hold [ / ]                 smoothly rotate viewport
+\                          reset viewport rotation
+0                          reset viewport
+
+Ctrl/Cmd+Z                 undo
+Ctrl/Cmd+Shift+Z           redo
+Ctrl/Cmd+Y                 redo
+
+Ctrl/Cmd+S                 save workspace JSON
+Ctrl/Cmd+O                 open workspace JSON
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.
+
+## Durable vs transient state
+
+Durable project state:
+
+```txt
+Graph
+selected node IDs
+hidden node IDs
+viewport center
+viewport zoom
+viewport rotation
+```
+
+Transient runtime state:
+
+```txt
+hover
+drag state
+pointer capture
+smooth viewport motion
+undo/redo stacks
+```
+
+Workspace save/load stores durable project state only.
 
 ## Architecture
 
