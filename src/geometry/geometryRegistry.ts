@@ -39,11 +39,22 @@ export function geometryDefinitionForKind<K extends GeometryKind>(
 export function dependenciesForGeometryNode(
   node: GeometryNode,
 ): readonly NodeId[] {
-  const definition = geometryDefinitionsByKind.get(node.kind);
+  return requireAnyGeometryDefinition(node.kind).representation.dependencies(node);
+}
+
+export function evaluateGeometryNode(
+  node: GeometryNode,
+  context: import("./evaluationContext").EvaluationContext,
+): import("../evaluation/evaluated").EvaluatedGeometry {
+  return requireAnyGeometryDefinition(node.kind).evaluation.evaluate(node, context);
+}
+
+function requireAnyGeometryDefinition(kind: GeometryKind): AnyGeometryDefinition {
+  const definition = geometryDefinitionsByKind.get(kind);
 
   if (!definition) {
-    throw new Error(`Missing geometry definition for kind: ${node.kind}`);
+    throw new Error(`Missing geometry definition for kind: ${kind}`);
   }
 
-  return definition.representation.dependencies(node);
+  return definition;
 }

@@ -1,4 +1,10 @@
-import type { GeometryDefinition } from "../geometryDefinition";
+import { vec2 } from "../../meaning/vec2";
+import type { EvaluatedPoint } from "../../evaluation/evaluated";
+import type { EvaluationContext } from "../evaluationContext";
+import type {
+  GeometryDefinition,
+  NodeByKind,
+} from "../geometryDefinition";
 
 export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
   Object.freeze({
@@ -6,5 +12,18 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
 
     representation: Object.freeze({
       dependencies: () => [],
+    }),
+
+    evaluation: Object.freeze({
+      evaluate: (
+        node: NodeByKind<"FREE_POINT">,
+        _context: EvaluationContext,
+      ): EvaluatedPoint => ({
+        kind: "POINT",
+        id: node.id,
+        point: vec2(node.x, node.y),
+        label: node.label,
+        role: "FREE",
+      }),
     }),
   });
