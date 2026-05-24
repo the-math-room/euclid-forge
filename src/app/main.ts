@@ -38,7 +38,11 @@ import {
 import { createRenderScheduler } from "./renderScheduler";
 import { applyTransition } from "./transitionEffects";
 import { renderScene } from "../rendering/renderScene";
-import { deserializeWorkspace } from "./workspace";
+import {
+  browserWorkspaceActionEnvironment,
+  openWorkspace,
+  saveWorkspace,
+} from "./workspaceActions";
 import {
   emptyViewportMotionState,
   isViewportMotionActive,
@@ -46,11 +50,6 @@ import {
   stepViewportMotion,
   stopViewportRotation,
 } from "./viewportMotion";
-import {
-  chooseWorkspaceFile,
-  downloadWorkspaceJson,
-  workspaceFromJsonText,
-} from "./workspaceFiles";
 
 function render(
   canvas: HTMLCanvasElement,
@@ -71,37 +70,10 @@ function render(
   });
 }
 
-async function openWorkspaceFromFile(
-  setState: (state: AppState) => void,
-  setHistory: (history: ReturnType<typeof initialHistory>) => void,
-  requestRender: () => void,
-): Promise<void> {
-  const file = await chooseWorkspaceFile(document);
-
-  if (!file) {
-    return;
-  }
-
-  try {
-    const workspace = workspaceFromJsonText(await file.text());
-    const nextState = deserializeWorkspace(workspace);
-
-    setState(nextState);
-    setHistory(initialHistory(nextState));
-    requestRender();
-  } catch (error) {
-    console.error(error);
-    window.alert(
-      error instanceof Error
-        ? error.message
-        : "Could not open workspace file",
-    );
-  }
-}
-
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
+  const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
   let state = initialAppState();
   let history = initialHistory(state);
@@ -159,13 +131,18 @@ function main(): void {
     }
 
     if (isSaveShortcut(event)) {
-      downloadWorkspaceJson(document, URL, state);
+      saveWorkspace(workspaceEnvironment, state);
       event.preventDefault();
       return;
     }
 
     if (isOpenShortcut(event)) {
-      void openWorkspaceFromFile(setState, setHistory, requestRender);
+      void openWorkspace({
+        environment: workspaceEnvironment,
+        setState,
+        setHistory,
+        requestRender,
+      });
       event.preventDefault();
       return;
     }
