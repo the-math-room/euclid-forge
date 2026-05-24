@@ -7,7 +7,10 @@ import {
   segmentNode,
   triangleNode,
 } from "../representation/node";
-import { effectiveHiddenNodeIds } from "./effectiveVisibility";
+import {
+  clearEffectivelyHiddenSelection,
+  effectiveHiddenNodeIds,
+} from "./effectiveVisibility";
 import { emptyViewState, hideSelectedNodes, toggleSelectedNode } from "./viewState";
 
 describe("app/effectiveHiddenNodeIds", () => {
@@ -86,5 +89,77 @@ describe("app/effectiveHiddenNodeIds", () => {
       "D",
       "G",
     ]);
+  });
+});
+
+describe("app/clearEffectivelyHiddenSelection", () => {
+  test("returns the same view state when selection is already empty", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const viewState = emptyViewState();
+
+    expect(clearEffectivelyHiddenSelection(graph, viewState)).toBe(viewState);
+  });
+
+  test("clears selected nodes that become effectively hidden", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const selected = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "G",
+    );
+
+    const hidden = hideSelectedNodes(
+      toggleSelectedNode(selected, "ABC"),
+    );
+
+    const next = clearEffectivelyHiddenSelection(graph, hidden);
+
+    expect([...next.selectedNodeIds]).toEqual([]);
+    expect([...next.hiddenNodeIds]).toEqual(["A", "G", "ABC"]);
+  });
+
+  test("clears dependent selected nodes when a source is hidden", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", 5, 5, "D"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const viewState = {
+      selectedNodeIds: new Set(["ABC", "G", "D"]),
+      hiddenNodeIds: new Set(["A"]),
+    };
+
+    const next = clearEffectivelyHiddenSelection(graph, viewState);
+
+    expect([...next.selectedNodeIds]).toEqual(["D"]);
+    expect([...next.hiddenNodeIds]).toEqual(["A"]);
+  });
+
+  test("preserves selected independent nodes", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", 5, 5, "D"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const viewState = {
+      selectedNodeIds: new Set(["D"]),
+      hiddenNodeIds: new Set(["ABC"]),
+    };
+
+    expect(clearEffectivelyHiddenSelection(graph, viewState)).toBe(viewState);
   });
 });

@@ -13,7 +13,10 @@ import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { screenToWorld } from "../rendering/viewport";
 import { appState } from "./appState";
-import { effectiveHiddenNodeIds } from "./effectiveVisibility";
+import {
+  clearEffectivelyHiddenSelection,
+  effectiveHiddenNodeIds,
+} from "./effectiveVisibility";
 import type { AppState } from "./appState";
 import {
   clearSelection,
@@ -115,7 +118,10 @@ export function handleKeyDown(
   }
 
   if (key === "h") {
-    const viewState = hideSelectedNodes(state.viewState);
+    const viewState = clearEffectivelyHiddenSelection(
+      state.graph,
+      hideSelectedNodes(state.viewState),
+    );
 
     if (viewState === state.viewState) {
       return unchanged(state);

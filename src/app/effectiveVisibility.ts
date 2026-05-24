@@ -22,3 +22,31 @@ export function effectiveHiddenNodeIds(
 
   return hiddenNodeIds;
 }
+
+export function clearEffectivelyHiddenSelection(
+  graph: Graph,
+  viewState: ViewState,
+): ViewState {
+  if (viewState.selectedNodeIds.size === 0) {
+    return viewState;
+  }
+
+  const hiddenNodeIds = effectiveHiddenNodeIds(graph, viewState);
+  const selectedNodeIds = new Set<NodeId>();
+
+  for (const id of viewState.selectedNodeIds) {
+    if (!hiddenNodeIds.has(id)) {
+      selectedNodeIds.add(id);
+    }
+  }
+
+  if (selectedNodeIds.size === viewState.selectedNodeIds.size) {
+    return viewState;
+  }
+
+  return Object.freeze({
+    ...viewState,
+    selectedNodeIds,
+  });
+}
+

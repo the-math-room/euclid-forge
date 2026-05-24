@@ -403,4 +403,62 @@ describe("app/appController", () => {
     );
   });
 
+  test("hiding a source clears dependent selected nodes", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", 5, 5, "D"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const viewState = {
+      selectedNodeIds: new Set(["A", "ABC", "G", "D"]),
+      hiddenNodeIds: new Set<string>(),
+    };
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "h",
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+    expect([...transition.state.viewState.hiddenNodeIds]).toEqual([
+      "A",
+      "ABC",
+      "G",
+      "D",
+    ]);
+    expect(transition.shouldRender).toBe(true);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("hiding a source does not clear independent unhidden selections", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", 5, 5, "D"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const viewState = {
+      selectedNodeIds: new Set(["ABC", "G", "D"]),
+      hiddenNodeIds: new Set(["A"]),
+    };
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "h",
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+    expect([...transition.state.viewState.hiddenNodeIds]).toEqual([
+      "A",
+      "ABC",
+      "G",
+      "D",
+    ]);
+  });
+
 });
