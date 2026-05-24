@@ -42,3 +42,4 @@ lerna-debug.log*
 *.tsbuildinfo
 
 # Push Script
+push.sh
