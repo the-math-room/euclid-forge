@@ -416,6 +416,8 @@ describe("app/appController", () => {
     const viewState = {
       selectedNodeIds: new Set(["A", "ABC", "G", "D"]),
       hiddenNodeIds: new Set<string>(),
+      viewportCenter: vec2(0, 0),
+      viewportZoom: 80,
     };
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
@@ -446,6 +448,8 @@ describe("app/appController", () => {
     const viewState = {
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
+      viewportCenter: vec2(0, 0),
+      viewportZoom: 80,
     };
 
     const transition = handleKeyDown(appState(graph, viewState, null), {

@@ -1,18 +1,23 @@
 import { describe, expect, test } from "vitest";
+import { vec2 } from "../meaning/vec2";
 import {
   clearSelection,
   emptyViewState,
   hideSelectedNodes,
+  setViewportCenter,
+  setViewportZoom,
   toggleSelectedNode,
   unhideAllNodes,
 } from "./viewState";
 
 describe("app/viewState", () => {
-  test("starts with no selected or hidden nodes", () => {
+  test("starts with no selected or hidden nodes and the default viewport", () => {
     const viewState = emptyViewState();
 
     expect([...viewState.selectedNodeIds]).toEqual([]);
     expect([...viewState.hiddenNodeIds]).toEqual([]);
+    expect(viewState.viewportCenter).toEqual(vec2(0, 0));
+    expect(viewState.viewportZoom).toBe(80);
     expect(Object.isFrozen(viewState)).toBe(true);
   });
 
@@ -87,4 +92,36 @@ describe("app/viewState", () => {
 
     expect(unhideAllNodes(viewState)).toBe(viewState);
   });
+  test("updates viewport center without changing graph-related view state", () => {
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+    const next = setViewportCenter(viewState, vec2(3, -2));
+
+    expect(next.viewportCenter).toEqual(vec2(3, -2));
+    expect(next.viewportZoom).toBe(80);
+    expect([...next.selectedNodeIds]).toEqual(["A"]);
+    expect([...next.hiddenNodeIds]).toEqual([]);
+  });
+
+  test("returns same object when setting viewport center to the current value", () => {
+    const viewState = emptyViewState();
+
+    expect(setViewportCenter(viewState, vec2(0, 0))).toBe(viewState);
+  });
+
+  test("updates viewport zoom without changing graph-related view state", () => {
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+    const next = setViewportZoom(viewState, 120);
+
+    expect(next.viewportCenter).toEqual(vec2(0, 0));
+    expect(next.viewportZoom).toBe(120);
+    expect([...next.selectedNodeIds]).toEqual(["A"]);
+    expect([...next.hiddenNodeIds]).toEqual([]);
+  });
+
+  test("returns same object when setting viewport zoom to the current value", () => {
+    const viewState = emptyViewState();
+
+    expect(setViewportZoom(viewState, 80)).toBe(viewState);
+  });
+
 });

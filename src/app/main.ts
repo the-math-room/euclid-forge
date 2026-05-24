@@ -30,7 +30,7 @@ function render(
   resizeCanvasToDisplaySize(canvas, ctx);
 
   const rect = canvas.getBoundingClientRect();
-  const viewport = viewportForCanvas(canvas);
+  const viewport = viewportForCanvas(canvas, state.viewState);
   const evaluated = evaluateGraph(state.graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
@@ -114,7 +114,7 @@ function main(): void {
       handlePointerDown(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
-        viewport: viewportForCanvas(canvas),
+        viewport: viewportForCanvas(canvas, state.viewState),
         shiftKey: event.shiftKey,
       }),
       setState,
@@ -129,7 +129,7 @@ function main(): void {
       handlePointerMove(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
-        viewport: viewportForCanvas(canvas),
+        viewport: viewportForCanvas(canvas, state.viewState),
         shiftKey: event.shiftKey,
       }),
       setState,

@@ -1,5 +1,5 @@
-import { vec2 } from "../meaning/vec2";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
+import type { ViewState } from "./viewState";
 
 export function getCanvas(): HTMLCanvasElement {
   const canvas = document.querySelector<HTMLCanvasElement>("#geometry-canvas");
@@ -40,14 +40,17 @@ export function resizeCanvasToDisplaySize(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-export function viewportForCanvas(canvas: HTMLCanvasElement): Viewport {
+export function viewportForCanvas(
+  canvas: HTMLCanvasElement,
+  viewState: ViewState,
+): Viewport {
   const rect = canvas.getBoundingClientRect();
 
   return {
     width: rect.width,
     height: rect.height,
-    center: vec2(0, 0),
-    zoom: 80,
+    center: viewState.viewportCenter,
+    zoom: viewState.viewportZoom,
   };
 }
 

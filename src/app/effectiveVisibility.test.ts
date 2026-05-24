@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
@@ -137,6 +138,8 @@ describe("app/clearEffectivelyHiddenSelection", () => {
     const viewState = {
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
+      viewportCenter: vec2(0, 0),
+      viewportZoom: 80,
     };
 
     const next = clearEffectivelyHiddenSelection(graph, viewState);
@@ -158,6 +161,8 @@ describe("app/clearEffectivelyHiddenSelection", () => {
     const viewState = {
       selectedNodeIds: new Set(["D"]),
       hiddenNodeIds: new Set(["ABC"]),
+      viewportCenter: vec2(0, 0),
+      viewportZoom: 80,
     };
 
     expect(clearEffectivelyHiddenSelection(graph, viewState)).toBe(viewState);
