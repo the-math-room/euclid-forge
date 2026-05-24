@@ -1,130 +1,29 @@
-import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-
-function waitForAnimationFrame(page: Page): Promise<void> {
-  return page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          resolve();
-        });
-      }),
-  );
-}
+import { test } from "@playwright/test";
+import {
+  clickWorld,
+  dragWorld,
+  expectBluePointNear,
+  expectGreenPointNear,
+  expectLightEdgeNear,
+  expectYellowPointNear,
+  getCanvasFrame,
+  shiftClickWorld,
+  waitForAnimationFrame,
+} from "./helpers/canvas";
 
 test("drags a triangle vertex and updates triangle constructions", async ({
   page,
 }) => {
   await page.goto("/");
 
-  const canvas = page.locator("#geometry-canvas");
+  const frame = await getCanvasFrame(page);
 
-  await expect(canvas).toBeVisible();
-
-  const box = await canvas.boundingBox();
-
-  if (!box) {
-    throw new Error("Could not find canvas bounding box");
-  }
-
-  const centerX = box.x + box.width / 2;
-  const centerY = box.y + box.height / 2;
-  const zoomCssPx = 80;
-
-  await page.mouse.move(centerX - 2 * zoomCssPx, centerY + 1 * zoomCssPx);
-  await page.mouse.down();
-  await page.mouse.move(centerX - 3 * zoomCssPx, centerY - 1 * zoomCssPx);
-  await page.mouse.up();
-
+  await dragWorld(page, frame, { x: -2, y: -1 }, { x: -3, y: 1 });
   await waitForAnimationFrame(page);
 
-  const result = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-    const maybeCtx = canvas.getContext("2d");
-
-    if (!maybeCtx) {
-      throw new Error("Could not get 2D context");
-    }
-
-    const ctx: CanvasRenderingContext2D = maybeCtx;
-
-    function countPixelsNear(
-      x: number,
-      y: number,
-      predicate: (
-        red: number,
-        green: number,
-        blue: number,
-        alpha: number,
-      ) => boolean,
-    ): number {
-      const radius = 18;
-      const image = ctx.getImageData(
-        Math.floor(x - radius),
-        Math.floor(y - radius),
-        radius * 2 + 1,
-        radius * 2 + 1,
-      );
-
-      let count = 0;
-
-      for (let index = 0; index < image.data.length; index += 4) {
-        const red = image.data[index] ?? 0;
-        const green = image.data[index + 1] ?? 0;
-        const blue = image.data[index + 2] ?? 0;
-        const alpha = image.data[index + 3] ?? 0;
-
-        if (predicate(red, green, blue, alpha)) {
-          count += 1;
-        }
-      }
-
-      return count;
-    }
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const zoom = 80 * window.devicePixelRatio;
-
-    const isYellowish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 120 && blue < 120;
-
-    const isGreenish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
-
-    const isBluish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red < 140 && green > 120 && blue > 180;
-
-    return {
-      movedA: countPixelsNear(centerX - 3 * zoom, centerY - 1 * zoom, isYellowish),
-      shiftedMidpoint: countPixelsNear(
-        centerX - 0.5 * zoom,
-        centerY,
-        isGreenish,
-      ),
-      shiftedCentroid: countPixelsNear(
-        centerX - (1 / 3) * zoom,
-        centerY - (2 / 3) * zoom,
-        isBluish,
-      ),
-    };
-  });
-
-  expect(result.movedA).toBeGreaterThan(0);
-  expect(result.shiftedMidpoint).toBeGreaterThan(0);
-  expect(result.shiftedCentroid).toBeGreaterThan(0);
+  await expectYellowPointNear(frame.canvas, { x: -3, y: 1 });
+  await expectGreenPointNear(frame.canvas, { x: -0.5, y: 0 });
+  await expectBluePointNear(frame.canvas, { x: -1 / 3, y: 2 / 3 });
 });
 
 test("drags the triangle body and translates its derived constructions", async ({
@@ -132,118 +31,16 @@ test("drags the triangle body and translates its derived constructions", async (
 }) => {
   await page.goto("/");
 
-  const canvas = page.locator("#geometry-canvas");
+  const frame = await getCanvasFrame(page);
 
-  await expect(canvas).toBeVisible();
-
-  const box = await canvas.boundingBox();
-
-  if (!box) {
-    throw new Error("Could not find canvas bounding box");
-  }
-
-  const centerX = box.x + box.width / 2;
-  const centerY = box.y + box.height / 2;
-  const zoomCssPx = 80;
-
-  await page.mouse.move(centerX, centerY);
-  await page.mouse.down();
-  await page.mouse.move(centerX + 1 * zoomCssPx, centerY - 0.5 * zoomCssPx);
-  await page.mouse.up();
-
+  await dragWorld(page, frame, { x: 0, y: 0 }, { x: 1, y: 0.5 });
   await waitForAnimationFrame(page);
 
-  const result = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-    const maybeCtx = canvas.getContext("2d");
-
-    if (!maybeCtx) {
-      throw new Error("Could not get 2D context");
-    }
-
-    const ctx: CanvasRenderingContext2D = maybeCtx;
-
-    function countPixelsNear(
-      x: number,
-      y: number,
-      predicate: (
-        red: number,
-        green: number,
-        blue: number,
-        alpha: number,
-      ) => boolean,
-    ): number {
-      const radius = 18;
-      const image = ctx.getImageData(
-        Math.floor(x - radius),
-        Math.floor(y - radius),
-        radius * 2 + 1,
-        radius * 2 + 1,
-      );
-
-      let count = 0;
-
-      for (let index = 0; index < image.data.length; index += 4) {
-        const red = image.data[index] ?? 0;
-        const green = image.data[index + 1] ?? 0;
-        const blue = image.data[index + 2] ?? 0;
-        const alpha = image.data[index + 3] ?? 0;
-
-        if (predicate(red, green, blue, alpha)) {
-          count += 1;
-        }
-      }
-
-      return count;
-    }
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const zoom = 80 * window.devicePixelRatio;
-
-    const isYellowish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 120 && blue < 120;
-
-    const isGreenish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
-
-    const isBluish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red < 140 && green > 120 && blue > 180;
-
-    return {
-      translatedA: countPixelsNear(centerX - 1 * zoom, centerY + 0.5 * zoom, isYellowish),
-      translatedB: countPixelsNear(centerX + 3 * zoom, centerY + 0.5 * zoom, isYellowish),
-      translatedC: countPixelsNear(centerX + 1 * zoom, centerY - 2.5 * zoom, isYellowish),
-      translatedMidpoint: countPixelsNear(
-        centerX + 1 * zoom,
-        centerY + 0.5 * zoom,
-        isGreenish,
-      ),
-      translatedCentroid: countPixelsNear(
-        centerX + 1 * zoom,
-        centerY - 0.5 * zoom,
-        isBluish,
-      ),
-    };
-  });
-
-  expect(result.translatedA).toBeGreaterThan(0);
-  expect(result.translatedB).toBeGreaterThan(0);
-  expect(result.translatedC).toBeGreaterThan(0);
-  expect(result.translatedMidpoint).toBeGreaterThan(0);
-  expect(result.translatedCentroid).toBeGreaterThan(0);
+  await expectYellowPointNear(frame.canvas, { x: -1, y: -0.5 });
+  await expectYellowPointNear(frame.canvas, { x: 3, y: -0.5 });
+  await expectYellowPointNear(frame.canvas, { x: 1, y: 2.5 });
+  await expectGreenPointNear(frame.canvas, { x: 1, y: -0.5 });
+  await expectBluePointNear(frame.canvas, { x: 1, y: 0.5 });
 });
 
 test("clicks empty canvas to add a new draggable free point", async ({
@@ -251,136 +48,17 @@ test("clicks empty canvas to add a new draggable free point", async ({
 }) => {
   await page.goto("/");
 
-  const canvas = page.locator("#geometry-canvas");
+  const frame = await getCanvasFrame(page);
 
-  await expect(canvas).toBeVisible();
-
-  const box = await canvas.boundingBox();
-
-  if (!box) {
-    throw new Error("Could not find canvas bounding box");
-  }
-
-  const centerX = box.x + box.width / 2;
-  const centerY = box.y + box.height / 2;
-  const zoomCssPx = 80;
-
-  await page.mouse.click(centerX + 3 * zoomCssPx, centerY - 2 * zoomCssPx);
-
+  await clickWorld(page, frame, { x: 3, y: 2 });
   await waitForAnimationFrame(page);
 
-  const result = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-    const maybeCtx = canvas.getContext("2d");
+  await expectYellowPointNear(frame.canvas, { x: 3, y: 2 });
 
-    if (!maybeCtx) {
-      throw new Error("Could not get 2D context");
-    }
-
-    const ctx: CanvasRenderingContext2D = maybeCtx;
-
-    function countPixelsNear(
-      x: number,
-      y: number,
-      predicate: (
-        red: number,
-        green: number,
-        blue: number,
-        alpha: number,
-      ) => boolean,
-    ): number {
-      const radius = 18;
-      const image = ctx.getImageData(
-        Math.floor(x - radius),
-        Math.floor(y - radius),
-        radius * 2 + 1,
-        radius * 2 + 1,
-      );
-
-      let count = 0;
-
-      for (let index = 0; index < image.data.length; index += 4) {
-        const red = image.data[index] ?? 0;
-        const green = image.data[index + 1] ?? 0;
-        const blue = image.data[index + 2] ?? 0;
-        const alpha = image.data[index + 3] ?? 0;
-
-        if (predicate(red, green, blue, alpha)) {
-          count += 1;
-        }
-      }
-
-      return count;
-    }
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const zoom = 80 * window.devicePixelRatio;
-
-    const isYellowish = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 120 && blue < 120;
-
-    return {
-      newPointPixels: countPixelsNear(
-        centerX + 3 * zoom,
-        centerY - 2 * zoom,
-        isYellowish,
-      ),
-    };
-  });
-
-  expect(result.newPointPixels).toBeGreaterThan(0);
-
-  await page.mouse.move(centerX + 3 * zoomCssPx, centerY - 2 * zoomCssPx);
-  await page.mouse.down();
-  await page.mouse.move(centerX + 2 * zoomCssPx, centerY - 2 * zoomCssPx);
-  await page.mouse.up();
-
+  await dragWorld(page, frame, { x: 3, y: 2 }, { x: 2, y: 2 });
   await waitForAnimationFrame(page);
 
-  const dragged = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-    const maybeCtx = canvas.getContext("2d");
-
-    if (!maybeCtx) {
-      throw new Error("Could not get 2D context");
-    }
-
-    const ctx: CanvasRenderingContext2D = maybeCtx;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const zoom = 80 * window.devicePixelRatio;
-    const radius = 18;
-
-    const image = ctx.getImageData(
-      Math.floor(centerX + 2 * zoom - radius),
-      Math.floor(centerY - 2 * zoom - radius),
-      radius * 2 + 1,
-      radius * 2 + 1,
-    );
-
-    let yellowishPixels = 0;
-
-    for (let index = 0; index < image.data.length; index += 4) {
-      const red = image.data[index] ?? 0;
-      const green = image.data[index + 1] ?? 0;
-      const blue = image.data[index + 2] ?? 0;
-      const alpha = image.data[index + 3] ?? 0;
-
-      if (alpha > 0 && red > 180 && green > 120 && blue < 120) {
-        yellowishPixels += 1;
-      }
-    }
-
-    return { yellowishPixels };
-  });
-
-  expect(dragged.yellowishPixels).toBeGreaterThan(0);
+  await expectYellowPointNear(frame.canvas, { x: 2, y: 2 });
 });
 
 test("shift-selects three free points and creates a triangle with T", async ({
@@ -388,120 +66,34 @@ test("shift-selects three free points and creates a triangle with T", async ({
 }) => {
   await page.goto("/");
 
-  const canvas = page.locator("#geometry-canvas");
+  const frame = await getCanvasFrame(page);
 
-  await expect(canvas).toBeVisible();
+  const p1 = { x: 3, y: 2 };
+  const p2 = { x: 4, y: 2 };
+  const p3 = { x: 3, y: 3 };
 
-  const box = await canvas.boundingBox();
-
-  if (!box) {
-    throw new Error("Could not find canvas bounding box");
-  }
-
-  const centerX = box.x + box.width / 2;
-  const centerY = box.y + box.height / 2;
-  const zoomCssPx = 80;
-
-  const p1 = { x: centerX + 3 * zoomCssPx, y: centerY - 2 * zoomCssPx };
-  const p2 = { x: centerX + 4 * zoomCssPx, y: centerY - 2 * zoomCssPx };
-  const p3 = { x: centerX + 3 * zoomCssPx, y: centerY - 3 * zoomCssPx };
-
-  await page.mouse.click(p1.x, p1.y);
+  await clickWorld(page, frame, p1);
   await waitForAnimationFrame(page);
 
-  await page.mouse.click(p2.x, p2.y);
+  await clickWorld(page, frame, p2);
   await waitForAnimationFrame(page);
 
-  await page.mouse.click(p3.x, p3.y);
+  await clickWorld(page, frame, p3);
   await waitForAnimationFrame(page);
 
-  await page.keyboard.down("Shift");
-  await page.mouse.click(p1.x, p1.y);
+  await shiftClickWorld(page, frame, p1);
   await waitForAnimationFrame(page);
-  await page.mouse.click(p2.x, p2.y);
+
+  await shiftClickWorld(page, frame, p2);
   await waitForAnimationFrame(page);
-  await page.mouse.click(p3.x, p3.y);
+
+  await shiftClickWorld(page, frame, p3);
   await waitForAnimationFrame(page);
-  await page.keyboard.up("Shift");
 
   await page.keyboard.press("T");
   await waitForAnimationFrame(page);
 
-  const result = await canvas.evaluate((node) => {
-    const canvas = node as HTMLCanvasElement;
-    const maybeCtx = canvas.getContext("2d");
-
-    if (!maybeCtx) {
-      throw new Error("Could not get 2D context");
-    }
-
-    const ctx: CanvasRenderingContext2D = maybeCtx;
-
-    function countPixelsNear(
-      x: number,
-      y: number,
-      predicate: (
-        red: number,
-        green: number,
-        blue: number,
-        alpha: number,
-      ) => boolean,
-    ): number {
-      const radius = 18;
-      const image = ctx.getImageData(
-        Math.floor(x - radius),
-        Math.floor(y - radius),
-        radius * 2 + 1,
-        radius * 2 + 1,
-      );
-
-      let count = 0;
-
-      for (let index = 0; index < image.data.length; index += 4) {
-        const red = image.data[index] ?? 0;
-        const green = image.data[index + 1] ?? 0;
-        const blue = image.data[index + 2] ?? 0;
-        const alpha = image.data[index + 3] ?? 0;
-
-        if (predicate(red, green, blue, alpha)) {
-          count += 1;
-        }
-      }
-
-      return count;
-    }
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const zoom = 80 * window.devicePixelRatio;
-
-    const isLightSegment = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 180 && blue > 180;
-
-    return {
-      edgeP1P2: countPixelsNear(
-        centerX + 3.5 * zoom,
-        centerY - 2 * zoom,
-        isLightSegment,
-      ),
-      edgeP2P3: countPixelsNear(
-        centerX + 3.5 * zoom,
-        centerY - 2.5 * zoom,
-        isLightSegment,
-      ),
-      edgeP3P1: countPixelsNear(
-        centerX + 3 * zoom,
-        centerY - 2.5 * zoom,
-        isLightSegment,
-      ),
-    };
-  });
-
-  expect(result.edgeP1P2).toBeGreaterThan(0);
-  expect(result.edgeP2P3).toBeGreaterThan(0);
-  expect(result.edgeP3P1).toBeGreaterThan(0);
+  await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });
+  await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2.5 });
+  await expectLightEdgeNear(frame.canvas, { x: 3, y: 2.5 });
 });
