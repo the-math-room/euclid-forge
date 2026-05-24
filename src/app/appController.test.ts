@@ -595,4 +595,54 @@ describe("app/appController", () => {
     );
   });
 
+  test("pointerdown drags the later-rendered overlapping triangle", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", -1, -0.5, "D"),
+      freePoint("E", 1, -0.5, "E"),
+      freePoint("F", 0, 1, "F"),
+      triangleNode("ABC", "A", "B", "C"),
+      triangleNode("DEF", "D", "E", "F"),
+    ]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.dragState?.kind).toBe("TRIANGLE");
+
+    if (transition.state.dragState?.kind !== "TRIANGLE") {
+      throw new Error("Expected triangle drag state");
+    }
+
+    expect(transition.state.dragState.vertexIds).toEqual(["D", "E", "F"]);
+  });
+
+  test("shift-click selects the later-rendered overlapping triangle", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", -1, -0.5, "D"),
+      freePoint("E", 1, -0.5, "E"),
+      freePoint("F", 0, 1, "F"),
+      triangleNode("ABC", "A", "B", "C"),
+      triangleNode("DEF", "D", "E", "F"),
+    ]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual(["DEF"]);
+  });
+
 });

@@ -26,7 +26,7 @@ export function hitTestPoint(
     distance: number;
   }> | null = null;
 
-  for (const value of evaluated.ordered) {
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "POINT") {
       continue;
     }
@@ -57,7 +57,7 @@ export function hitTestFreePoint(
     distance: number;
   }> | null = null;
 
-  for (const value of evaluated.ordered) {
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "POINT") {
       continue;
     }
@@ -91,7 +91,7 @@ export function hitTestSegmentSelection(
     distance: number;
   }> | null = null;
 
-  for (const value of evaluated.ordered) {
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "SEGMENT") {
       continue;
     }
@@ -116,7 +116,7 @@ export function hitTestTriangleSelection(
 ): TriangleSelectionHit | null {
   const worldPoint = screenToWorld(viewport, screenPoint);
 
-  for (const value of evaluated.ordered) {
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "TRIANGLE") {
       continue;
     }
@@ -141,7 +141,7 @@ export function hitTestTriangleInterior(
 ): TriangleHit | null {
   const worldPoint = screenToWorld(viewport, screenPoint);
 
-  for (const value of evaluated.ordered) {
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "TRIANGLE") {
       continue;
     }
@@ -169,6 +169,11 @@ export function hitTestTriangleInterior(
   }
 
   return null;
+}
+
+
+function reverseVisualOrder<T>(values: readonly T[]): readonly T[] {
+  return [...values].reverse();
 }
 
 function isFreePoint(graph: Graph, id: NodeId): boolean {
