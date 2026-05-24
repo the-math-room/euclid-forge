@@ -91,24 +91,46 @@ function main(): void {
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key.toLowerCase() !== "t") {
+    if (event.key.toLowerCase() === "t") {
+      const vertices = selectedTriangleVertices(viewState);
+
+      if (!vertices) {
+        return;
+      }
+
+      graph = applyGraphEdit(graph, {
+        kind: "ADD_TRIANGLE",
+        vertices,
+      });
+
+      viewState = clearSelection(viewState);
+      requestRender();
+      event.preventDefault();
       return;
     }
 
-    const vertices = selectedTriangleVertices(viewState);
+    if (event.key.toLowerCase() === "g") {
+      const selected = [...viewState.selectedNodeIds];
 
-    if (!vertices) {
-      return;
+      if (selected.length !== 1) {
+        return;
+      }
+
+      const [triangle] = selected;
+
+      if (!triangle) {
+        return;
+      }
+
+      graph = applyGraphEdit(graph, {
+        kind: "ADD_CENTROID",
+        triangle,
+      });
+
+      viewState = clearSelection(viewState);
+      requestRender();
+      event.preventDefault();
     }
-
-    graph = applyGraphEdit(graph, {
-      kind: "ADD_TRIANGLE",
-      vertices,
-    });
-
-    viewState = clearSelection(viewState);
-    requestRender();
-    event.preventDefault();
   });
 
   canvas.addEventListener("pointerdown", (event) => {

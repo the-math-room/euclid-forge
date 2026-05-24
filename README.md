@@ -60,6 +60,7 @@ drag triangle body        translate its free vertices
 shift-click free point    toggle point selection
 shift-click triangle body  toggle triangle selection
 press T                   create triangle from exactly 3 selected free points
+press G                   create centroid for selected triangle
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.

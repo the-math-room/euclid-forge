@@ -82,6 +82,61 @@ describe("representation/applyGraphEdit", () => {
     expect(next.byId.get("T2")).toEqual(triangleNode("T2", "P1", "P3", "P2"));
   });
 
+  test("adds a centroid for a triangle", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      triangleNode("T1", "P1", "P2", "P3"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "ADD_CENTROID",
+      triangle: "T1",
+    });
+
+    expect(next.byId.get("G1")).toEqual(centroidNode("G1", "T1", "G1"));
+  });
+
+  test("does not duplicate an existing centroid for the same triangle", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      triangleNode("T1", "P1", "P2", "P3"),
+      centroidNode("G1", "T1", "G1"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "ADD_CENTROID",
+      triangle: "T1",
+    });
+
+    expect(next).toBe(graph);
+  });
+
+  test("throws when creating a centroid for a missing triangle", () => {
+    const graph = createGraph([]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "ADD_CENTROID",
+        triangle: "T1",
+      }),
+    ).toThrow("Cannot create centroid for missing triangle: T1");
+  });
+
+  test("throws when creating a centroid for a non-triangle node", () => {
+    const graph = createGraph([freePoint("P1", 0, 0, "P1")]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "ADD_CENTROID",
+        triangle: "P1",
+      }),
+    ).toThrow("Cannot create centroid for non-triangle node: P1");
+  });
+
   test("throws when creating a triangle from duplicate vertices", () => {
     const graph = createGraph([
       freePoint("P1", 0, 0, "P1"),

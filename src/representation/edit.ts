@@ -1,7 +1,7 @@
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph } from "./graph";
 import type { Graph } from "./graph";
-import { freePoint, triangleNode } from "./node";
+import { centroidNode, freePoint, triangleNode } from "./node";
 import type { NodeId } from "./node";
 
 export type GraphEdit =
@@ -22,6 +22,10 @@ export type GraphEdit =
   | Readonly<{
       kind: "ADD_TRIANGLE";
       vertices: readonly [NodeId, NodeId, NodeId];
+    }>
+  | Readonly<{
+      kind: "ADD_CENTROID";
+      triangle: NodeId;
     }>;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
@@ -37,6 +41,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "ADD_TRIANGLE":
       return addTriangle(graph, edit.vertices);
+
+    case "ADD_CENTROID":
+      return addCentroid(graph, edit.triangle);
   }
 }
 
@@ -70,7 +77,35 @@ function addTriangle(
 
   const id = nextTriangleId(graph);
 
-  return createGraph([...graph.nodes, triangleNode(id, vertices[0], vertices[1], vertices[2])]);
+  return createGraph([
+    ...graph.nodes,
+    triangleNode(id, vertices[0], vertices[1], vertices[2]),
+  ]);
+}
+
+function addCentroid(graph: Graph, triangle: NodeId): Graph {
+  const node = graph.byId.get(triangle);
+
+  if (!node) {
+    throw new Error(`Cannot create centroid for missing triangle: ${triangle}`);
+  }
+
+  if (node.kind !== "TRIANGLE") {
+    throw new Error(`Cannot create centroid for non-triangle node: ${triangle}`);
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "CENTROID" && candidate.triangle === triangle,
+  );
+
+  if (existing) {
+    return graph;
+  }
+
+  const id = nextCentroidId(graph);
+
+  return createGraph([...graph.nodes, centroidNode(id, triangle, id)]);
 }
 
 function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
@@ -152,4 +187,14 @@ function nextTriangleId(graph: Graph): NodeId {
   }
 
   return `T${index}`;
+}
+
+function nextCentroidId(graph: Graph): NodeId {
+  let index = 1;
+
+  while (graph.byId.has(`G${index}`)) {
+    index += 1;
+  }
+
+  return `G${index}`;
 }
