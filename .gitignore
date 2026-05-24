@@ -40,3 +40,5 @@ lerna-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Push Script
