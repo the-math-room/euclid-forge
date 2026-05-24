@@ -2,6 +2,7 @@ import { centroid, midpoint, vec2 } from "../meaning/vec2";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type {
+  EvaluatedCircle,
   EvaluatedGeometry,
   EvaluatedPoint,
   EvaluatedSegment,
@@ -38,6 +39,23 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
           id: node.id,
           a: a.point,
           b: b.point,
+        });
+        break;
+      }
+
+      case "CIRCLE": {
+        const center = requireEvaluatedPoint(values, node.center);
+        const through = requireEvaluatedPoint(values, node.through);
+        const radius = Math.hypot(
+          through.point.x - center.point.x,
+          through.point.y - center.point.y,
+        );
+
+        values.set(node.id, {
+          kind: "CIRCLE",
+          id: node.id,
+          center: center.point,
+          radius,
         });
         break;
       }
@@ -103,6 +121,13 @@ function requireEvaluatedSegment(
   id: NodeId,
 ): EvaluatedSegment {
   return requireEvaluated(values, id, "SEGMENT");
+}
+
+function requireEvaluatedCircle(
+  values: ReadonlyMap<NodeId, EvaluatedGeometry>,
+  id: NodeId,
+): EvaluatedCircle {
+  return requireEvaluated(values, id, "CIRCLE");
 }
 
 function requireEvaluatedTriangle(

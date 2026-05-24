@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createGraph } from "./graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -9,6 +10,20 @@ import {
 } from "./node";
 
 describe("representation/createGraph", () => {
+  test("orders circle after its point dependencies", () => {
+    const graph = createGraph([
+      circleNode("circle", "center", "through"),
+      freePoint("through", 3, 4, "B"),
+      freePoint("center", 0, 0, "A"),
+    ]);
+
+    expect(graph.nodes.map((node) => node.id)).toEqual([
+      "through",
+      "center",
+      "circle",
+    ]);
+  });
+
   test("orders dependencies before dependents", () => {
     const graph = createGraph([
       centroidNode("G", "ABC", "G"),

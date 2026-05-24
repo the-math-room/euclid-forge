@@ -3,6 +3,7 @@ import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -11,6 +12,23 @@ import {
 import { evaluateGraph } from "./evaluateGraph";
 
 describe("evaluation/evaluateGraph", () => {
+  test("evaluates a circle from center and through points", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 3, 4, "B"),
+      circleNode("c", "A", "B"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.values.get("c")).toEqual({
+      kind: "CIRCLE",
+      id: "c",
+      center: vec2(0, 0),
+      radius: 5,
+    });
+  });
+
   test("evaluates free points", () => {
     const graph = createGraph([
       freePoint("A", -2, 0, "A"),

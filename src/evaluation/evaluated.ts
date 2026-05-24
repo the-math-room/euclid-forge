@@ -18,6 +18,13 @@ export type EvaluatedSegment = Readonly<{
   b: Vec2;
 }>;
 
+export type EvaluatedCircle = Readonly<{
+  kind: "CIRCLE";
+  id: NodeId;
+  center: Vec2;
+  radius: number;
+}>;
+
 export type EvaluatedTriangle = Readonly<{
   kind: "TRIANGLE";
   id: NodeId;
@@ -29,4 +36,5 @@ export type EvaluatedTriangle = Readonly<{
 export type EvaluatedGeometry =
   | EvaluatedPoint
   | EvaluatedSegment
+  | EvaluatedCircle
   | EvaluatedTriangle;

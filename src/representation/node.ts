@@ -3,6 +3,7 @@ export type NodeId = string;
 export type GeometryNode =
   | FreePointNode
   | SegmentNode
+  | CircleNode
   | TriangleNode
   | MidpointNode
   | CentroidNode;
@@ -20,6 +21,13 @@ export type SegmentNode = Readonly<{
   id: NodeId;
   a: NodeId;
   b: NodeId;
+}>;
+
+export type CircleNode = Readonly<{
+  kind: "CIRCLE";
+  id: NodeId;
+  center: NodeId;
+  through: NodeId;
 }>;
 
 export type TriangleNode = Readonly<{
@@ -69,6 +77,19 @@ export function segmentNode(
     id,
     a,
     b,
+  });
+}
+
+export function circleNode(
+  id: NodeId,
+  center: NodeId,
+  through: NodeId,
+): CircleNode {
+  return Object.freeze({
+    kind: "CIRCLE",
+    id,
+    center,
+    through,
   });
 }
 

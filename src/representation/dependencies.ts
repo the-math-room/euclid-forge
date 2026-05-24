@@ -9,6 +9,9 @@ export function dependenciesOf(node: GeometryNode): readonly NodeId[] {
     case "SEGMENT":
       return [node.a, node.b];
 
+    case "CIRCLE":
+      return [node.center, node.through];
+
     case "TRIANGLE":
       return [node.a, node.b, node.c];
 

@@ -3,6 +3,7 @@ import {
   visibleEvaluatedScene,
 } from "../evaluation/visibleScene";
 import type {
+  EvaluatedCircle,
   EvaluatedPoint,
   EvaluatedSegment,
   EvaluatedTriangle,
@@ -13,10 +14,13 @@ import { renderSegments } from "./segmentRenderer";
 import type { SegmentRenderOptions } from "./segmentRenderer";
 import { renderTriangles } from "./triangleRenderer";
 import type { TriangleRenderOptions } from "./triangleRenderer";
+import { renderCircles } from "./circleRenderer";
+import type { CircleRenderOptions } from "./circleRenderer";
 import type { Viewport } from "./viewport";
 
 export type RenderSceneOptions = PointRenderOptions &
   SegmentRenderOptions &
+  CircleRenderOptions &
   TriangleRenderOptions &
   Readonly<{
     hiddenNodeIds?: ReadonlySet<string>;
@@ -43,6 +47,10 @@ export function renderScene(
     (value): value is EvaluatedTriangle => value.kind === "TRIANGLE",
   );
 
+  const circles = visible.filter(
+    (value): value is EvaluatedCircle => value.kind === "CIRCLE",
+  );
+
   const segments = visible.filter(
     (value): value is EvaluatedSegment => value.kind === "SEGMENT",
   );
@@ -52,6 +60,7 @@ export function renderScene(
   );
 
   renderTriangles(ctx, viewport, triangles, options);
+  renderCircles(ctx, viewport, circles, options);
   renderSegments(ctx, viewport, segments, options);
   renderPoints(ctx, viewport, points, options);
 }
