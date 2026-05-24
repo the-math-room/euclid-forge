@@ -71,32 +71,55 @@ describe("evaluation/evaluateScene", () => {
     });
   });
 
-  test("throws when a segment dependency has not been evaluated", () => {
-    const scene = {
-      nodes: [
-        segmentNode("AB", "A", "B"),
-        freePoint("A", -2, 0, "A"),
-        freePoint("B", 2, 0, "B"),
-      ],
-    };
-
-    expect(() => evaluateScene(scene)).toThrow(
-      "Missing evaluated dependency: A",
-    );
-  });
-
-  test("throws when a midpoint segment dependency has not been evaluated", () => {
+  test("evaluates unordered nodes by dependency order", () => {
     const scene = {
       nodes: [
         midpointNode("M", "AB", "M"),
-        freePoint("A", -2, 0, "A"),
+        segmentNode("AB", "A", "B"),
         freePoint("B", 2, 0, "B"),
+        freePoint("A", -2, 0, "A"),
+      ],
+    };
+
+    const evaluated = evaluateScene(scene);
+
+    expect(evaluated.values.get("AB")).toEqual({
+      kind: "SEGMENT",
+      id: "AB",
+      a: vec2(-2, 0),
+      b: vec2(2, 0),
+    });
+
+    expect(evaluated.values.get("M")).toEqual({
+      kind: "POINT",
+      id: "M",
+      point: vec2(0, 0),
+      label: "M",
+      source: "CONSTRAINED",
+    });
+  });
+
+  test("throws when a dependency is genuinely missing", () => {
+    const scene = {
+      nodes: [
+        freePoint("A", -2, 0, "A"),
         segmentNode("AB", "A", "B"),
       ],
     };
 
     expect(() => evaluateScene(scene)).toThrow(
-      "Missing evaluated dependency: AB",
+      "Missing dependency: AB depends on B",
     );
+  });
+
+  test("throws when node ids are duplicated", () => {
+    const scene = {
+      nodes: [
+        freePoint("A", -2, 0, "A"),
+        freePoint("A", 2, 0, "A2"),
+      ],
+    };
+
+    expect(() => evaluateScene(scene)).toThrow("Duplicate node id: A");
   });
 });

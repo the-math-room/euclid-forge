@@ -1,11 +1,11 @@
 import { midpoint, vec2 } from "../meaning/vec2";
-import type { Vec2 } from "../meaning/vec2";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type {
   EvaluatedGeometry,
   EvaluatedPoint,
   EvaluatedSegment,
 } from "./evaluated";
+import { topoSort } from "./topoSort";
 
 export type Scene = Readonly<{
   nodes: readonly GeometryNode[];
@@ -18,8 +18,9 @@ export type EvaluatedScene = Readonly<{
 
 export function evaluateScene(scene: Scene): EvaluatedScene {
   const values = new Map<NodeId, EvaluatedGeometry>();
+  const orderedNodes = topoSort(scene.nodes);
 
-  for (const node of scene.nodes) {
+  for (const node of orderedNodes) {
     switch (node.kind) {
       case "FREE_POINT": {
         values.set(node.id, {
