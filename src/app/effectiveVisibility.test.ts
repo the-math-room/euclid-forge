@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
@@ -12,6 +11,7 @@ import {
   clearEffectivelyHiddenSelection,
   effectiveHiddenNodeIds,
 } from "./effectiveVisibility";
+import { testViewState } from "./testHelpers";
 import { emptyViewState, hideSelectedNodes, toggleSelectedNode } from "./viewState";
 
 describe("app/effectiveHiddenNodeIds", () => {
@@ -135,14 +135,10 @@ describe("app/clearEffectivelyHiddenSelection", () => {
       centroidNode("G", "ABC", "G"),
     ]);
 
-    const viewState = {
+    const viewState = testViewState({
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
-      hoveredNodeId: null,
-      viewportCenter: vec2(0, 0),
-      viewportZoom: 80,
-      viewportRotation: 0,
-    };
+    });
 
     const next = clearEffectivelyHiddenSelection(graph, viewState);
 
@@ -160,14 +156,10 @@ describe("app/clearEffectivelyHiddenSelection", () => {
       centroidNode("G", "ABC", "G"),
     ]);
 
-    const viewState = {
+    const viewState = testViewState({
       selectedNodeIds: new Set(["D"]),
       hiddenNodeIds: new Set(["ABC"]),
-      hoveredNodeId: null,
-      viewportCenter: vec2(0, 0),
-      viewportZoom: 80,
-      viewportRotation: 0,
-    };
+    });
 
     expect(clearEffectivelyHiddenSelection(graph, viewState)).toBe(viewState);
   });

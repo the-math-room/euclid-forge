@@ -9,8 +9,8 @@ import {
   segmentNode,
   triangleNode,
 } from "../representation/node";
-import type { Viewport } from "../rendering/viewport";
 import { worldToScreen } from "../rendering/viewport";
+import { testViewport } from "../rendering/testHelpers";
 import {
   hitTestFreePoint,
   hitTestPoint,
@@ -20,13 +20,7 @@ import {
 } from "./hitTest";
 
 describe("interaction/hitTestPoint", () => {
-  const viewport: Viewport = {
-    width: 800,
-    height: 600,
-    center: vec2(0, 0),
-    zoom: 80,
-  rotation: 0,
-  };
+  const viewport = testViewport();
 
   test("finds a nearby free point", () => {
     const graph = createGraph([
@@ -102,13 +96,7 @@ describe("interaction/hitTestPoint", () => {
 });
 
 describe("interaction/hitTestFreePoint", () => {
-  const viewport: Viewport = {
-    width: 800,
-    height: 600,
-    center: vec2(0, 0),
-    zoom: 80,
-  rotation: 0,
-  };
+  const viewport = testViewport();
 
   test("finds a nearby free point", () => {
     const graph = createGraph([
@@ -196,13 +184,7 @@ describe("interaction/hitTestFreePoint", () => {
 
 
 describe("interaction/hitTestSegmentSelection", () => {
-  const viewport: Viewport = {
-    width: 800,
-    height: 600,
-    center: vec2(0, 0),
-    zoom: 80,
-  rotation: 0,
-  };
+  const viewport = testViewport();
 
   test("finds a nearby segment", () => {
     const graph = createGraph([
@@ -263,13 +245,7 @@ describe("interaction/hitTestSegmentSelection", () => {
 });
 
 describe("interaction/hitTestTriangleSelection", () => {
-  const viewport: Viewport = {
-    width: 800,
-    height: 600,
-    center: vec2(0, 0),
-    zoom: 80,
-  rotation: 0,
-  };
+  const viewport = testViewport();
 
   test("finds a selectable triangle from an interior point", () => {
     const graph = createGraph([
@@ -351,13 +327,7 @@ describe("interaction/hitTestTriangleSelection", () => {
 });
 
 describe("interaction/hitTestTriangleInterior", () => {
-  const viewport: Viewport = {
-    width: 800,
-    height: 600,
-    center: vec2(0, 0),
-    zoom: 80,
-  rotation: 0,
-  };
+  const viewport = testViewport();
 
   test("finds a triangle from an interior point when all vertices are free", () => {
     const graph = createGraph([

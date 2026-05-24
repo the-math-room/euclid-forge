@@ -11,6 +11,14 @@ import {
 } from "./appController";
 import type { AppTransition, PointerCaptureEffect } from "./appController";
 import { initialAppState } from "./appState";
+import {
+  isOpenShortcut,
+  isRedoShortcut,
+  isSaveShortcut,
+  isUndoShortcut,
+  shouldIgnoreKeyDownTarget,
+  viewportRotationDirectionForKey,
+} from "./keyboardShortcuts";
 import type { AppState } from "./appState";
 import {
   eventPoint,
@@ -105,75 +113,6 @@ function applyPointerCaptureEffect(
       break;
   }
 }
-
-
-
-
-
-function isSaveShortcut(event: KeyboardEvent): boolean {
-  return (
-    (event.ctrlKey || event.metaKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === "s"
-  );
-}
-
-function isOpenShortcut(event: KeyboardEvent): boolean {
-  return (
-    (event.ctrlKey || event.metaKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === "o"
-  );
-}
-
-function isUndoShortcut(event: KeyboardEvent): boolean {
-  return (
-    (event.ctrlKey || event.metaKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === "z"
-  );
-}
-
-function isRedoShortcut(event: KeyboardEvent): boolean {
-  return (
-    (event.ctrlKey || event.metaKey) &&
-    !event.altKey &&
-    ((event.shiftKey && event.key.toLowerCase() === "z") ||
-      (!event.shiftKey && event.key.toLowerCase() === "y"))
-  );
-}
-
-function viewportRotationDirectionForKey(key: string): -1 | 1 | null {
-  if (key === "[") {
-    return 1;
-  }
-
-  if (key === "]") {
-    return -1;
-  }
-
-  return null;
-}
-
-function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  if (target.isContentEditable) {
-    return true;
-  }
-
-  return (
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
-  );
-}
-
 
 async function openWorkspaceFromFile(
   setState: (state: AppState) => void,
@@ -384,7 +323,6 @@ function main(): void {
       commitStateToHistory,
     );
   });
-
 
   requestRender();
 }

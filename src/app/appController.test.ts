@@ -8,8 +8,9 @@ import {
   segmentNode,
   triangleNode,
 } from "../representation/node";
-import type { Viewport } from "../rendering/viewport";
 import { worldToScreen } from "../rendering/viewport";
+import { testViewport } from "../rendering/testHelpers";
+import { testViewState } from "./testHelpers";
 import { appState } from "./appState";
 import {
   handleKeyDown,
@@ -24,13 +25,7 @@ import {
   toggleSelectedNode,
 } from "./viewState";
 
-const viewport: Viewport = {
-  width: 800,
-  height: 600,
-  center: vec2(0, 0),
-  zoom: 80,
-  rotation: 0,
-};
+const viewport = testViewport();
 
 describe("app/appController", () => {
   test("creates a triangle from three selected free points with T", () => {
@@ -415,14 +410,9 @@ describe("app/appController", () => {
       centroidNode("G", "ABC", "G"),
     ]);
 
-    const viewState = {
+    const viewState = testViewState({
       selectedNodeIds: new Set(["A", "ABC", "G", "D"]),
-      hiddenNodeIds: new Set<string>(),
-      hoveredNodeId: null,
-      viewportCenter: vec2(0, 0),
-      viewportZoom: 80,
-      viewportRotation: 0,
-    };
+    });
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
       key: "h",
@@ -449,14 +439,10 @@ describe("app/appController", () => {
       centroidNode("G", "ABC", "G"),
     ]);
 
-    const viewState = {
+    const viewState = testViewState({
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
-      hoveredNodeId: null,
-      viewportCenter: vec2(0, 0),
-      viewportZoom: 80,
-      viewportRotation: 0,
-    };
+    });
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
       key: "h",
