@@ -10,6 +10,7 @@ const VIEWPORT_MAX_ZOOM = 640;
 export type ViewState = Readonly<{
   selectedNodeIds: ReadonlySet<NodeId>;
   hiddenNodeIds: ReadonlySet<NodeId>;
+  hoveredNodeId: NodeId | null;
   viewportCenter: Vec2;
   viewportZoom: number;
 }>;
@@ -18,6 +19,7 @@ export function emptyViewState(): ViewState {
   return Object.freeze({
     selectedNodeIds: new Set<NodeId>(),
     hiddenNodeIds: new Set<NodeId>(),
+    hoveredNodeId: null,
     viewportCenter: DEFAULT_VIEWPORT_CENTER,
     viewportZoom: DEFAULT_VIEWPORT_ZOOM,
   });
@@ -148,5 +150,19 @@ export function resetViewport(viewState: ViewState): ViewState {
 
 function clampZoom(zoom: number): number {
   return Math.max(VIEWPORT_MIN_ZOOM, Math.min(VIEWPORT_MAX_ZOOM, zoom));
+}
+
+export function setHoveredNode(
+  viewState: ViewState,
+  hoveredNodeId: NodeId | null,
+): ViewState {
+  if (viewState.hoveredNodeId === hoveredNodeId) {
+    return viewState;
+  }
+
+  return Object.freeze({
+    ...viewState,
+    hoveredNodeId,
+  });
 }
 

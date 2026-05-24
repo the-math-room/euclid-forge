@@ -12,6 +12,7 @@ type PointStyle = Readonly<{
 
 export type PointRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
+  hoveredNodeId?: string | null;
 }>;
 
 const POINT_STYLES: Record<EvaluatedPointRole, PointStyle> = {
@@ -38,15 +39,25 @@ export function renderPoint(
   const screen = worldToScreen(viewport, point.point);
   const style = POINT_STYLES[point.role];
   const selected = options.selectedNodeIds?.has(point.id) ?? false;
+  const hovered = options.hoveredNodeId === point.id;
 
   ctx.save();
+
+  if (hovered) {
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, style.radiusPx + 4, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
   if (selected) {
     ctx.strokeStyle = "#f9fafb";
     ctx.lineWidth = 2;
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y, style.radiusPx + 5, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, style.radiusPx + 6, 0, Math.PI * 2);
     ctx.stroke();
   }
 

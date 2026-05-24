@@ -4,6 +4,7 @@ import { worldToScreen } from "./viewport";
 
 export type TriangleRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
+  hoveredNodeId?: string | null;
 }>;
 
 export function renderTriangle(
@@ -16,8 +17,21 @@ export function renderTriangle(
   const b = worldToScreen(viewport, triangle.b);
   const c = worldToScreen(viewport, triangle.c);
   const selected = options.selectedNodeIds?.has(triangle.id) ?? false;
+  const hovered = options.hoveredNodeId === triangle.id;
 
   ctx.save();
+
+  if (hovered) {
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.lineTo(c.x, c.y);
+    ctx.closePath();
+    ctx.stroke();
+  }
 
   if (selected) {
     ctx.strokeStyle = "#f8fafc";

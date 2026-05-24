@@ -36,6 +36,7 @@ function render(
   ctx.clearRect(0, 0, rect.width, rect.height);
   renderScene(ctx, viewport, evaluated, {
     selectedNodeIds: state.viewState.selectedNodeIds,
+    hoveredNodeId: state.viewState.hoveredNodeId,
     hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
   });
 }

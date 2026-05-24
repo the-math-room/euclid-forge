@@ -10,11 +10,13 @@ import type {
 import { renderPoints } from "./pointRenderer";
 import type { PointRenderOptions } from "./pointRenderer";
 import { renderSegments } from "./segmentRenderer";
+import type { SegmentRenderOptions } from "./segmentRenderer";
 import { renderTriangles } from "./triangleRenderer";
 import type { TriangleRenderOptions } from "./triangleRenderer";
 import type { Viewport } from "./viewport";
 
 export type RenderSceneOptions = PointRenderOptions &
+  SegmentRenderOptions &
   TriangleRenderOptions &
   Readonly<{
     hiddenNodeIds?: ReadonlySet<string>;
@@ -50,6 +52,6 @@ export function renderScene(
   );
 
   renderTriangles(ctx, viewport, triangles, options);
-  renderSegments(ctx, viewport, segments);
+  renderSegments(ctx, viewport, segments, options);
   renderPoints(ctx, viewport, points, options);
 }

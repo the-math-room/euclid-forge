@@ -7,6 +7,7 @@ import {
   panViewport,
   resetViewport,
   setViewportCenter,
+  setHoveredNode,
   setViewportZoom,
   toggleSelectedNode,
   unhideAllNodes,
@@ -19,6 +20,7 @@ describe("app/viewState", () => {
 
     expect([...viewState.selectedNodeIds]).toEqual([]);
     expect([...viewState.hiddenNodeIds]).toEqual([]);
+    expect(viewState.hoveredNodeId).toBeNull();
     expect(viewState.viewportCenter).toEqual(vec2(0, 0));
     expect(viewState.viewportZoom).toBe(80);
     expect(Object.isFrozen(viewState)).toBe(true);
@@ -186,6 +188,28 @@ describe("app/viewState", () => {
     expect(next.viewportZoom).toBe(80);
     expect([...next.selectedNodeIds]).toEqual([]);
     expect([...next.hiddenNodeIds]).toEqual(["A"]);
+  });
+
+  test("sets hovered node", () => {
+    const viewState = emptyViewState();
+    const next = setHoveredNode(viewState, "A");
+
+    expect(next.hoveredNodeId).toBe("A");
+    expect([...next.selectedNodeIds]).toEqual([]);
+    expect([...next.hiddenNodeIds]).toEqual([]);
+  });
+
+  test("clears hovered node", () => {
+    const viewState = setHoveredNode(emptyViewState(), "A");
+    const next = setHoveredNode(viewState, null);
+
+    expect(next.hoveredNodeId).toBeNull();
+  });
+
+  test("returns same object when setting hovered node to the current value", () => {
+    const viewState = setHoveredNode(emptyViewState(), "A");
+
+    expect(setHoveredNode(viewState, "A")).toBe(viewState);
   });
 
 });

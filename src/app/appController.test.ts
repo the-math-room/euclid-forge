@@ -416,6 +416,7 @@ describe("app/appController", () => {
     const viewState = {
       selectedNodeIds: new Set(["A", "ABC", "G", "D"]),
       hiddenNodeIds: new Set<string>(),
+      hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
     };
@@ -448,6 +449,7 @@ describe("app/appController", () => {
     const viewState = {
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
+      hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
     };
@@ -643,6 +645,102 @@ describe("app/appController", () => {
     });
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual(["DEF"]);
+  });
+
+  test("pointermove with no drag hovers a free point", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+
+    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.viewState.hoveredNodeId).toBe("A");
+    expect(transition.shouldRender).toBe(true);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("pointermove with no drag hovers the later-rendered overlapping triangle", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      freePoint("D", -1, -0.5, "D"),
+      freePoint("E", 1, -0.5, "E"),
+      freePoint("F", 0, 1, "F"),
+      triangleNode("ABC", "A", "B", "C"),
+      triangleNode("DEF", "D", "E", "F"),
+    ]);
+
+    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.viewState.hoveredNodeId).toBe("DEF");
+  });
+
+  test("shift pointermove with no drag hovers a segment", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+
+    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, -1)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect(transition.state.viewState.hoveredNodeId).toBe("AB");
+  });
+
+  test("pointermove clears hover when nothing is under the pointer", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+    const state = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        hoveredNodeId: "A",
+      },
+      null,
+    );
+
+    const transition = handlePointerMove(state, {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(5, 5)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.viewState.hoveredNodeId).toBeNull();
+  });
+
+  test("pointerdown clears hover", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+    const state = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        hoveredNodeId: "A",
+      },
+      null,
+    );
+
+    const transition = handlePointerDown(state, {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.viewState.hoveredNodeId).toBeNull();
   });
 
 });

@@ -138,6 +138,7 @@ describe("app/clearEffectivelyHiddenSelection", () => {
     const viewState = {
       selectedNodeIds: new Set(["ABC", "G", "D"]),
       hiddenNodeIds: new Set(["A"]),
+      hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
     };
@@ -161,6 +162,7 @@ describe("app/clearEffectivelyHiddenSelection", () => {
     const viewState = {
       selectedNodeIds: new Set(["D"]),
       hiddenNodeIds: new Set(["ABC"]),
+      hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
     };

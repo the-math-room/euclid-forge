@@ -23,6 +23,7 @@ import {
   hideSelectedNodes,
   panViewport,
   resetViewport,
+  setHoveredNode,
   toggleSelectedNode,
   unhideAllNodes,
   zoomViewport,
@@ -220,7 +221,8 @@ export function handlePointerDown(
   state: AppState,
   input: PointerInput,
 ): AppTransition {
-  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
+  const viewState = setHoveredNode(state.viewState, null);
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, viewState);
   const evaluated = visibleEvaluatedScene(
     evaluateGraph(state.graph),
     hiddenNodeIds.size > 0
@@ -241,7 +243,7 @@ export function handlePointerDown(
       return changed(
         appState(
           state.graph,
-          toggleSelectedNode(state.viewState, pointSelectionHit),
+          toggleSelectedNode(viewState, pointSelectionHit),
           null,
         ),
       );
@@ -257,7 +259,7 @@ export function handlePointerDown(
       return changed(
         appState(
           state.graph,
-          toggleSelectedNode(state.viewState, segmentSelectionHit),
+          toggleSelectedNode(viewState, segmentSelectionHit),
           null,
         ),
       );
@@ -273,13 +275,13 @@ export function handlePointerDown(
       return changed(
         appState(
           state.graph,
-          toggleSelectedNode(state.viewState, triangleSelectionHit.id),
+          toggleSelectedNode(viewState, triangleSelectionHit.id),
           null,
         ),
       );
     }
 
-    return preventOnly(appState(state.graph, state.viewState, null));
+    return preventOnly(appState(state.graph, viewState, null));
   }
 
   const pointHit = hitTestFreePoint(
@@ -291,7 +293,7 @@ export function handlePointerDown(
 
   if (pointHit) {
     return transition({
-      state: appState(state.graph, state.viewState, {
+      state: appState(state.graph, viewState, {
         kind: "FREE_POINT",
         nodeId: pointHit,
       }),
@@ -313,7 +315,7 @@ export function handlePointerDown(
 
   if (triangleHit) {
     return transition({
-      state: appState(state.graph, state.viewState, {
+      state: appState(state.graph, viewState, {
         kind: "TRIANGLE",
         vertexIds: triangleHit.vertexIds,
         initialPointerWorld: screenToWorld(input.viewport, input.point),
@@ -348,10 +350,18 @@ export function handlePointerMove(
   input: PointerInput,
 ): AppTransition {
   if (!state.dragState) {
-    return unchanged(state);
+    const hoveredNodeId = hitTestHoverTarget(state, input);
+    const viewState = setHoveredNode(state.viewState, hoveredNodeId);
+
+    if (viewState === state.viewState) {
+      return unchanged(state);
+    }
+
+    return changed(appState(state.graph, viewState, null));
   }
 
   const world = screenToWorld(input.viewport, input.point);
+  const viewState = setHoveredNode(state.viewState, null);
 
   switch (state.dragState.kind) {
     case "FREE_POINT":
@@ -362,7 +372,7 @@ export function handlePointerMove(
             id: state.dragState.nodeId,
             point: world,
           }),
-          state.viewState,
+          viewState,
           state.dragState,
         ),
       );
@@ -379,7 +389,7 @@ export function handlePointerMove(
               delta,
             ),
           }),
-          state.viewState,
+          viewState,
           state.dragState,
         ),
       );
@@ -413,6 +423,68 @@ export function handlePointerCancel(
   return handlePointerUp(state, pointerId);
 }
 
+
+
+function hitTestHoverTarget(
+  state: AppState,
+  input: PointerInput,
+): NodeId | null {
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
+  const evaluated = visibleEvaluatedScene(
+    evaluateGraph(state.graph),
+    hiddenNodeIds.size > 0
+      ? {
+          hiddenNodeIds,
+        }
+      : {},
+  );
+
+  if (input.shiftKey) {
+    const pointHit = hitTestPoint(evaluated, input.viewport, input.point);
+
+    if (pointHit) {
+      return pointHit;
+    }
+
+    const segmentHit = hitTestSegmentSelection(
+      evaluated,
+      input.viewport,
+      input.point,
+    );
+
+    if (segmentHit) {
+      return segmentHit;
+    }
+
+    const triangleHit = hitTestTriangleSelection(
+      evaluated,
+      input.viewport,
+      input.point,
+    );
+
+    return triangleHit?.id ?? null;
+  }
+
+  const freePointHit = hitTestFreePoint(
+    state.graph,
+    evaluated,
+    input.viewport,
+    input.point,
+  );
+
+  if (freePointHit) {
+    return freePointHit;
+  }
+
+  const triangleHit = hitTestTriangleInterior(
+    state.graph,
+    evaluated,
+    input.viewport,
+    input.point,
+  );
+
+  return triangleHit?.id ?? null;
+}
 
 function initialVertexPositions(
   graph: AppState["graph"],
