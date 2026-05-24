@@ -77,13 +77,19 @@ function getStatusElement(): HTMLElement {
     return existing;
   }
 
+  const app = document.querySelector<HTMLElement>("#app");
+
+  if (!app) {
+    throw new Error("Missing #app");
+  }
+
   const status = document.createElement("div");
   status.id = "status-message";
   status.role = "status";
   status.setAttribute("aria-live", "polite");
   status.hidden = true;
 
-  document.body.append(status);
+  app.append(status);
 
   return status;
 }

@@ -20,8 +20,6 @@ export function applyTransition(input: ApplyTransitionInput): void {
 
   if (input.transition.statusMessage) {
     input.showStatusMessage(input.transition.statusMessage);
-  } else if (input.transition.shouldRender) {
-    input.showStatusMessage(null);
   }
 
   if (input.transition.pointerCapture) {

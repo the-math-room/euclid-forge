@@ -63,3 +63,33 @@ body {
     white-space: normal;
   }
 }
+
+#status-message {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border: 1px solid rgb(251 191 36 / 0.35);
+  border-radius: 10px;
+  background: rgb(15 23 42 / 0.9);
+  color: #fde68a;
+  font: 13px system-ui, sans-serif;
+  line-height: 1.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+#status-message[hidden] {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  #status-message {
+    left: 8px;
+    bottom: 8px;
+    max-width: calc(100vw - 16px);
+    font-size: 12px;
+  }
+}

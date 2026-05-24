@@ -128,24 +128,6 @@ describe("app/transitionEffects", () => {
     expect(showStatusMessage).toHaveBeenCalledWith("Cannot delete A.");
   });
 
-  test("clears status messages on rendered transitions without a message", () => {
-    const showStatusMessage = vi.fn();
-
-    applyTransition({
-      canvas: canvasStub(),
-      event: new Event("test"),
-      transition: transition({
-        shouldRender: true,
-      }),
-      setState: vi.fn(),
-      requestRender: vi.fn(),
-      commitStateToHistory: vi.fn(),
-      showStatusMessage,
-    });
-
-    expect(showStatusMessage).toHaveBeenCalledWith(null);
-  });
-
   test("applies set pointer capture effect", () => {
     const canvas = canvasStub();
 
