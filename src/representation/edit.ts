@@ -1,7 +1,7 @@
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph } from "./graph";
 import type { Graph } from "./graph";
-import { dependenciesOf } from "./dependencies";
+import { canDeleteNodes } from "./deletePolicy";
 import {
   centroidNode,
   freePoint,
@@ -75,35 +75,6 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
   }
 }
 
-
-export function canDeleteNodes(
-  graph: Graph,
-  ids: Iterable<NodeId>,
-): boolean {
-  const idSet = new Set(ids);
-
-  if (idSet.size === 0) {
-    return false;
-  }
-
-  for (const id of idSet) {
-    if (!graph.byId.has(id)) {
-      return false;
-    }
-  }
-
-  for (const node of graph.nodes) {
-    if (idSet.has(node.id)) {
-      continue;
-    }
-
-    if (dependenciesOf(node).some((dependency) => idSet.has(dependency))) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 function deleteNodes(graph: Graph, ids: readonly NodeId[]): Graph {
   if (!canDeleteNodes(graph, ids)) {

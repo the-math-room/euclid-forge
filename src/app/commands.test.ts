@@ -192,7 +192,7 @@ describe("app/commands", () => {
     expect(result?.state.graph.byId.has("G")).toBe(false);
   });
 
-  test("delete selected is disabled when unselected dependents exist", () => {
+  test("delete selected explains unselected dependents", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
@@ -200,10 +200,14 @@ describe("app/commands", () => {
       triangleNode("ABC", "A", "B", "C"),
     ]);
     const viewState = toggleSelectedNode(emptyViewState(), "A");
+    const state = appState(graph, viewState, null);
 
-    expect(
-      appCommandForKey("Delete")?.run(appState(graph, viewState, null)),
-    ).toBeNull();
+    expect(appCommandForKey("Delete")?.run(state)).toEqual({
+      state,
+      history: "ignore",
+      statusMessage:
+        "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
+    });
   });
 
   test("delete selected is disabled when selection is empty", () => {

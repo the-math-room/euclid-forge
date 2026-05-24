@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
-import { applyGraphEdit, canDeleteNodes } from "./edit";
+import { applyGraphEdit } from "./edit";
+import { canDeleteNodes } from "./deletePolicy";
 import { createGraph } from "./graph";
 import {
   centroidNode,

@@ -34,6 +34,7 @@ export type AppTransition = Readonly<{
   shouldRender: boolean;
   shouldPreventDefault: boolean;
   history: AppTransitionHistoryPolicy;
+  statusMessage?: string;
   pointerCapture?: PointerCaptureEffect;
 }>;
 
@@ -69,7 +70,7 @@ export function handleKeyDown(
     return unchanged(state);
   }
 
-  return changed(result.state, result.history);
+  return changed(result.state, result.history, result.statusMessage);
 }
 
 export function handlePointerDown(
@@ -305,12 +306,14 @@ function preventOnly(state: AppState): AppTransition {
 function changed(
   state: AppState,
   history: AppTransitionHistoryPolicy = "ignore",
+  statusMessage?: string,
 ): AppTransition {
   return transition({
     state,
     shouldRender: true,
     shouldPreventDefault: true,
     history,
+    ...(statusMessage ? { statusMessage } : {}),
   });
 }
 

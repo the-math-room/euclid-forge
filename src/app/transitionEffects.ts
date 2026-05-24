@@ -8,6 +8,7 @@ export type ApplyTransitionInput = Readonly<{
   setState: (state: AppState) => void;
   requestRender: () => void;
   commitStateToHistory: (state: AppState) => void;
+  showStatusMessage: (message: string | null) => void;
 }>;
 
 export function applyTransition(input: ApplyTransitionInput): void {
@@ -15,6 +16,12 @@ export function applyTransition(input: ApplyTransitionInput): void {
 
   if (input.transition.history === "commit") {
     input.commitStateToHistory(input.transition.state);
+  }
+
+  if (input.transition.statusMessage) {
+    input.showStatusMessage(input.transition.statusMessage);
+  } else if (input.transition.shouldRender) {
+    input.showStatusMessage(null);
   }
 
   if (input.transition.pointerCapture) {

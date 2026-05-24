@@ -1,4 +1,8 @@
-import { applyGraphEdit, canDeleteNodes } from "../representation/edit";
+import { applyGraphEdit } from "../representation/edit";
+import {
+  canDeleteNodes,
+  deleteNodesDisabledReason,
+} from "../representation/deletePolicy";
 import type { NodeId } from "../representation/node";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
@@ -22,6 +26,7 @@ export type CommandHistoryPolicy = "commit" | "ignore";
 export type AppCommandResult = Readonly<{
   state: AppState;
   history: CommandHistoryPolicy;
+  statusMessage?: string;
 }>;
 
 export type AppCommand = Readonly<{
@@ -191,9 +196,14 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
 
   command("delete-selected", ["delete", "backspace"], (state) => {
     const selected = [...state.viewState.selectedNodeIds];
+    const disabledReason = deleteNodesDisabledReason(state.graph, selected);
 
-    if (!canDeleteNodes(state.graph, selected)) {
-      return null;
+    if (disabledReason) {
+      if (selected.length === 0) {
+        return null;
+      }
+
+      return ignore(state, disabledReason);
     }
 
     return commit(
@@ -263,10 +273,14 @@ function commit(state: AppState): AppCommandResult {
   });
 }
 
-function ignore(state: AppState): AppCommandResult {
+function ignore(
+  state: AppState,
+  statusMessage?: string,
+): AppCommandResult {
   return Object.freeze({
     state,
     history: "ignore",
+    ...(statusMessage ? { statusMessage } : {}),
   });
 }
 

@@ -45,6 +45,7 @@ describe("app/transitionEffects", () => {
       setState,
       requestRender: vi.fn(),
       commitStateToHistory: vi.fn(),
+      showStatusMessage: vi.fn(),
     });
 
     expect(setState).toHaveBeenCalledWith(next);
@@ -64,6 +65,7 @@ describe("app/transitionEffects", () => {
       setState: vi.fn(),
       requestRender: vi.fn(),
       commitStateToHistory,
+      showStatusMessage: vi.fn(),
     });
 
     expect(commitStateToHistory).toHaveBeenCalledWith(state);
@@ -80,6 +82,7 @@ describe("app/transitionEffects", () => {
       setState: vi.fn(),
       requestRender: vi.fn(),
       commitStateToHistory,
+      showStatusMessage: vi.fn(),
     });
 
     expect(commitStateToHistory).not.toHaveBeenCalled();
@@ -100,10 +103,47 @@ describe("app/transitionEffects", () => {
       setState: vi.fn(),
       requestRender,
       commitStateToHistory: vi.fn(),
+      showStatusMessage: vi.fn(),
     });
 
     expect(requestRender).toHaveBeenCalledOnce();
     expect(preventDefault).toHaveBeenCalledOnce();
+  });
+
+  test("shows transition status messages", () => {
+    const showStatusMessage = vi.fn();
+
+    applyTransition({
+      canvas: canvasStub(),
+      event: new Event("test"),
+      transition: transition({
+        statusMessage: "Cannot delete A.",
+      }),
+      setState: vi.fn(),
+      requestRender: vi.fn(),
+      commitStateToHistory: vi.fn(),
+      showStatusMessage,
+    });
+
+    expect(showStatusMessage).toHaveBeenCalledWith("Cannot delete A.");
+  });
+
+  test("clears status messages on rendered transitions without a message", () => {
+    const showStatusMessage = vi.fn();
+
+    applyTransition({
+      canvas: canvasStub(),
+      event: new Event("test"),
+      transition: transition({
+        shouldRender: true,
+      }),
+      setState: vi.fn(),
+      requestRender: vi.fn(),
+      commitStateToHistory: vi.fn(),
+      showStatusMessage,
+    });
+
+    expect(showStatusMessage).toHaveBeenCalledWith(null);
   });
 
   test("applies set pointer capture effect", () => {

@@ -70,9 +70,33 @@ function render(
   });
 }
 
+function getStatusElement(): HTMLElement {
+  const existing = document.querySelector<HTMLElement>("#status-message");
+
+  if (existing) {
+    return existing;
+  }
+
+  const status = document.createElement("div");
+  status.id = "status-message";
+  status.role = "status";
+  status.setAttribute("aria-live", "polite");
+  status.hidden = true;
+
+  document.body.append(status);
+
+  return status;
+}
+
+function showStatusMessage(status: HTMLElement, message: string | null): void {
+  status.textContent = message ?? "";
+  status.hidden = !message;
+}
+
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
+  const status = getStatusElement();
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
   let state = initialAppState();
@@ -179,6 +203,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
@@ -206,6 +231,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
@@ -222,6 +248,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
@@ -233,6 +260,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
@@ -244,6 +272,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
@@ -255,6 +284,7 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
+      showStatusMessage: (message) => showStatusMessage(status, message),
     });
   });
 
