@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
-import { freePoint, midpointNode, segmentNode } from "../representation/node";
+import {
+  freePoint,
+  midpointNode,
+  segmentNode,
+  triangleNode,
+} from "../representation/node";
 import { evaluateGraph } from "./evaluateGraph";
 
 describe("evaluation/evaluateGraph", () => {
@@ -47,6 +52,25 @@ describe("evaluation/evaluateGraph", () => {
     });
   });
 
+  test("evaluates a triangle from three free points", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.values.get("ABC")).toEqual({
+      kind: "TRIANGLE",
+      id: "ABC",
+      a: vec2(-2, -1),
+      b: vec2(2, -1),
+      c: vec2(0, 2),
+    });
+  });
+
   test("evaluates a constrained midpoint of a segment", () => {
     const graph = createGraph([
       freePoint("A", -2, 0, "A"),
@@ -70,6 +94,8 @@ describe("evaluation/evaluateGraph", () => {
     const graph = createGraph([
       midpointNode("M", "AB", "M"),
       segmentNode("AB", "A", "B"),
+      triangleNode("ABC", "A", "B", "C"),
+      freePoint("C", 0, 2, "C"),
       freePoint("B", 2, 0, "B"),
       freePoint("A", -2, 0, "A"),
     ]);
@@ -81,6 +107,14 @@ describe("evaluation/evaluateGraph", () => {
       id: "AB",
       a: vec2(-2, 0),
       b: vec2(2, 0),
+    });
+
+    expect(evaluated.values.get("ABC")).toEqual({
+      kind: "TRIANGLE",
+      id: "ABC",
+      a: vec2(-2, 0),
+      b: vec2(2, 0),
+      c: vec2(0, 2),
     });
 
     expect(evaluated.values.get("M")).toEqual({
@@ -97,33 +131,26 @@ describe("evaluation/evaluateGraph", () => {
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
       segmentNode("AB", "A", "B"),
-      segmentNode("BC", "B", "C"),
-      segmentNode("CA", "C", "A"),
       midpointNode("M_AB", "AB", "M"),
     ]);
 
     const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.values.get("ABC")).toEqual({
+      kind: "TRIANGLE",
+      id: "ABC",
+      a: vec2(-2, -1),
+      b: vec2(2, -1),
+      c: vec2(0, 2),
+    });
 
     expect(evaluated.values.get("AB")).toEqual({
       kind: "SEGMENT",
       id: "AB",
       a: vec2(-2, -1),
       b: vec2(2, -1),
-    });
-
-    expect(evaluated.values.get("BC")).toEqual({
-      kind: "SEGMENT",
-      id: "BC",
-      a: vec2(2, -1),
-      b: vec2(0, 2),
-    });
-
-    expect(evaluated.values.get("CA")).toEqual({
-      kind: "SEGMENT",
-      id: "CA",
-      a: vec2(0, 2),
-      b: vec2(-2, -1),
     });
 
     expect(evaluated.values.get("M_AB")).toEqual({

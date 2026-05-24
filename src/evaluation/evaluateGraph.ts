@@ -5,6 +5,7 @@ import type {
   EvaluatedGeometry,
   EvaluatedPoint,
   EvaluatedSegment,
+  EvaluatedTriangle,
 } from "./evaluated";
 
 export type EvaluatedScene = Readonly<{
@@ -37,6 +38,21 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
           id: node.id,
           a: a.point,
           b: b.point,
+        });
+        break;
+      }
+
+      case "TRIANGLE": {
+        const a = requireEvaluatedPoint(values, node.a);
+        const b = requireEvaluatedPoint(values, node.b);
+        const c = requireEvaluatedPoint(values, node.c);
+
+        values.set(node.id, {
+          kind: "TRIANGLE",
+          id: node.id,
+          a: a.point,
+          b: b.point,
+          c: c.point,
         });
         break;
       }

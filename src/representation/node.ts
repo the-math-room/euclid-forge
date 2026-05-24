@@ -1,6 +1,10 @@
 export type NodeId = string;
 
-export type GeometryNode = FreePointNode | SegmentNode | MidpointNode;
+export type GeometryNode =
+  | FreePointNode
+  | SegmentNode
+  | TriangleNode
+  | MidpointNode;
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -15,6 +19,14 @@ export type SegmentNode = Readonly<{
   id: NodeId;
   a: NodeId;
   b: NodeId;
+}>;
+
+export type TriangleNode = Readonly<{
+  kind: "TRIANGLE";
+  id: NodeId;
+  a: NodeId;
+  b: NodeId;
+  c: NodeId;
 }>;
 
 export type MidpointNode = Readonly<{
@@ -49,6 +61,21 @@ export function segmentNode(
     id,
     a,
     b,
+  });
+}
+
+export function triangleNode(
+  id: NodeId,
+  a: NodeId,
+  b: NodeId,
+  c: NodeId,
+): TriangleNode {
+  return Object.freeze({
+    kind: "TRIANGLE",
+    id,
+    a,
+    b,
+    c,
   });
 }
 

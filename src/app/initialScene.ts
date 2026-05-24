@@ -1,6 +1,11 @@
 import { createGraph } from "../representation/graph";
 import type { Graph } from "../representation/graph";
-import { freePoint, midpointNode, segmentNode } from "../representation/node";
+import {
+  freePoint,
+  midpointNode,
+  segmentNode,
+  triangleNode,
+} from "../representation/node";
 
 export function initialScene(): Graph {
   return createGraph([
@@ -8,10 +13,10 @@ export function initialScene(): Graph {
     freePoint("B", 2, -1, "B"),
     freePoint("C", 0, 2, "C"),
 
-    segmentNode("AB", "A", "B"),
-    segmentNode("BC", "B", "C"),
-    segmentNode("CA", "C", "A"),
+    triangleNode("ABC", "A", "B", "C"),
 
+    // Keep AB for now because midpoint is still defined over a segment.
+    segmentNode("AB", "A", "B"),
     midpointNode("M_AB", "AB", "M"),
   ]);
 }

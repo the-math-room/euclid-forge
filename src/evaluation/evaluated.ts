@@ -18,4 +18,15 @@ export type EvaluatedSegment = Readonly<{
   b: Vec2;
 }>;
 
-export type EvaluatedGeometry = EvaluatedPoint | EvaluatedSegment;
+export type EvaluatedTriangle = Readonly<{
+  kind: "TRIANGLE";
+  id: NodeId;
+  a: Vec2;
+  b: Vec2;
+  c: Vec2;
+}>;
+
+export type EvaluatedGeometry =
+  | EvaluatedPoint
+  | EvaluatedSegment
+  | EvaluatedTriangle;
