@@ -147,3 +147,29 @@ test("deletes an isolated point and undo restores it", async ({ page }) => {
   await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
 });
 
+test("creates a circle from two selected points", async ({ page }) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  const center = { x: 3, y: 2 };
+  const through = { x: 4, y: 2 };
+
+  await clickWorld(page, frame, center);
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, through);
+  await waitForAnimationFrame(page);
+
+  await shiftClickWorld(page, frame, center);
+  await waitForAnimationFrame(page);
+
+  await shiftClickWorld(page, frame, through);
+  await waitForAnimationFrame(page);
+
+  await page.keyboard.press("C");
+  await waitForAnimationFrame(page);
+
+  await expectLightEdgeNear(frame.canvas, { x: 3, y: 3 });
+});
+
