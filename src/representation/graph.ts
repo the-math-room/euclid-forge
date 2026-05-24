@@ -1,7 +1,19 @@
-import { dependenciesOf } from "../representation/dependencies";
-import type { GeometryNode, NodeId } from "../representation/node";
+import { dependenciesOf } from "./dependencies";
+import type { GeometryNode, NodeId } from "./node";
 
-export function topoSort(nodes: readonly GeometryNode[]): readonly GeometryNode[] {
+const graphBrand: unique symbol = Symbol("Graph");
+
+export type SceneDraft = Readonly<{
+  nodes: readonly GeometryNode[];
+}>;
+
+export type Graph = Readonly<{
+  nodes: readonly GeometryNode[];
+  byId: ReadonlyMap<NodeId, GeometryNode>;
+  [graphBrand]: "Graph";
+}>;
+
+export function createGraph(nodes: readonly GeometryNode[]): Graph {
   const byId = new Map<NodeId, GeometryNode>();
   const indegree = new Map<NodeId, number>();
   const dependents = new Map<NodeId, NodeId[]>();
@@ -87,5 +99,9 @@ export function topoSort(nodes: readonly GeometryNode[]): readonly GeometryNode[
     throw new Error("Cycle detected in scene graph");
   }
 
-  return Object.freeze(ordered);
+  return Object.freeze({
+    nodes: Object.freeze(ordered),
+    byId,
+    [graphBrand]: "Graph",
+  });
 }

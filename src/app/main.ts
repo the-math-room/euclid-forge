@@ -1,11 +1,11 @@
 import "../styles/app.css";
 
-import { evaluateScene } from "../evaluation/evaluateScene";
-import type { Scene } from "../evaluation/evaluateScene";
+import { evaluateGraph } from "../evaluation/evaluateScene";
 import type {
   EvaluatedPoint,
   EvaluatedSegment,
 } from "../evaluation/evaluated";
+import type { Graph } from "../representation/graph";
 import { vec2 } from "../meaning/vec2";
 import { renderPoints } from "../rendering/pointRenderer";
 import { renderSegments } from "../rendering/segmentRenderer";
@@ -48,7 +48,7 @@ function resizeCanvasToDisplaySize(
 function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  scene: Scene,
+  graph: Graph,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
@@ -61,7 +61,7 @@ function render(
     zoom: 80,
   };
 
-  const evaluated = evaluateScene(scene);
+  const evaluated = evaluateGraph(graph);
 
   const segments = evaluated.ordered.filter(
     (value): value is EvaluatedSegment => value.kind === "SEGMENT",
@@ -80,13 +80,13 @@ function render(
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
-  const scene = initialScene();
+  const graph = initialScene();
 
   window.addEventListener("resize", () => {
-    render(canvas, ctx, scene);
+    render(canvas, ctx, graph);
   });
 
-  render(canvas, ctx, scene);
+  render(canvas, ctx, graph);
 }
 
 main();

@@ -1,18 +1,17 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
+import { createGraph } from "../representation/graph";
 import { freePoint, midpointNode, segmentNode } from "../representation/node";
-import { evaluateScene } from "./evaluateScene";
+import { evaluateGraph } from "./evaluateScene";
 
-describe("evaluation/evaluateScene", () => {
+describe("evaluation/evaluateGraph", () => {
   test("evaluates free points", () => {
-    const scene = {
-      nodes: [
-        freePoint("A", -2, 0, "A"),
-        freePoint("B", 2, 0, "B"),
-      ],
-    };
+    const graph = createGraph([
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+    ]);
 
-    const evaluated = evaluateScene(scene);
+    const evaluated = evaluateGraph(graph);
 
     expect(evaluated.values.get("A")).toEqual({
       kind: "POINT",
@@ -32,15 +31,13 @@ describe("evaluation/evaluateScene", () => {
   });
 
   test("evaluates a segment from two free points", () => {
-    const scene = {
-      nodes: [
-        freePoint("A", -2, 0, "A"),
-        freePoint("B", 2, 0, "B"),
-        segmentNode("AB", "A", "B"),
-      ],
-    };
+    const graph = createGraph([
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
 
-    const evaluated = evaluateScene(scene);
+    const evaluated = evaluateGraph(graph);
 
     expect(evaluated.values.get("AB")).toEqual({
       kind: "SEGMENT",
@@ -51,16 +48,14 @@ describe("evaluation/evaluateScene", () => {
   });
 
   test("evaluates a constrained midpoint of a segment", () => {
-    const scene = {
-      nodes: [
-        freePoint("A", -2, 0, "A"),
-        freePoint("B", 2, 0, "B"),
-        segmentNode("AB", "A", "B"),
-        midpointNode("M", "AB", "M"),
-      ],
-    };
+    const graph = createGraph([
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M", "AB", "M"),
+    ]);
 
-    const evaluated = evaluateScene(scene);
+    const evaluated = evaluateGraph(graph);
 
     expect(evaluated.values.get("M")).toEqual({
       kind: "POINT",
@@ -71,17 +66,15 @@ describe("evaluation/evaluateScene", () => {
     });
   });
 
-  test("evaluates unordered nodes by dependency order", () => {
-    const scene = {
-      nodes: [
-        midpointNode("M", "AB", "M"),
-        segmentNode("AB", "A", "B"),
-        freePoint("B", 2, 0, "B"),
-        freePoint("A", -2, 0, "A"),
-      ],
-    };
+  test("evaluates unordered graph nodes after graph validation orders them", () => {
+    const graph = createGraph([
+      midpointNode("M", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("A", -2, 0, "A"),
+    ]);
 
-    const evaluated = evaluateScene(scene);
+    const evaluated = evaluateGraph(graph);
 
     expect(evaluated.values.get("AB")).toEqual({
       kind: "SEGMENT",
@@ -97,29 +90,5 @@ describe("evaluation/evaluateScene", () => {
       label: "M",
       source: "CONSTRAINED",
     });
-  });
-
-  test("throws when a dependency is genuinely missing", () => {
-    const scene = {
-      nodes: [
-        freePoint("A", -2, 0, "A"),
-        segmentNode("AB", "A", "B"),
-      ],
-    };
-
-    expect(() => evaluateScene(scene)).toThrow(
-      "Missing dependency: AB depends on B",
-    );
-  });
-
-  test("throws when node ids are duplicated", () => {
-    const scene = {
-      nodes: [
-        freePoint("A", -2, 0, "A"),
-        freePoint("A", 2, 0, "A2"),
-      ],
-    };
-
-    expect(() => evaluateScene(scene)).toThrow("Duplicate node id: A");
   });
 });
