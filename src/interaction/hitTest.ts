@@ -27,12 +27,18 @@ export type SegmentHit = Readonly<{
   distancePx: number;
 }>;
 
+export type CircleHit = Readonly<{
+  kind: "CIRCLE";
+  id: NodeId;
+  distancePx: number;
+}>;
+
 export type TriangleHitTarget = Readonly<{
   kind: "TRIANGLE";
   id: NodeId;
 }>;
 
-export type HitTarget = PointHit | SegmentHit | TriangleHitTarget;
+export type HitTarget = PointHit | SegmentHit | CircleHit | TriangleHitTarget;
 
 export function hitTestPointTarget(
   evaluated: EvaluatedScene,
@@ -160,6 +166,49 @@ export function hitTestSegmentSelection(
   radiusPx = 8,
 ): NodeId | null {
   return hitTestSegmentTarget(evaluated, viewport, screenPoint, radiusPx)?.id ?? null;
+}
+
+export function hitTestCircleTarget(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): CircleHit | null {
+  let best: CircleHit | null = null;
+
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
+    if (value.kind !== "CIRCLE") {
+      continue;
+    }
+
+    const center = worldToScreen(viewport, value.center);
+    const edge = worldToScreen(viewport, {
+      x: value.center.x + value.radius,
+      y: value.center.y,
+    });
+    const radiusPx = Math.hypot(edge.x - center.x, edge.y - center.y);
+    const distancePx = Math.hypot(
+      screenPoint.x - center.x,
+      screenPoint.y - center.y,
+    );
+
+    if (distancePx <= radiusPx && (!best || distancePx < best.distancePx)) {
+      best = {
+        kind: "CIRCLE",
+        id: value.id,
+        distancePx,
+      };
+    }
+  }
+
+  return best;
+}
+
+export function hitTestCircleSelection(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): NodeId | null {
+  return hitTestCircleTarget(evaluated, viewport, screenPoint)?.id ?? null;
 }
 
 export function hitTestTriangleTarget(

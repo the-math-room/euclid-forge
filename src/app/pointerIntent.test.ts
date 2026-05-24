@@ -3,6 +3,7 @@ import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   segmentNode,
   triangleNode,
@@ -23,6 +24,29 @@ import {
 const viewport = testViewport();
 
 describe("app/pointerIntent", () => {
+  test("shift-click can select a circle", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+    const viewport = testViewport();
+    const state = appState(graph, emptyViewState(), null);
+
+    expect(
+      pointerDownIntent(state, {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0.25, 0.25)),
+        viewport,
+        shiftKey: true,
+      }),
+    ).toEqual({
+      kind: "SELECT_NODE",
+      id: "circle",
+    });
+  });
+
+
   test("normal pointerdown drags a free point before triangle interiors", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),

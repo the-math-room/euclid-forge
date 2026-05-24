@@ -29,6 +29,26 @@ import {
 const viewport = testViewport();
 
 describe("app/appController", () => {
+  test("shift-click selects a circle", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+    const viewport = testViewport();
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0.25, 0.25)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect(transition.state.viewState.selectedNodeIds.has("circle")).toBe(true);
+    expect(transition.history).toBe("commit");
+  });
+
+
   test("creates a circle from two selected free points with C", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),

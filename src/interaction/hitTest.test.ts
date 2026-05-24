@@ -4,6 +4,7 @@ import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -12,6 +13,8 @@ import {
 import { worldToScreen } from "../rendering/viewport";
 import { testViewport } from "../rendering/testHelpers";
 import {
+  hitTestCircleSelection,
+  hitTestCircleTarget,
   hitTestFreePoint,
   hitTestFreePointTarget,
   hitTestPoint,

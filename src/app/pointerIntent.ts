@@ -1,6 +1,7 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { visibleEvaluatedScene } from "../evaluation/visibleScene";
 import {
+  hitTestCircleTarget,
   hitTestFreePointTarget,
   hitTestPointTarget,
   hitTestSegmentTarget,
@@ -71,6 +72,19 @@ export function pointerDownIntent(
       return {
         kind: "SELECT_NODE",
         id: segmentHit.id,
+      };
+    }
+
+    const circleHit = hitTestCircleTarget(
+      evaluated,
+      input.viewport,
+      input.point,
+    );
+
+    if (circleHit) {
+      return {
+        kind: "SELECT_NODE",
+        id: circleHit.id,
       };
     }
 
