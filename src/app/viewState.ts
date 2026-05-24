@@ -2,6 +2,11 @@ import { vec2 } from "../meaning/vec2";
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
 
+const DEFAULT_VIEWPORT_CENTER = vec2(0, 0);
+const DEFAULT_VIEWPORT_ZOOM = 80;
+const VIEWPORT_MIN_ZOOM = 10;
+const VIEWPORT_MAX_ZOOM = 640;
+
 export type ViewState = Readonly<{
   selectedNodeIds: ReadonlySet<NodeId>;
   hiddenNodeIds: ReadonlySet<NodeId>;
@@ -13,8 +18,8 @@ export function emptyViewState(): ViewState {
   return Object.freeze({
     selectedNodeIds: new Set<NodeId>(),
     hiddenNodeIds: new Set<NodeId>(),
-    viewportCenter: vec2(0, 0),
-    viewportZoom: 80,
+    viewportCenter: DEFAULT_VIEWPORT_CENTER,
+    viewportZoom: DEFAULT_VIEWPORT_ZOOM,
   });
 }
 
@@ -102,5 +107,46 @@ export function setViewportZoom(
     ...viewState,
     viewportZoom,
   });
+}
+
+export function panViewport(
+  viewState: ViewState,
+  deltaWorld: Vec2,
+): ViewState {
+  if (deltaWorld.x === 0 && deltaWorld.y === 0) {
+    return viewState;
+  }
+
+  return setViewportCenter(
+    viewState,
+    vec2(
+      viewState.viewportCenter.x + deltaWorld.x,
+      viewState.viewportCenter.y + deltaWorld.y,
+    ),
+  );
+}
+
+export function zoomViewport(
+  viewState: ViewState,
+  factor: number,
+): ViewState {
+  if (factor <= 0) {
+    throw new Error(`Viewport zoom factor must be positive: ${factor}`);
+  }
+
+  return setViewportZoom(
+    viewState,
+    clampZoom(viewState.viewportZoom * factor),
+  );
+}
+
+export function resetViewport(viewState: ViewState): ViewState {
+  const withCenter = setViewportCenter(viewState, DEFAULT_VIEWPORT_CENTER);
+
+  return setViewportZoom(withCenter, DEFAULT_VIEWPORT_ZOOM);
+}
+
+function clampZoom(zoom: number): number {
+  return Math.max(VIEWPORT_MIN_ZOOM, Math.min(VIEWPORT_MAX_ZOOM, zoom));
 }
 

@@ -465,4 +465,59 @@ describe("app/appController", () => {
     ]);
   });
 
+  test("arrow keys pan the viewport", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+
+    const left = handleKeyDown(state, { key: "ArrowLeft" });
+    const right = handleKeyDown(state, { key: "ArrowRight" });
+    const up = handleKeyDown(state, { key: "ArrowUp" });
+    const down = handleKeyDown(state, { key: "ArrowDown" });
+
+    expect(left.state.viewState.viewportCenter).toEqual(vec2(-0.5, 0));
+    expect(right.state.viewState.viewportCenter).toEqual(vec2(0.5, 0));
+    expect(up.state.viewState.viewportCenter).toEqual(vec2(0, 0.5));
+    expect(down.state.viewState.viewportCenter).toEqual(vec2(0, -0.5));
+  });
+
+  test("plus and minus keys zoom the viewport", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+
+    const zoomedIn = handleKeyDown(state, { key: "+" });
+    const zoomedOut = handleKeyDown(state, { key: "-" });
+
+    expect(zoomedIn.state.viewState.viewportZoom).toBe(100);
+    expect(zoomedOut.state.viewState.viewportZoom).toBe(64);
+  });
+
+  test("equals and underscore keys also zoom the viewport", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+
+    const zoomedIn = handleKeyDown(state, { key: "=" });
+    const zoomedOut = handleKeyDown(state, { key: "_" });
+
+    expect(zoomedIn.state.viewState.viewportZoom).toBe(100);
+    expect(zoomedOut.state.viewState.viewportZoom).toBe(64);
+  });
+
+  test("zero resets the viewport", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const moved = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        viewportCenter: vec2(3, -4),
+        viewportZoom: 120,
+      },
+      null,
+    );
+
+    const transition = handleKeyDown(moved, { key: "0" });
+
+    expect(transition.state.viewState.viewportCenter).toEqual(vec2(0, 0));
+    expect(transition.state.viewState.viewportZoom).toBe(80);
+  });
+
 });

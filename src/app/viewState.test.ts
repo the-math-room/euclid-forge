@@ -4,10 +4,13 @@ import {
   clearSelection,
   emptyViewState,
   hideSelectedNodes,
+  panViewport,
+  resetViewport,
   setViewportCenter,
   setViewportZoom,
   toggleSelectedNode,
   unhideAllNodes,
+  zoomViewport,
 } from "./viewState";
 
 describe("app/viewState", () => {
@@ -122,6 +125,67 @@ describe("app/viewState", () => {
     const viewState = emptyViewState();
 
     expect(setViewportZoom(viewState, 80)).toBe(viewState);
+  });
+
+  test("pans the viewport by a world delta", () => {
+    const viewState = emptyViewState();
+    const next = panViewport(viewState, vec2(2, -3));
+
+    expect(next.viewportCenter).toEqual(vec2(2, -3));
+    expect(next.viewportZoom).toBe(80);
+  });
+
+  test("returns same object when panning by zero", () => {
+    const viewState = emptyViewState();
+
+    expect(panViewport(viewState, vec2(0, 0))).toBe(viewState);
+  });
+
+  test("zooms the viewport by a positive factor", () => {
+    const viewState = emptyViewState();
+    const next = zoomViewport(viewState, 1.25);
+
+    expect(next.viewportCenter).toEqual(vec2(0, 0));
+    expect(next.viewportZoom).toBe(100);
+  });
+
+  test("clamps viewport zoom to the minimum", () => {
+    const viewState = setViewportZoom(emptyViewState(), 12);
+    const next = zoomViewport(viewState, 0.5);
+
+    expect(next.viewportZoom).toBe(10);
+  });
+
+  test("clamps viewport zoom to the maximum", () => {
+    const viewState = setViewportZoom(emptyViewState(), 600);
+    const next = zoomViewport(viewState, 2);
+
+    expect(next.viewportZoom).toBe(640);
+  });
+
+  test("throws for non-positive zoom factors", () => {
+    expect(() => zoomViewport(emptyViewState(), 0)).toThrow(
+      "Viewport zoom factor must be positive: 0",
+    );
+  });
+
+  test("resets the viewport while preserving selection and hidden state", () => {
+    const viewState = hideSelectedNodes(
+      toggleSelectedNode(
+        setViewportZoom(
+          setViewportCenter(emptyViewState(), vec2(3, -4)),
+          120,
+        ),
+        "A",
+      ),
+    );
+
+    const next = resetViewport(viewState);
+
+    expect(next.viewportCenter).toEqual(vec2(0, 0));
+    expect(next.viewportZoom).toBe(80);
+    expect([...next.selectedNodeIds]).toEqual([]);
+    expect([...next.hiddenNodeIds]).toEqual(["A"]);
   });
 
 });

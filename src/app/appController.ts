@@ -21,8 +21,11 @@ import type { AppState } from "./appState";
 import {
   clearSelection,
   hideSelectedNodes,
+  panViewport,
+  resetViewport,
   toggleSelectedNode,
   unhideAllNodes,
+  zoomViewport,
 } from "./viewState";
 
 export type PointerCaptureEffect = Readonly<
@@ -59,6 +62,76 @@ export function handleKeyDown(
   input: KeyInput,
 ): AppTransition {
   const key = input.key.toLowerCase();
+
+  if (key === "arrowleft") {
+    return changed(
+      appState(
+        state.graph,
+        panViewport(state.viewState, { x: -viewportPanStep(state), y: 0 }),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "arrowright") {
+    return changed(
+      appState(
+        state.graph,
+        panViewport(state.viewState, { x: viewportPanStep(state), y: 0 }),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "arrowup") {
+    return changed(
+      appState(
+        state.graph,
+        panViewport(state.viewState, { x: 0, y: viewportPanStep(state) }),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "arrowdown") {
+    return changed(
+      appState(
+        state.graph,
+        panViewport(state.viewState, { x: 0, y: -viewportPanStep(state) }),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "+" || key === "=") {
+    return changed(
+      appState(
+        state.graph,
+        zoomViewport(state.viewState, 1.25),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "-" || key === "_") {
+    return changed(
+      appState(
+        state.graph,
+        zoomViewport(state.viewState, 0.8),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "0") {
+    return changed(
+      appState(
+        state.graph,
+        resetViewport(state.viewState),
+        state.dragState,
+      ),
+    );
+  }
 
   if (key === "t") {
     const vertices = selectedFreePointVertices(state);
@@ -335,6 +408,10 @@ export function handlePointerCancel(
   pointerId: number,
 ): AppTransition {
   return handlePointerUp(state, pointerId);
+}
+
+function viewportPanStep(state: AppState): number {
+  return 40 / state.viewState.viewportZoom;
 }
 
 function selectedFreePointVertices(
