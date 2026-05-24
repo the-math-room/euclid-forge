@@ -1,4 +1,5 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
+import { visibleEvaluatedScene } from "../evaluation/visibleScene";
 import {
   hitTestFreePoint,
   hitTestPoint,
@@ -139,7 +140,14 @@ export function handlePointerDown(
   state: AppState,
   input: PointerInput,
 ): AppTransition {
-  const evaluated = evaluateGraph(state.graph);
+  const evaluated = visibleEvaluatedScene(
+    evaluateGraph(state.graph),
+    state.viewState.hiddenNodeIds.size > 0
+      ? {
+          hiddenNodeIds: state.viewState.hiddenNodeIds,
+        }
+      : {},
+  );
 
   if (input.shiftKey) {
     const pointSelectionHit = hitTestPoint(

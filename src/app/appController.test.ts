@@ -17,7 +17,11 @@ import {
   handlePointerMove,
   handlePointerUp,
 } from "./appController";
-import { emptyViewState, toggleSelectedNode } from "./viewState";
+import {
+  emptyViewState,
+  hideSelectedNodes,
+  toggleSelectedNode,
+} from "./viewState";
 
 const viewport: Viewport = {
   width: 800,
@@ -231,4 +235,120 @@ describe("app/appController", () => {
       pointerId: 1,
     });
   });
+  test("pointerdown ignores hidden free points and adds a new point instead", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+
+    const hiddenViewState = hideSelectedNodes(
+      toggleSelectedNode(emptyViewState(), "A"),
+    );
+
+    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.dragState).toBeNull();
+    expect(transition.pointerCapture).toBeUndefined();
+    expect(transition.state.graph.byId.get("P1")).toEqual(
+      freePoint("P1", -2, -1, "P1"),
+    );
+  });
+
+  test("shift-click ignores hidden points", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+
+    const hiddenViewState = hideSelectedNodes(
+      toggleSelectedNode(emptyViewState(), "A"),
+    );
+
+    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(-2, -1)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+    expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["A"]);
+    expect(transition.shouldRender).toBe(false);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("shift-click ignores hidden segments", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+
+    const hiddenViewState = hideSelectedNodes(
+      toggleSelectedNode(emptyViewState(), "AB"),
+    );
+
+    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, -1)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+    expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["AB"]);
+    expect(transition.shouldRender).toBe(false);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("shift-click ignores hidden triangles", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const hiddenViewState = hideSelectedNodes(
+      toggleSelectedNode(emptyViewState(), "ABC"),
+    );
+
+    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+    expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["ABC"]);
+    expect(transition.shouldRender).toBe(false);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("pointerdown ignores hidden triangle interiors and adds a point instead", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const hiddenViewState = hideSelectedNodes(
+      toggleSelectedNode(emptyViewState(), "ABC"),
+    );
+
+    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.dragState).toBeNull();
+    expect(transition.pointerCapture).toBeUndefined();
+    expect(transition.state.graph.byId.get("P1")).toEqual(
+      freePoint("P1", 0, 0, "P1"),
+    );
+  });
+
 });

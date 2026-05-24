@@ -1,6 +1,8 @@
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
+import {
+  visibleEvaluatedScene,
+} from "../evaluation/visibleScene";
 import type {
-  EvaluatedGeometry,
   EvaluatedPoint,
   EvaluatedSegment,
   EvaluatedTriangle,
@@ -24,7 +26,16 @@ export function renderScene(
   scene: EvaluatedScene,
   options: RenderSceneOptions = {},
 ): void {
-  const visible = scene.ordered.filter((value) => isVisible(value, options));
+  const visibleScene = visibleEvaluatedScene(
+    scene,
+    options.hiddenNodeIds
+      ? {
+          hiddenNodeIds: options.hiddenNodeIds,
+        }
+      : {},
+  );
+
+  const visible = visibleScene.ordered;
 
   const triangles = visible.filter(
     (value): value is EvaluatedTriangle => value.kind === "TRIANGLE",
@@ -41,11 +52,4 @@ export function renderScene(
   renderTriangles(ctx, viewport, triangles, options);
   renderSegments(ctx, viewport, segments);
   renderPoints(ctx, viewport, points, options);
-}
-
-function isVisible(
-  value: EvaluatedGeometry,
-  options: RenderSceneOptions,
-): boolean {
-  return !(options.hiddenNodeIds?.has(value.id) ?? false);
 }
