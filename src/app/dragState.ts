@@ -9,5 +9,6 @@ export type DragState =
   | Readonly<{
       kind: "TRIANGLE";
       vertexIds: readonly NodeId[];
-      previousWorldPoint: Vec2;
+      initialPointerWorld: Vec2;
+      initialVertexPositions: ReadonlyMap<NodeId, Vec2>;
     }>;

@@ -308,4 +308,40 @@ describe("representation/applyGraphEdit", () => {
       }),
     ).toThrow("Cannot directly translate constrained node: ABC");
   });
+  test("sets multiple free point positions absolutely", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "SET_FREE_POINT_POSITIONS",
+      positions: new Map([
+        ["A", vec2(10, 11)],
+        ["C", vec2(12, 13)],
+      ]),
+    });
+
+    expect(next.byId.get("A")).toEqual(freePoint("A", 10, 11, "A"));
+    expect(next.byId.get("B")).toEqual(freePoint("B", 2, -1, "B"));
+    expect(next.byId.get("C")).toEqual(freePoint("C", 12, 13, "C"));
+  });
+
+  test("throws when setting an absolute position for a constrained node", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "SET_FREE_POINT_POSITIONS",
+        positions: new Map([["ABC", vec2(1, 1)]]),
+      }),
+    ).toThrow("Cannot directly set constrained node position: ABC");
+  });
+
 });

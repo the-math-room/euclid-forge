@@ -7,7 +7,7 @@ import {
   hitTestTriangleInterior,
   hitTestTriangleSelection,
 } from "../interaction/hitTest";
-import { deltaBetween } from "../meaning/vec2";
+import { deltaBetween, vec2 } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
@@ -316,7 +316,11 @@ export function handlePointerDown(
       state: appState(state.graph, state.viewState, {
         kind: "TRIANGLE",
         vertexIds: triangleHit.vertexIds,
-        previousWorldPoint: screenToWorld(input.viewport, input.point),
+        initialPointerWorld: screenToWorld(input.viewport, input.point),
+        initialVertexPositions: initialVertexPositions(
+          state.graph,
+          triangleHit.vertexIds,
+        ),
       }),
       shouldRender: false,
       shouldPreventDefault: true,
@@ -364,20 +368,19 @@ export function handlePointerMove(
       );
 
     case "TRIANGLE": {
-      const delta = deltaBetween(state.dragState.previousWorldPoint, world);
+      const delta = deltaBetween(state.dragState.initialPointerWorld, world);
 
       return changed(
         appState(
           applyGraphEdit(state.graph, {
-            kind: "TRANSLATE_FREE_POINTS",
-            ids: state.dragState.vertexIds,
-            delta,
+            kind: "SET_FREE_POINT_POSITIONS",
+            positions: translatedVertexPositions(
+              state.dragState.initialVertexPositions,
+              delta,
+            ),
           }),
           state.viewState,
-          {
-            ...state.dragState,
-            previousWorldPoint: world,
-          },
+          state.dragState,
         ),
       );
     }
@@ -408,6 +411,45 @@ export function handlePointerCancel(
   pointerId: number,
 ): AppTransition {
   return handlePointerUp(state, pointerId);
+}
+
+
+function initialVertexPositions(
+  graph: AppState["graph"],
+  vertexIds: readonly NodeId[],
+): ReadonlyMap<NodeId, ReturnType<typeof vec2>> {
+  const positions = new Map<NodeId, ReturnType<typeof vec2>>();
+
+  for (const id of vertexIds) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot start triangle drag with missing vertex: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(
+        `Cannot start triangle drag with constrained vertex: ${id}`,
+      );
+    }
+
+    positions.set(id, vec2(node.x, node.y));
+  }
+
+  return positions;
+}
+
+function translatedVertexPositions(
+  initialPositions: ReadonlyMap<NodeId, ReturnType<typeof vec2>>,
+  delta: ReturnType<typeof vec2>,
+): ReadonlyMap<NodeId, ReturnType<typeof vec2>> {
+  const positions = new Map<NodeId, ReturnType<typeof vec2>>();
+
+  for (const [id, point] of initialPositions) {
+    positions.set(id, vec2(point.x + delta.x, point.y + delta.y));
+  }
+
+  return positions;
 }
 
 function viewportPanStep(state: AppState): number {

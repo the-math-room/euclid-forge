@@ -26,6 +26,10 @@ export type GraphEdit =
       delta: Vec2;
     }>
   | Readonly<{
+      kind: "SET_FREE_POINT_POSITIONS";
+      positions: ReadonlyMap<NodeId, Vec2>;
+    }>
+  | Readonly<{
       kind: "ADD_TRIANGLE";
       vertices: readonly [NodeId, NodeId, NodeId];
     }>
@@ -48,6 +52,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "TRANSLATE_FREE_POINTS":
       return translateFreePoints(graph, edit.ids, edit.delta);
+
+    case "SET_FREE_POINT_POSITIONS":
+      return setFreePointPositions(graph, edit.positions);
 
     case "ADD_TRIANGLE":
       return addTriangle(graph, edit.vertices);
@@ -164,6 +171,42 @@ function addTriangleSideMidpoints(graph: Graph, triangle: NodeId): Graph {
   }
 
   return createGraph(nodes);
+}
+
+
+function setFreePointPositions(
+  graph: Graph,
+  positions: ReadonlyMap<NodeId, Vec2>,
+): Graph {
+  for (const [id] of positions) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot set position for missing node: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot directly set constrained node position: ${id}`);
+    }
+  }
+
+  return createGraph(
+    graph.nodes.map((node) => {
+      const point = positions.get(node.id);
+
+      if (!point) {
+        return node;
+      }
+
+      if (node.kind !== "FREE_POINT") {
+        throw new Error(
+          `Cannot directly set constrained node position: ${node.id}`,
+        );
+      }
+
+      return freePoint(node.id, point.x, point.y, node.label);
+    }),
+  );
 }
 
 function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {

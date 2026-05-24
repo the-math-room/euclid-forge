@@ -520,4 +520,79 @@ describe("app/appController", () => {
     expect(transition.state.viewState.viewportZoom).toBe(80);
   });
 
+  test("pointerdown on a triangle records absolute drag starting positions", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, 0)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.dragState?.kind).toBe("TRIANGLE");
+
+    if (transition.state.dragState?.kind !== "TRIANGLE") {
+      throw new Error("Expected triangle drag state");
+    }
+
+    expect(transition.state.dragState.initialPointerWorld).toEqual(vec2(0, 0));
+    expect(
+      [...transition.state.dragState.initialVertexPositions],
+    ).toEqual([
+      ["A", vec2(-2, -1)],
+      ["B", vec2(2, -1)],
+      ["C", vec2(0, 2)],
+    ]);
+  });
+
+  test("triangle drag computes positions from the drag start rather than previous frame", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const state = appState(graph, emptyViewState(), {
+      kind: "TRIANGLE",
+      vertexIds: ["A", "B", "C"],
+      initialPointerWorld: vec2(0, 0),
+      initialVertexPositions: new Map([
+        ["A", vec2(-2, -1)],
+        ["B", vec2(2, -1)],
+        ["C", vec2(0, 2)],
+      ]),
+    });
+
+    const first = handlePointerMove(state, {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(1, 1)),
+      viewport,
+      shiftKey: false,
+    });
+
+    const second = handlePointerMove(first.state, {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(2, 3)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(second.state.graph.byId.get("A")).toEqual(
+      freePoint("A", 0, 2, "A"),
+    );
+    expect(second.state.graph.byId.get("B")).toEqual(
+      freePoint("B", 4, 2, "B"),
+    );
+    expect(second.state.graph.byId.get("C")).toEqual(
+      freePoint("C", 2, 5, "C"),
+    );
+  });
+
 });
