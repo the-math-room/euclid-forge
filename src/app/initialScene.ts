@@ -3,8 +3,9 @@ import type { Graph } from "../representation/graph";
 import {
   centroidNode,
   freePoint,
+  midpointNode,
+  segmentNode,
   triangleNode,
-  triangleSideMidpointNode,
 } from "../representation/node";
 
 export function initialScene(): Graph {
@@ -14,7 +15,8 @@ export function initialScene(): Graph {
     freePoint("C", 0, 2, "C"),
 
     triangleNode("ABC", "A", "B", "C"),
-    triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+    segmentNode("AB", "A", "B"),
+    midpointNode("M_AB", "AB", "M"),
 
     centroidNode("G", "ABC", "G"),
   ]);

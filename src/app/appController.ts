@@ -2,6 +2,7 @@ import { evaluateGraph } from "../evaluation/evaluateGraph";
 import {
   hitTestFreePoint,
   hitTestPoint,
+  hitTestSegmentSelection,
   hitTestTriangleInterior,
   hitTestTriangleSelection,
 } from "../interaction/hitTest";
@@ -92,6 +93,25 @@ export function handleKeyDown(
     );
   }
 
+  if (key === "m") {
+    const triangle = selectedTriangle(state);
+
+    if (!triangle) {
+      return unchanged(state);
+    }
+
+    return changed(
+      appState(
+        applyGraphEdit(state.graph, {
+          kind: "ADD_MIDPOINTS",
+          triangle,
+        }),
+        clearSelection(state.viewState),
+        state.dragState,
+      ),
+    );
+  }
+
   if (key === "h") {
     const viewState = hideSelectedNodes(state.viewState);
 
@@ -133,6 +153,22 @@ export function handlePointerDown(
         appState(
           state.graph,
           toggleSelectedNode(state.viewState, pointSelectionHit),
+          null,
+        ),
+      );
+    }
+
+    const segmentSelectionHit = hitTestSegmentSelection(
+      evaluated,
+      input.viewport,
+      input.point,
+    );
+
+    if (segmentSelectionHit) {
+      return changed(
+        appState(
+          state.graph,
+          toggleSelectedNode(state.viewState, segmentSelectionHit),
           null,
         ),
       );

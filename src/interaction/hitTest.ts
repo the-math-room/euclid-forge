@@ -1,5 +1,5 @@
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import type { EvaluatedTriangle } from "../evaluation/evaluated";
+import type { EvaluatedSegment, EvaluatedTriangle } from "../evaluation/evaluated";
 import type { Vec2 } from "../meaning/vec2";
 import type { Graph } from "../representation/graph";
 import type { NodeId, TriangleNode } from "../representation/node";
@@ -68,6 +68,35 @@ export function hitTestFreePoint(
 
     const screen = worldToScreen(viewport, value.point);
     const distance = Math.hypot(screen.x - screenPoint.x, screen.y - screenPoint.y);
+
+    if (distance <= radiusPx && (!best || distance < best.distance)) {
+      best = {
+        id: value.id,
+        distance,
+      };
+    }
+  }
+
+  return best?.id ?? null;
+}
+
+export function hitTestSegmentSelection(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+  radiusPx = 8,
+): NodeId | null {
+  let best: Readonly<{
+    id: NodeId;
+    distance: number;
+  }> | null = null;
+
+  for (const value of evaluated.ordered) {
+    if (value.kind !== "SEGMENT") {
+      continue;
+    }
+
+    const distance = distanceToSegmentScreen(viewport, screenPoint, value);
 
     if (distance <= radiusPx && (!best || distance < best.distance)) {
       best = {
@@ -165,4 +194,32 @@ function pointInTriangle(point: Vec2, triangle: EvaluatedTriangle): boolean {
 
 function signedArea(a: Vec2, b: Vec2, c: Vec2): number {
   return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
+}
+
+function distanceToSegmentScreen(
+  viewport: Viewport,
+  point: ScreenPoint,
+  segment: EvaluatedSegment,
+): number {
+  const a = worldToScreen(viewport, segment.a);
+  const b = worldToScreen(viewport, segment.b);
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared === 0) {
+    return Math.hypot(point.x - a.x, point.y - a.y);
+  }
+
+  const t = Math.max(
+    0,
+    Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared),
+  );
+
+  const closest = {
+    x: a.x + t * dx,
+    y: a.y + t * dy,
+  };
+
+  return Math.hypot(point.x - closest.x, point.y - closest.y);
 }

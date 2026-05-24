@@ -4,6 +4,8 @@ import { createGraph } from "../representation/graph";
 import {
   centroidNode,
   freePoint,
+  midpointNode,
+  segmentNode,
   triangleNode,
 } from "../representation/node";
 import type { Viewport } from "../rendering/viewport";
@@ -89,6 +91,41 @@ describe("app/appController", () => {
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
   });
 
+  test("creates side midpoints for one selected triangle with M", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      triangleNode("T1", "P1", "P2", "P3"),
+    ]);
+
+    const viewState = toggleSelectedNode(emptyViewState(), "T1");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "m",
+    });
+
+    expect(transition.state.graph.byId.get("S_P1_P2")).toEqual(
+      segmentNode("S_P1_P2", "P1", "P2"),
+    );
+    expect(transition.state.graph.byId.get("M_S_P1_P2")).toEqual(
+      midpointNode("M_S_P1_P2", "S_P1_P2", "M_S_P1_P2"),
+    );
+    expect(transition.state.graph.byId.get("S_P2_P3")).toEqual(
+      segmentNode("S_P2_P3", "P2", "P3"),
+    );
+    expect(transition.state.graph.byId.get("M_S_P2_P3")).toEqual(
+      midpointNode("M_S_P2_P3", "S_P2_P3", "M_S_P2_P3"),
+    );
+    expect(transition.state.graph.byId.get("S_P1_P3")).toEqual(
+      segmentNode("S_P1_P3", "P3", "P1"),
+    );
+    expect(transition.state.graph.byId.get("M_S_P1_P3")).toEqual(
+      midpointNode("M_S_P1_P3", "S_P1_P3", "M_S_P1_P3"),
+    );
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
+  });
+
   test("hides selected nodes with H and unhides all with U", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
     const selected = toggleSelectedNode(emptyViewState(), "A");
@@ -118,6 +155,24 @@ describe("app/appController", () => {
     });
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual(["G"]);
+    expect(transition.shouldRender).toBe(true);
+  });
+
+  test("shift-click selects a segment", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0, -1)),
+      viewport,
+      shiftKey: true,
+    });
+
+    expect([...transition.state.viewState.selectedNodeIds]).toEqual(["AB"]);
     expect(transition.shouldRender).toBe(true);
   });
 

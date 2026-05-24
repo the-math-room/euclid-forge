@@ -1,6 +1,6 @@
 # Architecture
 
-Euclid Forge is organized as a pipeline.
+Euclid Forge is a layered pipeline.
 
 ```txt
 meaning
@@ -11,11 +11,9 @@ meaning
 → app
 ```
 
-The boundary checker enforces this direction.
+The boundary checker enforces import direction.
 
-## Layers
-
-### `meaning/`
+## `meaning/`
 
 Pure math.
 
@@ -30,7 +28,7 @@ centroid
 deltaBetween
 ```
 
-### `representation/`
+## `representation/`
 
 Construction syntax and graph validity.
 
@@ -47,7 +45,7 @@ dependenciesOf
 
 The graph is the mathematical construction document. It is not view state.
 
-### `evaluation/`
+## `evaluation/`
 
 Gives meaning to a validated graph.
 
@@ -57,67 +55,59 @@ Graph → EvaluatedScene
 
 Evaluation derives geometry. It does not mutate the graph.
 
-Examples:
-
-```txt
-TRIANGLE → EvaluatedTriangle
-CENTROID → EvaluatedPoint
-TRIANGLE_SIDE_MIDPOINT → EvaluatedPoint
-```
-
-### `rendering/`
+## `rendering/`
 
 Draws evaluated geometry.
 
 ```txt
-EvaluatedScene + Viewport → canvas pixels
+EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
-Rendering does not know how constructions are edited.
+Rendering may respect view options such as selection and hidden nodes. It does not edit constructions.
 
-### `interaction/`
+## `interaction/`
 
 Pure hit testing and gesture-adjacent logic.
 
-It may inspect evaluated geometry and graph structure, but should not perform DOM effects.
-
-### `app/`
-
-Browser shell.
-
-Owns:
+Examples:
 
 ```txt
-DOM lookup
-canvas context
-pointer events
-keyboard events
-requestAnimationFrame scheduling
-current Graph
-current selection
-current drag state
+hitTestPoint
+hitTestFreePoint
+hitTestTriangleSelection
+hitTestTriangleInterior
+```
+
+## `app/`
+
+Browser shell and interaction transitions.
+
+```txt
+main.ts            DOM wiring and browser effects
+appController.ts   user input → AppTransition
+appState.ts        Graph + ViewState + DragState
+viewState.ts       selected and hidden node IDs
+dragState.ts       active drag description
+canvasSurface.ts   canvas/viewport DOM utilities
+renderScheduler.ts requestAnimationFrame coalescing
 ```
 
 ## Core rules
 
 ```txt
 Derived geometry is never directly mutated.
-User effects become GraphEdit values.
+User effects become GraphEdit values or ViewState changes.
 GraphEdit values produce new validated Graphs.
-Rendering consumes evaluated geometry only.
-Selection is view state, not graph state.
+Selection and visibility are view state.
+Rendering consumes evaluated geometry.
 ```
 
-## Triangle dragging
+## Dragging
 
-A triangle body is draggable only when all defining vertices are free points.
+Free points are directly draggable.
 
-Dragging a triangle means:
+Triangle body dragging translates its free vertices.
 
-```txt
-translate its free vertices
-```
-
-It does not mutate the evaluated triangle directly.
+Side midpoints are modeled as segment midpoints. Shared sides should reuse the same segment and midpoint nodes.
 
 Triangles with constrained vertices are not body-draggable unless an explicit inverse edit is later defined.

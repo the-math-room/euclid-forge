@@ -1,8 +1,14 @@
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph } from "./graph";
 import type { Graph } from "./graph";
-import { centroidNode, freePoint, triangleNode } from "./node";
-import type { NodeId } from "./node";
+import {
+  centroidNode,
+  freePoint,
+  midpointNode,
+  segmentNode,
+  triangleNode,
+} from "./node";
+import type { GeometryNode, MidpointNode, NodeId, SegmentNode, TriangleNode } from "./node";
 
 export type GraphEdit =
   | Readonly<{
@@ -26,6 +32,10 @@ export type GraphEdit =
   | Readonly<{
       kind: "ADD_CENTROID";
       triangle: NodeId;
+    }>
+  | Readonly<{
+      kind: "ADD_MIDPOINTS";
+      triangle: NodeId;
     }>;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
@@ -44,6 +54,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "ADD_CENTROID":
       return addCentroid(graph, edit.triangle);
+
+    case "ADD_MIDPOINTS":
+      return addTriangleSideMidpoints(graph, edit.triangle);
   }
 }
 
@@ -108,6 +121,51 @@ function addCentroid(graph: Graph, triangle: NodeId): Graph {
   return createGraph([...graph.nodes, centroidNode(id, triangle, id)]);
 }
 
+function addTriangleSideMidpoints(graph: Graph, triangle: NodeId): Graph {
+  const node = graph.byId.get(triangle);
+
+  if (!node) {
+    throw new Error(`Cannot create side midpoints for missing triangle: ${triangle}`);
+  }
+
+  if (node.kind !== "TRIANGLE") {
+    throw new Error(`Cannot create side midpoints for non-triangle node: ${triangle}`);
+  }
+
+  let nodes = [...graph.nodes];
+  let changed = false;
+
+  for (const [a, b] of triangleEdges(node)) {
+    const segment = findSegmentBetween(nodes, a, b);
+
+    if (!segment) {
+      const segmentId = nextSegmentId(nodes, a, b);
+      nodes = [...nodes, segmentNode(segmentId, a, b)];
+      changed = true;
+    }
+
+    const currentSegment = findSegmentBetween(nodes, a, b);
+
+    if (!currentSegment) {
+      throw new Error(`Internal segment creation error for ${a}, ${b}`);
+    }
+
+    const midpoint = findMidpointForSegment(nodes, currentSegment.id);
+
+    if (!midpoint) {
+      const midpointId = nextMidpointId(nodes, currentSegment.id);
+      nodes = [...nodes, midpointNode(midpointId, currentSegment.id, midpointId)];
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return graph;
+  }
+
+  return createGraph(nodes);
+}
+
 function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
   const node = graph.byId.get(id);
 
@@ -169,6 +227,46 @@ function translateFreePoints(
   );
 }
 
+function findSegmentBetween(
+  nodes: readonly GeometryNode[],
+  a: NodeId,
+  b: NodeId,
+): SegmentNode | null {
+  const found = nodes.find(
+    (node): node is SegmentNode =>
+      node.kind === "SEGMENT" &&
+      ((node.a === a && node.b === b) || (node.a === b && node.b === a)),
+  );
+
+  return found ?? null;
+}
+
+function findMidpointForSegment(
+  nodes: readonly GeometryNode[],
+  segment: NodeId,
+): MidpointNode | null {
+  const found = nodes.find(
+    (node): node is MidpointNode =>
+      node.kind === "MIDPOINT" && node.segment === segment,
+  );
+
+  return found ?? null;
+}
+
+function triangleEdges(
+  triangle: TriangleNode,
+): readonly (readonly [NodeId, NodeId])[] {
+  return [
+    [triangle.a, triangle.b],
+    [triangle.b, triangle.c],
+    [triangle.c, triangle.a],
+  ];
+}
+
+function endpointKey(a: NodeId, b: NodeId): string {
+  return [a, b].sort().join("_");
+}
+
 function nextPointId(graph: Graph): NodeId {
   let index = 1;
 
@@ -197,4 +295,43 @@ function nextCentroidId(graph: Graph): NodeId {
   }
 
   return `G${index}`;
+}
+
+function nextSegmentId(
+  nodes: readonly { id: NodeId }[],
+  a: NodeId,
+  b: NodeId,
+): NodeId {
+  const base = `S_${endpointKey(a, b)}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
+}
+
+function nextMidpointId(
+  nodes: readonly { id: NodeId }[],
+  segment: NodeId,
+): NodeId {
+  const base = `M_${segment}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
 }

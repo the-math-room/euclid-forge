@@ -2,30 +2,31 @@
 
 Prefer small vertical changes.
 
-Each feature should preserve the pipeline:
+Keep the pipeline intact:
 
 ```txt
-GraphEdit → Graph → EvaluatedScene → render
+user input → AppTransition → GraphEdit/ViewState → Graph/EvaluatedScene → render
 ```
 
-## Add a new construction
+## Add a construction
 
 1. Add syntax in `representation/node.ts`.
 2. Add dependencies in `representation/dependencies.ts`.
 3. Add evaluated type in `evaluation/evaluated.ts`, if needed.
-4. Add evaluation case in `evaluation/evaluateGraph.ts`.
-5. Add renderer only if the evaluated geometry needs new drawing behavior.
-6. Add graph edit support in `representation/edit.ts`, if users can create it.
+4. Add evaluation in `evaluation/evaluateGraph.ts`.
+5. Add rendering only if drawing changes.
+6. Add `GraphEdit` support if users can create it.
 7. Add unit tests.
-8. Add smoke coverage only for user-visible behavior.
+8. Add smoke coverage only for user-visible browser behavior.
 
-## Add a new user interaction
+## Add a user interaction
 
 1. Decide the user intent.
-2. Convert the gesture into a `GraphEdit` or view-state change.
-3. Keep DOM effects in `app/`.
-4. Keep geometry changes in `representation/edit.ts`.
+2. Add or update `AppTransition` behavior in `appController.ts`.
+3. Keep DOM effects in `main.ts`.
+4. Keep graph mutations in `representation/edit.ts`.
 5. Keep hit testing in `interaction/`.
+6. Add unit tests for controller behavior.
 
 ## Add view state
 
@@ -51,7 +52,7 @@ Good:
 
 ```txt
 CENTROID depends on TRIANGLE
-TRIANGLE_SIDE_MIDPOINT depends on TRIANGLE + side
+MIDPOINT depends on SEGMENT
 ```
 
 Avoid storing derived coordinates in the graph.
@@ -63,9 +64,10 @@ Use unit tests for:
 ```txt
 math
 graph validation
-evaluation
 graph edits
+evaluation
 hit testing
+app transitions
 render scheduling
 ```
 
@@ -77,7 +79,7 @@ canvas rendering
 real pointer/keyboard interactions
 ```
 
-Smoke tests should assert behavior, not implementation details.
+Smoke helpers live in `smoke/helpers/`.
 
 ## Comments
 
@@ -86,8 +88,8 @@ Comment why, not what.
 Good:
 
 ```ts
-// Only triangles with free vertices are body-draggable. Translating only
-// some vertices would deform the construction instead of moving it.
+// Triangles with constrained vertices are not body-draggable.
+// Moving only the free anchors would deform the construction.
 ```
 
 Bad:

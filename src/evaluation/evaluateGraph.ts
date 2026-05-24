@@ -1,5 +1,4 @@
 import { centroid, midpoint, vec2 } from "../meaning/vec2";
-import type { TriangleSide } from "../representation/node";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type {
@@ -71,20 +70,6 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
         break;
       }
 
-      case "TRIANGLE_SIDE_MIDPOINT": {
-        const triangle = requireEvaluatedTriangle(values, node.triangle);
-        const [a, b] = triangleSideEndpoints(triangle, node.side);
-
-        values.set(node.id, {
-          kind: "POINT",
-          id: node.id,
-          point: midpoint(a, b),
-          label: node.label,
-          role: "MIDPOINT",
-        });
-        break;
-      }
-
       case "CENTROID": {
         const triangle = requireEvaluatedTriangle(values, node.triangle);
 
@@ -104,22 +89,6 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
     values,
     ordered: Object.freeze([...values.values()]),
   });
-}
-
-function triangleSideEndpoints(
-  triangle: EvaluatedTriangle,
-  side: TriangleSide,
-): readonly [typeof triangle.a, typeof triangle.b] {
-  switch (side) {
-    case "AB":
-      return [triangle.a, triangle.b];
-
-    case "BC":
-      return [triangle.b, triangle.c];
-
-    case "CA":
-      return [triangle.c, triangle.a];
-  }
 }
 
 function requireEvaluatedPoint(

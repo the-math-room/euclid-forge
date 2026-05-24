@@ -2,13 +2,13 @@
 
 An experimental 2D geometry construction engine.
 
-The design goal is simple:
+Core shape:
 
 ```txt
 construction syntax → validated graph → evaluated geometry → rendering
 ```
 
-User interactions produce graph edits. They do not mutate evaluated geometry.
+User interactions produce graph edits or view-state changes. They do not mutate evaluated geometry.
 
 ## Quick start
 
@@ -25,7 +25,7 @@ Open the Vite URL printed in the terminal.
 npm run check
 ```
 
-This runs:
+Runs:
 
 ```txt
 typecheck
@@ -41,11 +41,10 @@ npm test
 npm run typecheck
 npm run check:boundaries
 npm run smoke
+npm run build
 ```
 
 ## Source dump
-
-To share the current source state:
 
 ```bash
 ./scripts/dump-source.sh > source-dump.txt
@@ -54,15 +53,15 @@ To share the current source state:
 ## Current interactions
 
 ```txt
-click empty canvas        add free point
-drag free point           move that point
-drag triangle body        translate its free vertices
-shift-click free point    toggle point selection
+click empty canvas         add free point
+drag free point            move free point
+drag triangle body         translate free vertices
+shift-click point          toggle point selection
 shift-click triangle body  toggle triangle selection
-press T                   create triangle from exactly 3 selected free points
-press G                   create centroid for selected triangle
-press H                   hide selected nodes
-press U                   unhide all hidden nodes
+T                          create triangle from 3 selected free points
+G                          create centroid for selected triangle
+H                          hide selected nodes
+U                          unhide all hidden nodes
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.

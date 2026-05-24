@@ -7,7 +7,6 @@ import {
   midpointNode,
   segmentNode,
   triangleNode,
-  triangleSideMidpointNode,
 } from "../representation/node";
 import { evaluateGraph } from "./evaluateGraph";
 
@@ -37,7 +36,7 @@ describe("evaluation/evaluateGraph", () => {
     });
   });
 
-  test("evaluates a legacy segment midpoint", () => {
+  test("evaluates a segment midpoint", () => {
     const graph = createGraph([
       freePoint("A", -2, 0, "A"),
       freePoint("B", 2, 0, "B"),
@@ -52,58 +51,6 @@ describe("evaluation/evaluateGraph", () => {
       id: "M",
       point: vec2(0, 0),
       label: "M",
-      role: "MIDPOINT",
-    });
-  });
-
-  test("evaluates a triangle side midpoint", () => {
-    const graph = createGraph([
-      freePoint("A", -2, -1, "A"),
-      freePoint("B", 2, -1, "B"),
-      freePoint("C", 0, 2, "C"),
-      triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
-    ]);
-
-    const evaluated = evaluateGraph(graph);
-
-    expect(evaluated.values.get("M_AB")).toEqual({
-      kind: "POINT",
-      id: "M_AB",
-      point: vec2(0, -1),
-      label: "M",
-      role: "MIDPOINT",
-    });
-  });
-
-  test("evaluates each triangle side midpoint", () => {
-    const graph = createGraph([
-      freePoint("A", -2, -1, "A"),
-      freePoint("B", 2, -1, "B"),
-      freePoint("C", 0, 2, "C"),
-      triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M_AB"),
-      triangleSideMidpointNode("M_BC", "ABC", "BC", "M_BC"),
-      triangleSideMidpointNode("M_CA", "ABC", "CA", "M_CA"),
-    ]);
-
-    const evaluated = evaluateGraph(graph);
-
-    expect(evaluated.values.get("M_AB")).toMatchObject({
-      kind: "POINT",
-      point: vec2(0, -1),
-      role: "MIDPOINT",
-    });
-
-    expect(evaluated.values.get("M_BC")).toMatchObject({
-      kind: "POINT",
-      point: vec2(1, 0.5),
-      role: "MIDPOINT",
-    });
-
-    expect(evaluated.values.get("M_CA")).toMatchObject({
-      kind: "POINT",
-      point: vec2(-1, 0.5),
       role: "MIDPOINT",
     });
   });
@@ -131,7 +78,8 @@ describe("evaluation/evaluateGraph", () => {
   test("evaluates unordered graph nodes after graph validation orders them", () => {
     const graph = createGraph([
       centroidNode("G", "ABC", "G"),
-      triangleSideMidpointNode("M", "ABC", "AB", "M"),
+      midpointNode("M", "AB", "M"),
+      segmentNode("AB", "A", "B"),
       triangleNode("ABC", "A", "B", "C"),
       freePoint("C", 0, 2, "C"),
       freePoint("B", 2, 0, "B"),
@@ -165,13 +113,14 @@ describe("evaluation/evaluateGraph", () => {
     });
   });
 
-  test("evaluates a triangle with side midpoint and centroid constructions", () => {
+  test("evaluates a triangle with segment midpoint and centroid constructions", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
       centroidNode("G", "ABC", "G"),
     ]);
 

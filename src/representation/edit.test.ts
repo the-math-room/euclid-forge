@@ -2,7 +2,13 @@ import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
 import { applyGraphEdit } from "./edit";
 import { createGraph } from "./graph";
-import { centroidNode, freePoint, triangleNode } from "./node";
+import {
+  centroidNode,
+  freePoint,
+  triangleNode,
+  midpointNode,
+  segmentNode,
+} from "./node";
 
 describe("representation/applyGraphEdit", () => {
   test("adds a free point with the next available generated id", () => {
@@ -113,6 +119,107 @@ describe("representation/applyGraphEdit", () => {
     });
 
     expect(next).toBe(graph);
+  });
+
+  test("adds reusable segments and segment midpoints for a triangle", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      triangleNode("T1", "P1", "P2", "P3"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "ADD_MIDPOINTS",
+      triangle: "T1",
+    });
+
+    expect(next.byId.get("S_P1_P2")).toEqual(segmentNode("S_P1_P2", "P1", "P2"));
+    expect(next.byId.get("M_S_P1_P2")).toEqual(
+      midpointNode("M_S_P1_P2", "S_P1_P2", "M_S_P1_P2"),
+    );
+    expect(next.byId.get("S_P2_P3")).toEqual(segmentNode("S_P2_P3", "P2", "P3"));
+    expect(next.byId.get("M_S_P2_P3")).toEqual(
+      midpointNode("M_S_P2_P3", "S_P2_P3", "M_S_P2_P3"),
+    );
+    expect(next.byId.get("S_P1_P3")).toEqual(segmentNode("S_P1_P3", "P3", "P1"));
+    expect(next.byId.get("M_S_P1_P3")).toEqual(
+      midpointNode("M_S_P1_P3", "S_P1_P3", "M_S_P1_P3"),
+    );
+  });
+
+  test("reuses an existing segment for a shared triangle side", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      segmentNode("AB", "P1", "P2"),
+      midpointNode("M_AB", "AB", "M_AB"),
+      triangleNode("T1", "P1", "P2", "P3"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "ADD_MIDPOINTS",
+      triangle: "T1",
+    });
+
+    const segmentsBetweenP1P2 = next.nodes.filter(
+      (node) =>
+        node.kind === "SEGMENT" &&
+        ((node.a === "P1" && node.b === "P2") ||
+          (node.a === "P2" && node.b === "P1")),
+    );
+
+    const midpointsForAB = next.nodes.filter(
+      (node) => node.kind === "MIDPOINT" && node.segment === "AB",
+    );
+
+    expect(segmentsBetweenP1P2).toEqual([segmentNode("AB", "P1", "P2")]);
+    expect(midpointsForAB).toEqual([midpointNode("M_AB", "AB", "M_AB")]);
+  });
+
+  test("returns same graph when all edge segments and midpoints already exist", () => {
+    const graph = createGraph([
+      freePoint("P1", 0, 0, "P1"),
+      freePoint("P2", 2, 0, "P2"),
+      freePoint("P3", 1, 2, "P3"),
+      segmentNode("S_P1_P2", "P1", "P2"),
+      segmentNode("S_P2_P3", "P2", "P3"),
+      segmentNode("S_P1_P3", "P3", "P1"),
+      midpointNode("M_S_P1_P2", "S_P1_P2", "M_S_P1_P2"),
+      midpointNode("M_S_P2_P3", "S_P2_P3", "M_S_P2_P3"),
+      midpointNode("M_S_P1_P3", "S_P1_P3", "M_S_P1_P3"),
+      triangleNode("T1", "P1", "P2", "P3"),
+    ]);
+
+    const next = applyGraphEdit(graph, {
+      kind: "ADD_MIDPOINTS",
+      triangle: "T1",
+    });
+
+    expect(next).toBe(graph);
+  });
+
+  test("throws when creating side midpoints for a missing triangle", () => {
+    const graph = createGraph([]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "ADD_MIDPOINTS",
+        triangle: "T1",
+      }),
+    ).toThrow("Cannot create side midpoints for missing triangle: T1");
+  });
+
+  test("throws when creating side midpoints for a non-triangle node", () => {
+    const graph = createGraph([freePoint("P1", 0, 0, "P1")]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "ADD_MIDPOINTS",
+        triangle: "P1",
+      }),
+    ).toThrow("Cannot create side midpoints for non-triangle node: P1");
   });
 
   test("throws when creating a centroid for a missing triangle", () => {

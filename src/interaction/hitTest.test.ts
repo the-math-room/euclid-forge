@@ -5,14 +5,16 @@ import { createGraph } from "../representation/graph";
 import {
   centroidNode,
   freePoint,
+  midpointNode,
+  segmentNode,
   triangleNode,
-  triangleSideMidpointNode,
 } from "../representation/node";
 import type { Viewport } from "../rendering/viewport";
 import { worldToScreen } from "../rendering/viewport";
 import {
   hitTestFreePoint,
   hitTestPoint,
+  hitTestSegmentSelection,
   hitTestTriangleInterior,
   hitTestTriangleSelection,
 } from "./hitTest";
@@ -62,7 +64,8 @@ describe("interaction/hitTestPoint", () => {
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
     ]);
 
     const evaluated = evaluateGraph(graph);
@@ -98,7 +101,8 @@ describe("interaction/hitTestFreePoint", () => {
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
       centroidNode("G", "ABC", "G"),
     ]);
 
@@ -114,7 +118,8 @@ describe("interaction/hitTestFreePoint", () => {
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
       centroidNode("G", "ABC", "G"),
     ]);
 
@@ -130,7 +135,8 @@ describe("interaction/hitTestFreePoint", () => {
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
       centroidNode("G", "ABC", "G"),
     ]);
 
@@ -156,6 +162,52 @@ describe("interaction/hitTestFreePoint", () => {
 
     expect(
       hitTestFreePoint(graph, evaluated, viewport, { x: 10, y: 10 }),
+    ).toBeNull();
+  });
+});
+
+
+describe("interaction/hitTestSegmentSelection", () => {
+  const viewport: Viewport = {
+    width: 800,
+    height: 600,
+    center: vec2(0, 0),
+    zoom: 80,
+  };
+
+  test("finds a nearby segment", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestSegmentSelection(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, -1)),
+      ),
+    ).toBe("AB");
+  });
+
+  test("returns null when no segment is nearby", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestSegmentSelection(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 1)),
+      ),
     ).toBeNull();
   });
 });

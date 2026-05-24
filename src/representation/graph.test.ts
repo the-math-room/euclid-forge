@@ -3,15 +3,17 @@ import { createGraph } from "./graph";
 import {
   centroidNode,
   freePoint,
+  midpointNode,
+  segmentNode,
   triangleNode,
-  triangleSideMidpointNode,
 } from "./node";
 
 describe("representation/createGraph", () => {
   test("orders dependencies before dependents", () => {
     const graph = createGraph([
       centroidNode("G", "ABC", "G"),
-      triangleSideMidpointNode("M", "ABC", "AB", "M"),
+      midpointNode("M", "AB", "M"),
+      segmentNode("AB", "A", "B"),
       triangleNode("ABC", "A", "B", "C"),
       freePoint("C", 0, 2, "C"),
       freePoint("B", 2, 0, "B"),
@@ -23,7 +25,9 @@ describe("representation/createGraph", () => {
     expect(ids.indexOf("A")).toBeLessThan(ids.indexOf("ABC"));
     expect(ids.indexOf("B")).toBeLessThan(ids.indexOf("ABC"));
     expect(ids.indexOf("C")).toBeLessThan(ids.indexOf("ABC"));
-    expect(ids.indexOf("ABC")).toBeLessThan(ids.indexOf("M"));
+    expect(ids.indexOf("A")).toBeLessThan(ids.indexOf("AB"));
+    expect(ids.indexOf("B")).toBeLessThan(ids.indexOf("AB"));
+    expect(ids.indexOf("AB")).toBeLessThan(ids.indexOf("M"));
     expect(ids.indexOf("ABC")).toBeLessThan(ids.indexOf("G"));
   });
 
@@ -33,14 +37,14 @@ describe("representation/createGraph", () => {
       freePoint("B", 2, 0, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
     ]);
 
     expect(graph.byId.get("A")).toEqual(freePoint("A", -2, 0, "A"));
     expect(graph.byId.get("ABC")).toEqual(triangleNode("ABC", "A", "B", "C"));
-    expect(graph.byId.get("M_AB")).toEqual(
-      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
-    );
+    expect(graph.byId.get("AB")).toEqual(segmentNode("AB", "A", "B"));
+    expect(graph.byId.get("M_AB")).toEqual(midpointNode("M_AB", "AB", "M"));
   });
 
   test("throws when a triangle dependency is missing", () => {
@@ -52,10 +56,10 @@ describe("representation/createGraph", () => {
     ).toThrow("Missing dependency: ABC depends on B");
   });
 
-  test("throws when a triangle-side midpoint dependency is missing", () => {
-    expect(() =>
-      createGraph([triangleSideMidpointNode("M_AB", "ABC", "AB", "M")]),
-    ).toThrow("Missing dependency: M_AB depends on ABC");
+  test("throws when a midpoint segment dependency is missing", () => {
+    expect(() => createGraph([midpointNode("M_AB", "AB", "M")])).toThrow(
+      "Missing dependency: M_AB depends on AB",
+    );
   });
 
   test("throws when node ids are duplicated", () => {
