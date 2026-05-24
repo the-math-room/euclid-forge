@@ -51,6 +51,7 @@ print_tree() {
     \) -prune \
     -o \
     ! -name "package-lock.json" \
+    ! -name "push.sh" \
     ! -name "*.log" \
     -print \
     | sort
@@ -78,6 +79,7 @@ print_files_matching() {
     ! -path "./public/*" \
     ! -path "./src/assets/*" \
     ! -name "package-lock.json" \
+    ! -name "push.sh" \
     ! -name "*.svg" \
     ! -name "*.png" \
     ! -name "*.jpg" \
