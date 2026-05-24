@@ -12,24 +12,16 @@ import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { screenToWorld } from "../rendering/viewport";
+import { appCommandForKey } from "./commands";
 import { appState } from "./appState";
 import {
-  clearEffectivelyHiddenSelection,
   effectiveHiddenNodeIds,
 } from "./effectiveVisibility";
 import type { AppState } from "./appState";
 import {
   clearSelection,
-  hideSelectedNodes,
-  panViewport,
-  resetViewport,
-  resetViewportRotation,
-  rotateViewportClockwise,
-  rotateViewportCounterclockwise,
   setHoveredNode,
   toggleSelectedNode,
-  unhideAllNodes,
-  zoomViewport,
 } from "./viewState";
 
 export type PointerCaptureEffect = Readonly<
@@ -73,192 +65,19 @@ export function handleKeyDown(
   state: AppState,
   input: KeyInput,
 ): AppTransition {
-  const key = input.key.toLowerCase();
+  const command = appCommandForKey(input.key);
 
-  if (key === "arrowleft") {
-    return changed(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: -viewportPanStep(state), y: 0 }),
-        state.dragState,
-      ),
-    );
+  if (!command) {
+    return unchanged(state);
   }
 
-  if (key === "arrowright") {
-    return changed(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: viewportPanStep(state), y: 0 }),
-        state.dragState,
-      ),
-    );
+  const result = command.run(state);
+
+  if (!result) {
+    return unchanged(state);
   }
 
-  if (key === "arrowup") {
-    return changed(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: 0, y: viewportPanStep(state) }),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "arrowdown") {
-    return changed(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: 0, y: -viewportPanStep(state) }),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "+" || key === "=") {
-    return changed(
-      appState(
-        state.graph,
-        zoomViewport(state.viewState, 1.25),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "-" || key === "_") {
-    return changed(
-      appState(
-        state.graph,
-        zoomViewport(state.viewState, 0.8),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "0") {
-    return changed(
-      appState(
-        state.graph,
-        resetViewport(state.viewState),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "[") {
-    return changed(
-      appState(
-        state.graph,
-        rotateViewportCounterclockwise(state.viewState),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "]") {
-    return changed(
-      appState(
-        state.graph,
-        rotateViewportClockwise(state.viewState),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "\\") {
-    return changed(
-      appState(
-        state.graph,
-        resetViewportRotation(state.viewState),
-        state.dragState,
-      ),
-    );
-  }
-
-  if (key === "t") {
-    const vertices = selectedFreePointVertices(state);
-
-    if (!vertices) {
-      return unchanged(state);
-    }
-
-    return changed(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_TRIANGLE",
-          vertices,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
-      ),
-      "commit",
-    );
-  }
-
-  if (key === "g") {
-    const triangle = selectedTriangle(state);
-
-    if (!triangle) {
-      return unchanged(state);
-    }
-
-    return changed(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_CENTROID",
-          triangle,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
-      ),
-      "commit",
-    );
-  }
-
-  if (key === "m") {
-    const triangle = selectedTriangle(state);
-
-    if (!triangle) {
-      return unchanged(state);
-    }
-
-    return changed(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_MIDPOINTS",
-          triangle,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
-      ),
-      "commit",
-    );
-  }
-
-  if (key === "h") {
-    const viewState = clearEffectivelyHiddenSelection(
-      state.graph,
-      hideSelectedNodes(state.viewState),
-    );
-
-    if (viewState === state.viewState) {
-      return unchanged(state);
-    }
-
-    return changed(appState(state.graph, viewState, state.dragState), "commit");
-  }
-
-  if (key === "u") {
-    const viewState = unhideAllNodes(state.viewState);
-
-    if (viewState === state.viewState) {
-      return unchanged(state);
-    }
-
-    return changed(appState(state.graph, viewState, state.dragState), "commit");
-  }
-
-  return unchanged(state);
+  return changed(result.state, result.history);
 }
 
 export function handlePointerDown(
@@ -582,52 +401,6 @@ function translatedVertexPositions(
   }
 
   return positions;
-}
-
-function viewportPanStep(state: AppState): number {
-  return 40 / state.viewState.viewportZoom;
-}
-
-function selectedFreePointVertices(
-  state: AppState,
-): readonly [NodeId, NodeId, NodeId] | null {
-  const selected = [...state.viewState.selectedNodeIds];
-
-  if (selected.length !== 3) {
-    return null;
-  }
-
-  const [a, b, c] = selected;
-
-  if (!a || !b || !c) {
-    return null;
-  }
-
-  if (
-    state.graph.byId.get(a)?.kind !== "FREE_POINT" ||
-    state.graph.byId.get(b)?.kind !== "FREE_POINT" ||
-    state.graph.byId.get(c)?.kind !== "FREE_POINT"
-  ) {
-    return null;
-  }
-
-  return [a, b, c];
-}
-
-function selectedTriangle(state: AppState): NodeId | null {
-  const selected = [...state.viewState.selectedNodeIds];
-
-  if (selected.length !== 1) {
-    return null;
-  }
-
-  const [triangle] = selected;
-
-  if (!triangle || state.graph.byId.get(triangle)?.kind !== "TRIANGLE") {
-    return null;
-  }
-
-  return triangle;
 }
 
 function unchanged(state: AppState): AppTransition {
