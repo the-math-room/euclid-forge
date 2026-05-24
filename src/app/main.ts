@@ -1,19 +1,15 @@
 import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateGraph";
-import { addFreePoint } from "../interaction/addFreePoint";
 import {
   hitTestFreePoint,
   hitTestTriangleInterior,
 } from "../interaction/hitTest";
-import {
-  deltaBetween,
-  translateFreePoints,
-} from "../interaction/translateFreePoints";
-import { updateFreePoint } from "../interaction/updateFreePoint";
-import type { Vec2 } from "../meaning/vec2";
+import { deltaBetween } from "../meaning/vec2";
+import { applyGraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
+import type { Vec2 } from "../meaning/vec2";
 import { renderScene } from "../rendering/renderScene";
 import { screenToWorld } from "../rendering/viewport";
 import {
@@ -106,7 +102,10 @@ function main(): void {
       return;
     }
 
-    graph = addFreePoint(graph, screenToWorld(viewport, pointer));
+    graph = applyGraphEdit(graph, {
+      kind: "ADD_FREE_POINT",
+      point: screenToWorld(viewport, pointer),
+    });
     drag = null;
     requestRender();
     event.preventDefault();
@@ -122,13 +121,23 @@ function main(): void {
 
     switch (drag.kind) {
       case "FREE_POINT": {
-        graph = updateFreePoint(graph, drag.nodeId, world);
+        graph = applyGraphEdit(graph, {
+          kind: "MOVE_FREE_POINT",
+          id: drag.nodeId,
+          point: world,
+        });
         break;
       }
 
       case "TRIANGLE": {
         const delta = deltaBetween(drag.previousWorldPoint, world);
-        graph = translateFreePoints(graph, drag.vertexIds, delta);
+
+        graph = applyGraphEdit(graph, {
+          kind: "TRANSLATE_FREE_POINTS",
+          ids: drag.vertexIds,
+          delta,
+        });
+
         drag = {
           ...drag,
           previousWorldPoint: world,

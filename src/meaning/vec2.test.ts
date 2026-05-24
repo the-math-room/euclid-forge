@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { centroid, midpoint, vec2 } from "./vec2";
+import { centroid, deltaBetween, midpoint, vec2 } from "./vec2";
 
 describe("meaning/vec2", () => {
   test("constructs an immutable 2D vector", () => {
@@ -17,5 +17,9 @@ describe("meaning/vec2", () => {
     expect(centroid(vec2(-2, -1), vec2(2, -1), vec2(0, 2))).toEqual(
       vec2(0, 0),
     );
+  });
+
+  test("computes the delta from one vector to another", () => {
+    expect(deltaBetween(vec2(-1, 2), vec2(3, -4))).toEqual(vec2(4, -6));
   });
 });

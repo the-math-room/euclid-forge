@@ -14,3 +14,7 @@ export function midpoint(a: Vec2, b: Vec2): Vec2 {
 export function centroid(a: Vec2, b: Vec2, c: Vec2): Vec2 {
   return vec2((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
 }
+
+export function deltaBetween(a: Vec2, b: Vec2): Vec2 {
+  return vec2(b.x - a.x, b.y - a.y);
+}
