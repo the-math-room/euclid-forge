@@ -10,6 +10,7 @@ import { renderScene } from "../rendering/renderScene";
 import { screenToWorld } from "../rendering/viewport";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { initialScene } from "./initialScene";
+import { createRenderScheduler } from "./renderScheduler";
 
 type DragState = Readonly<{
   nodeId: NodeId;
@@ -92,20 +93,10 @@ function main(): void {
 
   let graph = initialScene();
   let drag: DragState | null = null;
-  let renderPending = false;
 
-  function requestRender(): void {
-    if (renderPending) {
-      return;
-    }
-
-    renderPending = true;
-
-    requestAnimationFrame(() => {
-      renderPending = false;
-      render(canvas, ctx, graph);
-    });
-  }
+  const requestRender = createRenderScheduler(() => {
+    render(canvas, ctx, graph);
+  });
 
   window.addEventListener("resize", () => {
     requestRender();
