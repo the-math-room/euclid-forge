@@ -1,70 +1,41 @@
+import { dependenciesForGeometryNode } from "../geometry/geometryRegistry";
 import type { Graph } from "./graph";
 import type { GeometryNode, NodeId } from "./node";
 
 export function dependenciesOf(node: GeometryNode): readonly NodeId[] {
-  switch (node.kind) {
-    case "FREE_POINT":
-      return [];
-
-    case "SEGMENT":
-      return [node.a, node.b];
-
-    case "CIRCLE":
-      return [node.center, node.through];
-
-    case "TRIANGLE":
-      return [node.a, node.b, node.c];
-
-    case "MIDPOINT":
-      return [node.segment];
-
-    case "CENTROID":
-      return [node.triangle];
-  }
+  return dependenciesForGeometryNode(node);
 }
 
 export function dependentsOf(graph: Graph, id: NodeId): readonly NodeId[] {
-  const dependents: NodeId[] = [];
-
-  for (const node of graph.nodes) {
-    if (dependenciesOf(node).includes(id)) {
-      dependents.push(node.id);
-    }
-  }
-
-  return Object.freeze(dependents);
+  return graph.nodes
+    .filter((node) => dependenciesOf(node).includes(id))
+    .map((node) => node.id);
 }
 
 export function transitiveDependentsOf(
   graph: Graph,
   ids: Iterable<NodeId>,
-): readonly NodeId[] {
+): ReadonlySet<NodeId> {
   const roots = new Set(ids);
-  const visited = new Set<NodeId>(roots);
-  const dependents: NodeId[] = [];
+  const dependents = new Set<NodeId>();
   const queue = [...roots];
 
-  let head = 0;
-
-  while (head < queue.length) {
-    const id = queue[head];
+  while (queue.length > 0) {
+    const id = queue.shift();
 
     if (!id) {
-      throw new Error("Internal dependent traversal queue error");
+      continue;
     }
 
-    head += 1;
-
     for (const dependent of dependentsOf(graph, id)) {
-      if (visited.has(dependent)) {
+      if (roots.has(dependent) || dependents.has(dependent)) {
         continue;
       }
 
-      visited.add(dependent);
-      dependents.push(dependent);
+      dependents.add(dependent);
       queue.push(dependent);
     }
   }
 
-  return Object.freeze(dependents);
+  return dependents;
 }
