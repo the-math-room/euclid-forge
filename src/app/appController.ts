@@ -1,22 +1,14 @@
-import { evaluateGraph } from "../evaluation/evaluateGraph";
-import { visibleEvaluatedScene } from "../evaluation/visibleScene";
-import {
-  hitTestFreePoint,
-  hitTestPoint,
-  hitTestSegmentSelection,
-  hitTestTriangleInterior,
-  hitTestTriangleSelection,
-} from "../interaction/hitTest";
 import { deltaBetween, vec2 } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { screenToWorld } from "../rendering/viewport";
 import { appCommandForKey } from "./commands";
-import { appState } from "./appState";
 import {
-  effectiveHiddenNodeIds,
-} from "./effectiveVisibility";
+  hoverIntent,
+  pointerDownIntent,
+} from "./pointerIntent";
+import { appState } from "./appState";
 import type { AppState } from "./appState";
 import {
   clearSelection,
@@ -85,125 +77,71 @@ export function handlePointerDown(
   input: PointerInput,
 ): AppTransition {
   const viewState = setHoveredNode(state.viewState, null);
-  const evaluated = visibleEvaluatedSceneForState(
+  const intent = pointerDownIntent(
     appState(state.graph, viewState, state.dragState),
+    input,
   );
 
-  if (input.shiftKey) {
-    const pointSelectionHit = hitTestPoint(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (pointSelectionHit) {
+  switch (intent.kind) {
+    case "SELECT_NODE":
       return changed(
         appState(
           state.graph,
-          toggleSelectedNode(viewState, pointSelectionHit),
+          toggleSelectedNode(viewState, intent.id),
           null,
         ),
         "commit",
       );
-    }
 
-    const segmentSelectionHit = hitTestSegmentSelection(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
+    case "DRAG_FREE_POINT":
+      return transition({
+        state: appState(state.graph, viewState, {
+          kind: "FREE_POINT",
+          nodeId: intent.id,
+        }),
+        shouldRender: false,
+        shouldPreventDefault: true,
+        pointerCapture: {
+          kind: "SET_POINTER_CAPTURE",
+          pointerId: input.pointerId,
+        },
+      });
 
-    if (segmentSelectionHit) {
+    case "DRAG_TRIANGLE":
+      return transition({
+        state: appState(state.graph, viewState, {
+          kind: "TRIANGLE",
+          vertexIds: intent.vertexIds,
+          initialPointerWorld: screenToWorld(input.viewport, input.point),
+          initialVertexPositions: initialVertexPositions(
+            state.graph,
+            intent.vertexIds,
+          ),
+        }),
+        shouldRender: false,
+        shouldPreventDefault: true,
+        pointerCapture: {
+          kind: "SET_POINTER_CAPTURE",
+          pointerId: input.pointerId,
+        },
+      });
+
+    case "ADD_FREE_POINT":
       return changed(
         appState(
-          state.graph,
-          toggleSelectedNode(viewState, segmentSelectionHit),
+          applyGraphEdit(state.graph, {
+            kind: "ADD_FREE_POINT",
+            point: intent.point,
+          }),
+          clearSelection(viewState),
           null,
         ),
         "commit",
       );
-    }
 
-    const triangleSelectionHit = hitTestTriangleSelection(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (triangleSelectionHit) {
-      return changed(
-        appState(
-          state.graph,
-          toggleSelectedNode(viewState, triangleSelectionHit.id),
-          null,
-        ),
-        "commit",
-      );
-    }
-
-    return preventOnly(appState(state.graph, viewState, null));
+    case "NONE":
+      return preventOnly(appState(state.graph, viewState, null));
   }
-
-  const pointHit = hitTestFreePoint(
-    state.graph,
-    evaluated,
-    input.viewport,
-    input.point,
-  );
-
-  if (pointHit) {
-    return transition({
-      state: appState(state.graph, viewState, {
-        kind: "FREE_POINT",
-        nodeId: pointHit,
-      }),
-      shouldRender: false,
-      shouldPreventDefault: true,
-      pointerCapture: {
-        kind: "SET_POINTER_CAPTURE",
-        pointerId: input.pointerId,
-      },
-    });
-  }
-
-  const triangleHit = hitTestTriangleInterior(
-    state.graph,
-    evaluated,
-    input.viewport,
-    input.point,
-  );
-
-  if (triangleHit) {
-    return transition({
-      state: appState(state.graph, viewState, {
-        kind: "TRIANGLE",
-        vertexIds: triangleHit.vertexIds,
-        initialPointerWorld: screenToWorld(input.viewport, input.point),
-        initialVertexPositions: initialVertexPositions(
-          state.graph,
-          triangleHit.vertexIds,
-        ),
-      }),
-      shouldRender: false,
-      shouldPreventDefault: true,
-      pointerCapture: {
-        kind: "SET_POINTER_CAPTURE",
-        pointerId: input.pointerId,
-      },
-    });
-  }
-
-  return changed(
-    appState(
-      applyGraphEdit(state.graph, {
-        kind: "ADD_FREE_POINT",
-        point: screenToWorld(input.viewport, input.point),
-      }),
-      clearSelection(viewState),
-      null,
-    ),
-    "commit",
-  );
 }
 
 export function handlePointerMove(
@@ -258,7 +196,6 @@ export function handlePointerMove(
   }
 }
 
-
 export function handlePointerLeave(state: AppState): AppTransition {
   const viewState = setHoveredNode(state.viewState, null);
 
@@ -296,73 +233,19 @@ export function handlePointerCancel(
   return handlePointerUp(state, pointerId);
 }
 
-
-
-
-function visibleEvaluatedSceneForState(state: AppState) {
-  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
-
-  return visibleEvaluatedScene(
-    evaluateGraph(state.graph),
-    hiddenNodeIds.size > 0
-      ? {
-          hiddenNodeIds,
-        }
-      : {},
-  );
-}
-
 function hitTestHoverTarget(
   state: AppState,
   input: PointerInput,
 ): NodeId | null {
-  const evaluated = visibleEvaluatedSceneForState(state);
+  const intent = hoverIntent(state, input);
 
-  if (input.shiftKey) {
-    const pointHit = hitTestPoint(evaluated, input.viewport, input.point);
+  switch (intent.kind) {
+    case "HOVER_NODE":
+      return intent.id;
 
-    if (pointHit) {
-      return pointHit;
-    }
-
-    const segmentHit = hitTestSegmentSelection(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (segmentHit) {
-      return segmentHit;
-    }
-
-    const triangleHit = hitTestTriangleSelection(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    return triangleHit?.id ?? null;
+    case "NONE":
+      return null;
   }
-
-  const freePointHit = hitTestFreePoint(
-    state.graph,
-    evaluated,
-    input.viewport,
-    input.point,
-  );
-
-  if (freePointHit) {
-    return freePointHit;
-  }
-
-  const triangleHit = hitTestTriangleInterior(
-    state.graph,
-    evaluated,
-    input.viewport,
-    input.point,
-  );
-
-  return triangleHit?.id ?? null;
 }
 
 function initialVertexPositions(
