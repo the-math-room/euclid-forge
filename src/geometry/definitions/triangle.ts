@@ -1,7 +1,9 @@
+import { hitTriangleValue } from "../hitGeometry";
 import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedTriangle } from "../../evaluation/evaluated";
 import { renderTriangle } from "../../rendering/triangleRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
 import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
@@ -32,6 +34,27 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
           b: b.point,
           c: c.point,
         };
+      },
+    }),
+
+    interaction: Object.freeze({
+      hitClass: "AREA",
+      hitTest: (
+        value: EvaluatedGeometry,
+        context: GeometryHitContext,
+      ): GeometryHitCandidate | null => {
+        if (value.kind !== "TRIANGLE") {
+          return null;
+        }
+
+        const target = hitTriangleValue(value, context);
+
+        return target
+          ? {
+              hitClass: "AREA" as const,
+              target,
+            }
+          : null;
       },
     }),
 

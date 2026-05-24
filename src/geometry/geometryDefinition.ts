@@ -1,6 +1,11 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type { EvaluationContext } from "./evaluationContext";
+import type {
+  GeometryHitCandidate,
+  GeometryHitClass,
+  GeometryHitContext,
+} from "./interactionContext";
 import type { GeometryRenderContext } from "./renderingContext";
 
 export type GeometryKind = GeometryNode["kind"];
@@ -30,6 +35,14 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
       context: GeometryRenderContext,
     ) => void;
   }>;
+
+  interaction?: Readonly<{
+    hitClass: GeometryHitClass;
+    hitTest: (
+      value: EvaluatedGeometry,
+      context: GeometryHitContext,
+    ) => GeometryHitCandidate | null;
+  }>;
 }>;
 
 export type AnyGeometryDefinition = Readonly<{
@@ -51,6 +64,14 @@ export type AnyGeometryDefinition = Readonly<{
       value: EvaluatedGeometry,
       context: GeometryRenderContext,
     ) => void;
+  }>;
+
+  interaction?: Readonly<{
+    hitClass: GeometryHitClass;
+    hitTest: (
+      value: EvaluatedGeometry,
+      context: GeometryHitContext,
+    ) => GeometryHitCandidate | null;
   }>;
 }>;
 

@@ -1,7 +1,9 @@
+import { hitSegmentValue } from "../hitGeometry";
 import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedSegment } from "../../evaluation/evaluated";
 import { renderSegment } from "../../rendering/segmentRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
 import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
@@ -31,6 +33,27 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
       };
     },
   }),
+
+    interaction: Object.freeze({
+      hitClass: "LINEAR",
+      hitTest: (
+        value: EvaluatedGeometry,
+        context: GeometryHitContext,
+      ): GeometryHitCandidate | null => {
+        if (value.kind !== "SEGMENT") {
+          return null;
+        }
+
+        const target = hitSegmentValue(value, context);
+
+        return target
+          ? {
+              hitClass: "LINEAR" as const,
+              target,
+            }
+          : null;
+      },
+    }),
 
   rendering: Object.freeze({
     render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {

@@ -101,3 +101,25 @@ function evaluatedValueToGeometryKind(
       return "TRIANGLE";
   }
 }
+
+
+export function hitGeometryValue(
+  value: import("../evaluation/evaluated").EvaluatedGeometry,
+  context: import("./interactionContext").GeometryHitContext,
+): import("./interactionContext").GeometryHitCandidate | null {
+  const definition = requireAnyGeometryDefinition(
+    evaluatedValueToGeometryKind(value),
+  );
+
+  return definition.interaction?.hitTest(value, context) ?? null;
+}
+
+export function hitClassForGeometryValue(
+  value: import("../evaluation/evaluated").EvaluatedGeometry,
+): import("./interactionContext").GeometryHitClass | null {
+  const definition = requireAnyGeometryDefinition(
+    evaluatedValueToGeometryKind(value),
+  );
+
+  return definition.interaction?.hitClass ?? null;
+}

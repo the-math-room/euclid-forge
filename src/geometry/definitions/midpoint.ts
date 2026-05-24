@@ -1,8 +1,10 @@
+import { hitPointValue } from "../hitGeometry";
 import type { EvaluatedGeometry } from "../../evaluation/evaluated";
 import type { EvaluatedPoint } from "../../evaluation/evaluated";
 import { midpoint } from "../../meaning/vec2";
 import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
+import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
 import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
@@ -31,6 +33,27 @@ export const midpointDefinition: GeometryDefinition<"MIDPOINT"> =
           label: node.label,
           role: "MIDPOINT",
         };
+      },
+    }),
+
+    interaction: Object.freeze({
+      hitClass: "POINT",
+      hitTest: (
+        value: EvaluatedGeometry,
+        context: GeometryHitContext,
+      ): GeometryHitCandidate | null => {
+        if (value.kind !== "POINT") {
+          return null;
+        }
+
+        const target = hitPointValue(value, context);
+
+        return target
+          ? {
+              hitClass: "POINT" as const,
+              target,
+            }
+          : null;
       },
     }),
 

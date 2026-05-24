@@ -1,12 +1,9 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { visibleEvaluatedScene } from "../evaluation/visibleScene";
 import {
-  hitTestCircleTarget,
   hitTestFreePointTarget,
-  hitTestPointTarget,
-  hitTestSegmentTarget,
+  hitTestSelectionTarget,
   hitTestTriangleInterior,
-  hitTestTriangleTarget,
 } from "../interaction/hitTest";
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
@@ -53,51 +50,12 @@ export function pointerDownIntent(
   const evaluated = visibleEvaluatedSceneForInteraction(state);
 
   if (input.shiftKey) {
-    const pointHit = hitTestPointTarget(evaluated, input.viewport, input.point);
+    const hit = hitTestSelectionTarget(evaluated, input.viewport, input.point);
 
-    if (pointHit) {
+    if (hit) {
       return {
         kind: "SELECT_NODE",
-        id: pointHit.id,
-      };
-    }
-
-    const segmentHit = hitTestSegmentTarget(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (segmentHit) {
-      return {
-        kind: "SELECT_NODE",
-        id: segmentHit.id,
-      };
-    }
-
-    const circleHit = hitTestCircleTarget(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (circleHit) {
-      return {
-        kind: "SELECT_NODE",
-        id: circleHit.id,
-      };
-    }
-
-    const triangleHit = hitTestTriangleTarget(
-      evaluated,
-      input.viewport,
-      input.point,
-    );
-
-    if (triangleHit) {
-      return {
-        kind: "SELECT_NODE",
-        id: triangleHit.id,
+        id: hit.id,
       };
     }
 
