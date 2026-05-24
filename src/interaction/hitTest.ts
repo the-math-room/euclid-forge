@@ -1,9 +1,15 @@
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import type { EvaluatedPoint } from "../evaluation/evaluated";
+import type { EvaluatedPoint, EvaluatedTriangle } from "../evaluation/evaluated";
+import type { Vec2 } from "../meaning/vec2";
 import type { Graph } from "../representation/graph";
-import type { NodeId } from "../representation/node";
+import type { NodeId, TriangleNode } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
-import { worldToScreen } from "../rendering/viewport";
+import { screenToWorld, worldToScreen } from "../rendering/viewport";
+
+export type TriangleHit = Readonly<{
+  id: NodeId;
+  vertexIds: readonly [NodeId, NodeId, NodeId];
+}>;
 
 export function hitTestFreePoint(
   graph: Graph,
@@ -40,6 +46,59 @@ export function hitTestFreePoint(
   return best?.id ?? null;
 }
 
+export function hitTestTriangleInterior(
+  graph: Graph,
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): TriangleHit | null {
+  const worldPoint = screenToWorld(viewport, screenPoint);
+
+  for (const value of evaluated.ordered) {
+    if (value.kind !== "TRIANGLE") {
+      continue;
+    }
+
+    if (!pointInTriangle(worldPoint, value)) {
+      continue;
+    }
+
+    const node = graph.byId.get(value.id);
+
+    if (!node || node.kind !== "TRIANGLE") {
+      continue;
+    }
+
+    return {
+      id: value.id,
+      vertexIds: triangleVertexIds(node),
+    };
+  }
+
+  return null;
+}
+
 function isFreePoint(graph: Graph, value: EvaluatedPoint): boolean {
   return graph.byId.get(value.id)?.kind === "FREE_POINT";
+}
+
+function triangleVertexIds(
+  triangle: TriangleNode,
+): readonly [NodeId, NodeId, NodeId] {
+  return [triangle.a, triangle.b, triangle.c];
+}
+
+function pointInTriangle(point: Vec2, triangle: EvaluatedTriangle): boolean {
+  const d1 = signedArea(point, triangle.a, triangle.b);
+  const d2 = signedArea(point, triangle.b, triangle.c);
+  const d3 = signedArea(point, triangle.c, triangle.a);
+
+  const hasNegative = d1 < 0 || d2 < 0 || d3 < 0;
+  const hasPositive = d1 > 0 || d2 > 0 || d3 > 0;
+
+  return !(hasNegative && hasPositive);
+}
+
+function signedArea(a: Vec2, b: Vec2, c: Vec2): number {
+  return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
 }
