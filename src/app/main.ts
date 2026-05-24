@@ -6,7 +6,6 @@ import {
   hitTestTriangleInterior,
 } from "../interaction/hitTest";
 import { deltaBetween } from "../meaning/vec2";
-import type { Vec2 } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
@@ -19,6 +18,7 @@ import {
   resizeCanvasToDisplaySize,
   viewportForCanvas,
 } from "./canvasSurface";
+import type { DragState } from "./dragState";
 import { initialScene } from "./initialScene";
 import { createRenderScheduler } from "./renderScheduler";
 import {
@@ -27,17 +27,6 @@ import {
   toggleSelectedNode,
 } from "./viewState";
 import type { ViewState } from "./viewState";
-
-type DragState =
-  | Readonly<{
-      kind: "FREE_POINT";
-      nodeId: NodeId;
-    }>
-  | Readonly<{
-      kind: "TRIANGLE";
-      vertexIds: readonly NodeId[];
-      previousWorldPoint: Vec2;
-    }>;
 
 function render(
   canvas: HTMLCanvasElement,
