@@ -1,5 +1,9 @@
 import type { AppState } from "./appState";
-import type { AppTransition, PointerCaptureEffect } from "./appController";
+import type {
+  AppEffect,
+  AppTransition,
+  PointerCaptureEffect,
+} from "./appController";
 
 export type ApplyTransitionInput = Readonly<{
   canvas: HTMLCanvasElement;
@@ -18,12 +22,8 @@ export function applyTransition(input: ApplyTransitionInput): void {
     input.commitStateToHistory(input.transition.state);
   }
 
-  if (input.transition.statusMessage) {
-    input.showStatusMessage(input.transition.statusMessage);
-  }
-
-  if (input.transition.pointerCapture) {
-    applyPointerCaptureEffect(input.canvas, input.transition.pointerCapture);
+  for (const effect of input.transition.effects) {
+    applyAppEffect(input, effect);
   }
 
   if (input.transition.shouldRender) {
@@ -32,6 +32,23 @@ export function applyTransition(input: ApplyTransitionInput): void {
 
   if (input.transition.shouldPreventDefault) {
     input.event.preventDefault();
+  }
+}
+
+
+function applyAppEffect(
+  input: ApplyTransitionInput,
+  effect: AppEffect,
+): void {
+  switch (effect.kind) {
+    case "SHOW_STATUS":
+      input.showStatusMessage(effect.message);
+      break;
+
+    case "SET_POINTER_CAPTURE":
+    case "RELEASE_POINTER_CAPTURE":
+      applyPointerCaptureEffect(input.canvas, effect);
+      break;
   }
 }
 

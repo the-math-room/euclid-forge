@@ -191,7 +191,7 @@ describe("app/appController", () => {
       kind: "FREE_POINT",
       nodeId: "A",
     });
-    expect(transition.pointerCapture).toEqual({
+    expect(transition.effects).toContainEqual({
       kind: "SET_POINTER_CAPTURE",
       pointerId: 1,
     });
@@ -227,7 +227,7 @@ describe("app/appController", () => {
     const transition = handlePointerUp(state, 1);
 
     expect(transition.state.dragState).toBeNull();
-    expect(transition.pointerCapture).toEqual({
+    expect(transition.effects).toContainEqual({
       kind: "RELEASE_POINTER_CAPTURE",
       pointerId: 1,
     });
@@ -247,7 +247,11 @@ describe("app/appController", () => {
     });
 
     expect(transition.state.dragState).toBeNull();
-    expect(transition.pointerCapture).toBeUndefined();
+    expect(transition.effects).not.toContainEqual(
+      expect.objectContaining({
+        kind: "SET_POINTER_CAPTURE",
+      }),
+    );
     expect(transition.state.graph.byId.get("P1")).toEqual(
       freePoint("P1", -2, -1, "P1"),
     );
@@ -342,7 +346,11 @@ describe("app/appController", () => {
     });
 
     expect(transition.state.dragState).toBeNull();
-    expect(transition.pointerCapture).toBeUndefined();
+    expect(transition.effects).not.toContainEqual(
+      expect.objectContaining({
+        kind: "SET_POINTER_CAPTURE",
+      }),
+    );
     expect(transition.state.graph.byId.get("P1")).toEqual(
       freePoint("P1", 0, 0, "P1"),
     );
@@ -394,7 +402,11 @@ describe("app/appController", () => {
     });
 
     expect(transition.state.dragState).toBeNull();
-    expect(transition.pointerCapture).toBeUndefined();
+    expect(transition.effects).not.toContainEqual(
+      expect.objectContaining({
+        kind: "SET_POINTER_CAPTURE",
+      }),
+    );
     expect(transition.state.graph.byId.get("P1")).toEqual(
       freePoint("P1", 0, 0, "P1"),
     );

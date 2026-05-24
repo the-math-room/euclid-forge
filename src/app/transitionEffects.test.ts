@@ -21,6 +21,7 @@ function transition(
     shouldRender: false,
     shouldPreventDefault: false,
     history: "ignore",
+    effects: [],
     ...overrides,
   };
 }
@@ -117,7 +118,12 @@ describe("app/transitionEffects", () => {
       canvas: canvasStub(),
       event: new Event("test"),
       transition: transition({
-        statusMessage: "Cannot delete A.",
+        effects: [
+          {
+            kind: "SHOW_STATUS",
+            message: "Cannot delete A.",
+          },
+        ],
       }),
       setState: vi.fn(),
       requestRender: vi.fn(),

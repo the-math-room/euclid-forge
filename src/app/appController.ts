@@ -27,6 +27,13 @@ export type PointerCaptureEffect = Readonly<
     }
 >;
 
+export type StatusEffect = Readonly<{
+  kind: "SHOW_STATUS";
+  message: string;
+}>;
+
+export type AppEffect = PointerCaptureEffect | StatusEffect;
+
 export type AppTransitionHistoryPolicy = "commit" | "ignore";
 
 export type AppTransition = Readonly<{
@@ -34,13 +41,13 @@ export type AppTransition = Readonly<{
   shouldRender: boolean;
   shouldPreventDefault: boolean;
   history: AppTransitionHistoryPolicy;
-  statusMessage?: string;
-  pointerCapture?: PointerCaptureEffect;
+  effects: readonly AppEffect[];
 }>;
 
-type AppTransitionInit = Omit<AppTransition, "history"> &
+type AppTransitionInit = Omit<AppTransition, "history" | "effects"> &
   Readonly<{
     history?: AppTransitionHistoryPolicy;
+    effects?: readonly AppEffect[];
   }>;
 
 export type KeyInput = Readonly<{
@@ -102,10 +109,12 @@ export function handlePointerDown(
         }),
         shouldRender: false,
         shouldPreventDefault: true,
-        pointerCapture: {
-          kind: "SET_POINTER_CAPTURE",
-          pointerId: input.pointerId,
-        },
+        effects: [
+          {
+            kind: "SET_POINTER_CAPTURE",
+            pointerId: input.pointerId,
+          },
+        ],
       });
 
     case "DRAG_TRIANGLE":
@@ -121,10 +130,12 @@ export function handlePointerDown(
         }),
         shouldRender: false,
         shouldPreventDefault: true,
-        pointerCapture: {
-          kind: "SET_POINTER_CAPTURE",
-          pointerId: input.pointerId,
-        },
+        effects: [
+          {
+            kind: "SET_POINTER_CAPTURE",
+            pointerId: input.pointerId,
+          },
+        ],
       });
 
     case "ADD_FREE_POINT":
@@ -220,10 +231,12 @@ export function handlePointerUp(
     shouldRender: false,
     shouldPreventDefault: true,
     history: "commit",
-    pointerCapture: {
-      kind: "RELEASE_POINTER_CAPTURE",
-      pointerId,
-    },
+    effects: [
+      {
+        kind: "RELEASE_POINTER_CAPTURE",
+        pointerId,
+      },
+    ],
   });
 }
 
@@ -308,12 +321,21 @@ function changed(
   history: AppTransitionHistoryPolicy = "ignore",
   statusMessage?: string,
 ): AppTransition {
+  const effects: readonly AppEffect[] | undefined = statusMessage
+    ? [
+        {
+          kind: "SHOW_STATUS",
+          message: statusMessage,
+        },
+      ]
+    : undefined;
+
   return transition({
     state,
     shouldRender: true,
     shouldPreventDefault: true,
     history,
-    ...(statusMessage ? { statusMessage } : {}),
+    ...(effects ? { effects } : {}),
   });
 }
 
@@ -321,5 +343,6 @@ function transition(value: AppTransitionInit): AppTransition {
   return Object.freeze({
     history: "ignore",
     ...value,
+    effects: Object.freeze([...(value.effects ?? [])]),
   });
 }
