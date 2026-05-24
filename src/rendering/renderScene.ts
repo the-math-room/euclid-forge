@@ -5,14 +5,18 @@ import type {
   EvaluatedTriangle,
 } from "../evaluation/evaluated";
 import { renderPoints } from "./pointRenderer";
+import type { PointRenderOptions } from "./pointRenderer";
 import { renderSegments } from "./segmentRenderer";
 import { renderTriangles } from "./triangleRenderer";
 import type { Viewport } from "./viewport";
+
+export type RenderSceneOptions = PointRenderOptions;
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
   scene: EvaluatedScene,
+  options: RenderSceneOptions = {},
 ): void {
   const triangles = scene.ordered.filter(
     (value): value is EvaluatedTriangle => value.kind === "TRIANGLE",
@@ -28,5 +32,5 @@ export function renderScene(
 
   renderTriangles(ctx, viewport, triangles);
   renderSegments(ctx, viewport, segments);
-  renderPoints(ctx, viewport, points);
+  renderPoints(ctx, viewport, points, options);
 }

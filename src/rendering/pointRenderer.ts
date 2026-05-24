@@ -10,6 +10,10 @@ type PointStyle = Readonly<{
   radiusPx: number;
 }>;
 
+export type PointRenderOptions = Readonly<{
+  selectedNodeIds?: ReadonlySet<string>;
+}>;
+
 const POINT_STYLES: Record<EvaluatedPointRole, PointStyle> = {
   FREE: {
     fill: "#fbbf24",
@@ -29,11 +33,22 @@ export function renderPoint(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
   point: EvaluatedPoint,
+  options: PointRenderOptions = {},
 ): void {
   const screen = worldToScreen(viewport, point.point);
   const style = POINT_STYLES[point.role];
+  const selected = options.selectedNodeIds?.has(point.id) ?? false;
 
   ctx.save();
+
+  if (selected) {
+    ctx.strokeStyle = "#f9fafb";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, style.radiusPx + 5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
   ctx.fillStyle = style.fill;
 
@@ -52,8 +67,9 @@ export function renderPoints(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
   points: readonly EvaluatedPoint[],
+  options: PointRenderOptions = {},
 ): void {
   for (const point of points) {
-    renderPoint(ctx, viewport, point);
+    renderPoint(ctx, viewport, point, options);
   }
 }

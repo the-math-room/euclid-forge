@@ -6,10 +6,10 @@ import {
   hitTestTriangleInterior,
 } from "../interaction/hitTest";
 import { deltaBetween } from "../meaning/vec2";
+import type { Vec2 } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
-import type { Vec2 } from "../meaning/vec2";
 import { renderScene } from "../rendering/renderScene";
 import { screenToWorld } from "../rendering/viewport";
 import {
@@ -37,6 +37,7 @@ function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   graph: Graph,
+  selectedNodeIds: ReadonlySet<NodeId>,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
@@ -45,7 +46,7 @@ function render(
   const evaluated = evaluateGraph(graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
-  renderScene(ctx, viewport, evaluated);
+  renderScene(ctx, viewport, evaluated, { selectedNodeIds });
 }
 
 function releasePointerCaptureIfHeld(
@@ -57,19 +58,62 @@ function releasePointerCaptureIfHeld(
   }
 }
 
+function toggleSelection(
+  selectedNodeIds: ReadonlySet<NodeId>,
+  id: NodeId,
+): ReadonlySet<NodeId> {
+  const next = new Set(selectedNodeIds);
+
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+
+  return next;
+}
+
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
 
   let graph = initialScene();
   let drag: DragState | null = null;
+  let selectedNodeIds: ReadonlySet<NodeId> = new Set();
 
   const requestRender = createRenderScheduler(() => {
-    render(canvas, ctx, graph);
+    render(canvas, ctx, graph, selectedNodeIds);
   });
 
   window.addEventListener("resize", () => {
     requestRender();
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() !== "t") {
+      return;
+    }
+
+    const selected = [...selectedNodeIds];
+
+    if (selected.length !== 3) {
+      return;
+    }
+
+    const [a, b, c] = selected;
+
+    if (!a || !b || !c) {
+      return;
+    }
+
+    graph = applyGraphEdit(graph, {
+      kind: "ADD_TRIANGLE",
+      vertices: [a, b, c],
+    });
+
+    selectedNodeIds = new Set();
+    requestRender();
+    event.preventDefault();
   });
 
   canvas.addEventListener("pointerdown", (event) => {
@@ -80,6 +124,14 @@ function main(): void {
     const pointHit = hitTestFreePoint(graph, evaluated, viewport, pointer);
 
     if (pointHit) {
+      if (event.shiftKey) {
+        selectedNodeIds = toggleSelection(selectedNodeIds, pointHit);
+        drag = null;
+        requestRender();
+        event.preventDefault();
+        return;
+      }
+
       canvas.setPointerCapture(event.pointerId);
       drag = {
         kind: "FREE_POINT",
@@ -106,6 +158,7 @@ function main(): void {
       kind: "ADD_FREE_POINT",
       point: screenToWorld(viewport, pointer),
     });
+    selectedNodeIds = new Set();
     drag = null;
     requestRender();
     event.preventDefault();

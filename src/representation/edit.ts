@@ -1,7 +1,7 @@
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph } from "./graph";
 import type { Graph } from "./graph";
-import { freePoint } from "./node";
+import { freePoint, triangleNode } from "./node";
 import type { NodeId } from "./node";
 
 export type GraphEdit =
@@ -18,6 +18,10 @@ export type GraphEdit =
       kind: "TRANSLATE_FREE_POINTS";
       ids: readonly NodeId[];
       delta: Vec2;
+    }>
+  | Readonly<{
+      kind: "ADD_TRIANGLE";
+      vertices: readonly [NodeId, NodeId, NodeId];
     }>;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
@@ -30,6 +34,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "TRANSLATE_FREE_POINTS":
       return translateFreePoints(graph, edit.ids, edit.delta);
+
+    case "ADD_TRIANGLE":
+      return addTriangle(graph, edit.vertices);
   }
 }
 
@@ -37,6 +44,33 @@ function addFreePoint(graph: Graph, point: Vec2): Graph {
   const id = nextPointId(graph);
 
   return createGraph([...graph.nodes, freePoint(id, point.x, point.y, id)]);
+}
+
+function addTriangle(
+  graph: Graph,
+  vertices: readonly [NodeId, NodeId, NodeId],
+): Graph {
+  const uniqueVertices = new Set(vertices);
+
+  if (uniqueVertices.size !== 3) {
+    throw new Error("Cannot create triangle from duplicate vertices");
+  }
+
+  for (const id of vertices) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot create triangle with missing vertex: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot create triangle with constrained vertex: ${id}`);
+    }
+  }
+
+  const id = nextTriangleId(graph);
+
+  return createGraph([...graph.nodes, triangleNode(id, vertices[0], vertices[1], vertices[2])]);
 }
 
 function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
@@ -108,4 +142,14 @@ function nextPointId(graph: Graph): NodeId {
   }
 
   return `P${index}`;
+}
+
+function nextTriangleId(graph: Graph): NodeId {
+  let index = 1;
+
+  while (graph.byId.has(`T${index}`)) {
+    index += 1;
+  }
+
+  return `T${index}`;
 }

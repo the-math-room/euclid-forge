@@ -265,7 +265,6 @@ test("clicks empty canvas to add a new draggable free point", async ({
   const centerY = box.y + box.height / 2;
   const zoomCssPx = 80;
 
-  // Empty point outside the initial triangle: world coordinate (3, 2).
   await page.mouse.click(centerX + 3 * zoomCssPx, centerY - 2 * zoomCssPx);
 
   await waitForAnimationFrame(page);
@@ -336,7 +335,6 @@ test("clicks empty canvas to add a new draggable free point", async ({
 
   expect(result.newPointPixels).toBeGreaterThan(0);
 
-  // It should also be draggable now.
   await page.mouse.move(centerX + 3 * zoomCssPx, centerY - 2 * zoomCssPx);
   await page.mouse.down();
   await page.mouse.move(centerX + 2 * zoomCssPx, centerY - 2 * zoomCssPx);
@@ -383,4 +381,127 @@ test("clicks empty canvas to add a new draggable free point", async ({
   });
 
   expect(dragged.yellowishPixels).toBeGreaterThan(0);
+});
+
+test("shift-selects three free points and creates a triangle with T", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const canvas = page.locator("#geometry-canvas");
+
+  await expect(canvas).toBeVisible();
+
+  const box = await canvas.boundingBox();
+
+  if (!box) {
+    throw new Error("Could not find canvas bounding box");
+  }
+
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+  const zoomCssPx = 80;
+
+  const p1 = { x: centerX + 3 * zoomCssPx, y: centerY - 2 * zoomCssPx };
+  const p2 = { x: centerX + 4 * zoomCssPx, y: centerY - 2 * zoomCssPx };
+  const p3 = { x: centerX + 3 * zoomCssPx, y: centerY - 3 * zoomCssPx };
+
+  await page.mouse.click(p1.x, p1.y);
+  await waitForAnimationFrame(page);
+
+  await page.mouse.click(p2.x, p2.y);
+  await waitForAnimationFrame(page);
+
+  await page.mouse.click(p3.x, p3.y);
+  await waitForAnimationFrame(page);
+
+  await page.keyboard.down("Shift");
+  await page.mouse.click(p1.x, p1.y);
+  await waitForAnimationFrame(page);
+  await page.mouse.click(p2.x, p2.y);
+  await waitForAnimationFrame(page);
+  await page.mouse.click(p3.x, p3.y);
+  await waitForAnimationFrame(page);
+  await page.keyboard.up("Shift");
+
+  await page.keyboard.press("T");
+  await waitForAnimationFrame(page);
+
+  const result = await canvas.evaluate((node) => {
+    const canvas = node as HTMLCanvasElement;
+    const maybeCtx = canvas.getContext("2d");
+
+    if (!maybeCtx) {
+      throw new Error("Could not get 2D context");
+    }
+
+    const ctx: CanvasRenderingContext2D = maybeCtx;
+
+    function countPixelsNear(
+      x: number,
+      y: number,
+      predicate: (
+        red: number,
+        green: number,
+        blue: number,
+        alpha: number,
+      ) => boolean,
+    ): number {
+      const radius = 18;
+      const image = ctx.getImageData(
+        Math.floor(x - radius),
+        Math.floor(y - radius),
+        radius * 2 + 1,
+        radius * 2 + 1,
+      );
+
+      let count = 0;
+
+      for (let index = 0; index < image.data.length; index += 4) {
+        const red = image.data[index] ?? 0;
+        const green = image.data[index + 1] ?? 0;
+        const blue = image.data[index + 2] ?? 0;
+        const alpha = image.data[index + 3] ?? 0;
+
+        if (predicate(red, green, blue, alpha)) {
+          count += 1;
+        }
+      }
+
+      return count;
+    }
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const zoom = 80 * window.devicePixelRatio;
+
+    const isLightSegment = (
+      red: number,
+      green: number,
+      blue: number,
+      alpha: number,
+    ) => alpha > 0 && red > 180 && green > 180 && blue > 180;
+
+    return {
+      edgeP1P2: countPixelsNear(
+        centerX + 3.5 * zoom,
+        centerY - 2 * zoom,
+        isLightSegment,
+      ),
+      edgeP2P3: countPixelsNear(
+        centerX + 3.5 * zoom,
+        centerY - 2.5 * zoom,
+        isLightSegment,
+      ),
+      edgeP3P1: countPixelsNear(
+        centerX + 3 * zoom,
+        centerY - 2.5 * zoom,
+        isLightSegment,
+      ),
+    };
+  });
+
+  expect(result.edgeP1P2).toBeGreaterThan(0);
+  expect(result.edgeP2P3).toBeGreaterThan(0);
+  expect(result.edgeP3P1).toBeGreaterThan(0);
 });
