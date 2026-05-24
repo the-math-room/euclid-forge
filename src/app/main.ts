@@ -21,6 +21,12 @@ import {
 } from "./canvasSurface";
 import { initialScene } from "./initialScene";
 import { createRenderScheduler } from "./renderScheduler";
+import {
+  clearSelection,
+  emptyViewState,
+  toggleSelectedNode,
+} from "./viewState";
+import type { ViewState } from "./viewState";
 
 type DragState =
   | Readonly<{
@@ -37,7 +43,7 @@ function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   graph: Graph,
-  selectedNodeIds: ReadonlySet<NodeId>,
+  viewState: ViewState,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
@@ -46,7 +52,9 @@ function render(
   const evaluated = evaluateGraph(graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
-  renderScene(ctx, viewport, evaluated, { selectedNodeIds });
+  renderScene(ctx, viewport, evaluated, {
+    selectedNodeIds: viewState.selectedNodeIds,
+  });
 }
 
 function releasePointerCaptureIfHeld(
@@ -58,19 +66,22 @@ function releasePointerCaptureIfHeld(
   }
 }
 
-function toggleSelection(
-  selectedNodeIds: ReadonlySet<NodeId>,
-  id: NodeId,
-): ReadonlySet<NodeId> {
-  const next = new Set(selectedNodeIds);
+function selectedTriangleVertices(
+  viewState: ViewState,
+): readonly [NodeId, NodeId, NodeId] | null {
+  const selected = [...viewState.selectedNodeIds];
 
-  if (next.has(id)) {
-    next.delete(id);
-  } else {
-    next.add(id);
+  if (selected.length !== 3) {
+    return null;
   }
 
-  return next;
+  const [a, b, c] = selected;
+
+  if (!a || !b || !c) {
+    return null;
+  }
+
+  return [a, b, c];
 }
 
 function main(): void {
@@ -79,10 +90,10 @@ function main(): void {
 
   let graph = initialScene();
   let drag: DragState | null = null;
-  let selectedNodeIds: ReadonlySet<NodeId> = new Set();
+  let viewState = emptyViewState();
 
   const requestRender = createRenderScheduler(() => {
-    render(canvas, ctx, graph, selectedNodeIds);
+    render(canvas, ctx, graph, viewState);
   });
 
   window.addEventListener("resize", () => {
@@ -94,24 +105,18 @@ function main(): void {
       return;
     }
 
-    const selected = [...selectedNodeIds];
+    const vertices = selectedTriangleVertices(viewState);
 
-    if (selected.length !== 3) {
-      return;
-    }
-
-    const [a, b, c] = selected;
-
-    if (!a || !b || !c) {
+    if (!vertices) {
       return;
     }
 
     graph = applyGraphEdit(graph, {
       kind: "ADD_TRIANGLE",
-      vertices: [a, b, c],
+      vertices,
     });
 
-    selectedNodeIds = new Set();
+    viewState = clearSelection(viewState);
     requestRender();
     event.preventDefault();
   });
@@ -125,7 +130,7 @@ function main(): void {
 
     if (pointHit) {
       if (event.shiftKey) {
-        selectedNodeIds = toggleSelection(selectedNodeIds, pointHit);
+        viewState = toggleSelectedNode(viewState, pointHit);
         drag = null;
         requestRender();
         event.preventDefault();
@@ -158,7 +163,7 @@ function main(): void {
       kind: "ADD_FREE_POINT",
       point: screenToWorld(viewport, pointer),
     });
-    selectedNodeIds = new Set();
+    viewState = clearSelection(viewState);
     drag = null;
     requestRender();
     event.preventDefault();
