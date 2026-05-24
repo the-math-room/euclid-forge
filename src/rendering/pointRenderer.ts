@@ -1,6 +1,29 @@
-import type { EvaluatedPoint } from "../evaluation/evaluated";
+import type {
+  EvaluatedPoint,
+  EvaluatedPointRole,
+} from "../evaluation/evaluated";
 import type { Viewport } from "./viewport";
 import { worldToScreen } from "./viewport";
+
+type PointStyle = Readonly<{
+  fill: string;
+  radiusPx: number;
+}>;
+
+const POINT_STYLES: Record<EvaluatedPointRole, PointStyle> = {
+  FREE: {
+    fill: "#fbbf24",
+    radiusPx: 6,
+  },
+  MIDPOINT: {
+    fill: "#34d399",
+    radiusPx: 5,
+  },
+  CENTROID: {
+    fill: "#60a5fa",
+    radiusPx: 5,
+  },
+};
 
 export function renderPoint(
   ctx: CanvasRenderingContext2D,
@@ -8,13 +31,14 @@ export function renderPoint(
   point: EvaluatedPoint,
 ): void {
   const screen = worldToScreen(viewport, point.point);
+  const style = POINT_STYLES[point.role];
 
   ctx.save();
 
-  ctx.fillStyle = point.role === "FREE" ? "#fbbf24" : "#34d399";
+  ctx.fillStyle = style.fill;
 
   ctx.beginPath();
-  ctx.arc(screen.x, screen.y, point.role === "FREE" ? 6 : 5, 0, Math.PI * 2);
+  ctx.arc(screen.x, screen.y, style.radiusPx, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = "#f9fafb";

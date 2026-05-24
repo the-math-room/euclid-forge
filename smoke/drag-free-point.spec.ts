@@ -96,6 +96,13 @@ test("drags a triangle vertex and updates triangle constructions", async ({
       alpha: number,
     ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
 
+    const isBluish = (
+      red: number,
+      green: number,
+      blue: number,
+      alpha: number,
+    ) => alpha > 0 && red < 140 && green > 120 && blue > 180;
+
     return {
       movedA: countPixelsNear(centerX - 3 * zoom, centerY - 1 * zoom, isYellowish),
       shiftedMidpoint: countPixelsNear(
@@ -106,7 +113,7 @@ test("drags a triangle vertex and updates triangle constructions", async ({
       shiftedCentroid: countPixelsNear(
         centerX - (1 / 3) * zoom,
         centerY - (2 / 3) * zoom,
-        isGreenish,
+        isBluish,
       ),
     };
   });
