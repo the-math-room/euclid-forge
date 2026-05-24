@@ -5,6 +5,7 @@ import {
   handleKeyDown,
   handlePointerCancel,
   handlePointerDown,
+  handlePointerLeave,
   handlePointerMove,
   handlePointerUp,
 } from "./appController";
@@ -178,6 +179,17 @@ function main(): void {
       requestRender,
     );
   });
+
+  canvas.addEventListener("pointerleave", (event) => {
+    applyTransition(
+      canvas,
+      event,
+      handlePointerLeave(state),
+      setState,
+      requestRender,
+    );
+  });
+
 
   requestRender();
 }

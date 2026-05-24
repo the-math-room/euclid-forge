@@ -14,6 +14,7 @@ import { appState } from "./appState";
 import {
   handleKeyDown,
   handlePointerDown,
+  handlePointerLeave,
   handlePointerMove,
   handlePointerUp,
 } from "./appController";
@@ -741,6 +742,35 @@ describe("app/appController", () => {
     });
 
     expect(transition.state.viewState.hoveredNodeId).toBeNull();
+  });
+
+  test("pointerleave clears hover", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+    const state = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        hoveredNodeId: "A",
+      },
+      null,
+    );
+
+    const transition = handlePointerLeave(state);
+
+    expect(transition.state.viewState.hoveredNodeId).toBeNull();
+    expect(transition.shouldRender).toBe(true);
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("pointerleave is unchanged when nothing is hovered", () => {
+    const graph = createGraph([freePoint("A", -2, -1, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+
+    const transition = handlePointerLeave(state);
+
+    expect(transition.state).toBe(state);
+    expect(transition.shouldRender).toBe(false);
+    expect(transition.shouldPreventDefault).toBe(false);
   });
 
 });

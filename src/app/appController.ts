@@ -397,6 +397,17 @@ export function handlePointerMove(
   }
 }
 
+
+export function handlePointerLeave(state: AppState): AppTransition {
+  const viewState = setHoveredNode(state.viewState, null);
+
+  if (viewState === state.viewState) {
+    return unchanged(state);
+  }
+
+  return changed(appState(state.graph, viewState, state.dragState));
+}
+
 export function handlePointerUp(
   state: AppState,
   pointerId: number,
