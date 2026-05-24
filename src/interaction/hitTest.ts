@@ -15,6 +15,36 @@ export type TriangleSelectionHit = Readonly<{
   id: NodeId;
 }>;
 
+export function hitTestPoint(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+  radiusPx = 12,
+): NodeId | null {
+  let best: Readonly<{
+    id: NodeId;
+    distance: number;
+  }> | null = null;
+
+  for (const value of evaluated.ordered) {
+    if (value.kind !== "POINT") {
+      continue;
+    }
+
+    const screen = worldToScreen(viewport, value.point);
+    const distance = Math.hypot(screen.x - screenPoint.x, screen.y - screenPoint.y);
+
+    if (distance <= radiusPx && (!best || distance < best.distance)) {
+      best = {
+        id: value.id,
+        distance,
+      };
+    }
+  }
+
+  return best?.id ?? null;
+}
+
 export function hitTestFreePoint(
   graph: Graph,
   evaluated: EvaluatedScene,

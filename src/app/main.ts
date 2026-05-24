@@ -3,6 +3,7 @@ import "../styles/app.css";
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import {
   hitTestFreePoint,
+  hitTestPoint,
   hitTestTriangleInterior,
   hitTestTriangleSelection,
 } from "../interaction/hitTest";
@@ -25,7 +26,9 @@ import { createRenderScheduler } from "./renderScheduler";
 import {
   clearSelection,
   emptyViewState,
+  hideSelectedNodes,
   toggleSelectedNode,
+  unhideAllNodes,
 } from "./viewState";
 import type { ViewState } from "./viewState";
 
@@ -44,6 +47,7 @@ function render(
   ctx.clearRect(0, 0, rect.width, rect.height);
   renderScene(ctx, viewport, evaluated, {
     selectedNodeIds: viewState.selectedNodeIds,
+    hiddenNodeIds: viewState.hiddenNodeIds,
   });
 }
 
@@ -130,6 +134,32 @@ function main(): void {
       viewState = clearSelection(viewState);
       requestRender();
       event.preventDefault();
+      return;
+    }
+
+    if (event.key.toLowerCase() === "h") {
+      const nextViewState = hideSelectedNodes(viewState);
+
+      if (nextViewState === viewState) {
+        return;
+      }
+
+      viewState = nextViewState;
+      requestRender();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key.toLowerCase() === "u") {
+      const nextViewState = unhideAllNodes(viewState);
+
+      if (nextViewState === viewState) {
+        return;
+      }
+
+      viewState = nextViewState;
+      requestRender();
+      event.preventDefault();
     }
   });
 
@@ -138,27 +168,17 @@ function main(): void {
     const pointer = eventPoint(canvas, event);
     const evaluated = evaluateGraph(graph);
 
-    const pointHit = hitTestFreePoint(graph, evaluated, viewport, pointer);
+    if (event.shiftKey) {
+      const pointSelectionHit = hitTestPoint(evaluated, viewport, pointer);
 
-    if (pointHit) {
-      if (event.shiftKey) {
-        viewState = toggleSelectedNode(viewState, pointHit);
+      if (pointSelectionHit) {
+        viewState = toggleSelectedNode(viewState, pointSelectionHit);
         drag = null;
         requestRender();
         event.preventDefault();
         return;
       }
 
-      canvas.setPointerCapture(event.pointerId);
-      drag = {
-        kind: "FREE_POINT",
-        nodeId: pointHit,
-      };
-      event.preventDefault();
-      return;
-    }
-
-    if (event.shiftKey) {
       const triangleSelectionHit = hitTestTriangleSelection(
         evaluated,
         viewport,
@@ -174,6 +194,18 @@ function main(): void {
       }
 
       drag = null;
+      event.preventDefault();
+      return;
+    }
+
+    const pointHit = hitTestFreePoint(graph, evaluated, viewport, pointer);
+
+    if (pointHit) {
+      canvas.setPointerCapture(event.pointerId);
+      drag = {
+        kind: "FREE_POINT",
+        nodeId: pointHit,
+      };
       event.preventDefault();
       return;
     }

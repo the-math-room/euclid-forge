@@ -2,14 +2,17 @@ import { describe, expect, test } from "vitest";
 import {
   clearSelection,
   emptyViewState,
+  hideSelectedNodes,
   toggleSelectedNode,
+  unhideAllNodes,
 } from "./viewState";
 
 describe("app/viewState", () => {
-  test("starts with no selected nodes", () => {
+  test("starts with no selected or hidden nodes", () => {
     const viewState = emptyViewState();
 
     expect([...viewState.selectedNodeIds]).toEqual([]);
+    expect([...viewState.hiddenNodeIds]).toEqual([]);
     expect(Object.isFrozen(viewState)).toBe(true);
   });
 
@@ -44,5 +47,44 @@ describe("app/viewState", () => {
     const viewState = emptyViewState();
 
     expect(clearSelection(viewState)).toBe(viewState);
+  });
+
+  test("hides selected nodes and clears selection", () => {
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+
+    const hidden = hideSelectedNodes(viewState);
+
+    expect([...hidden.selectedNodeIds]).toEqual([]);
+    expect([...hidden.hiddenNodeIds]).toEqual(["A", "B"]);
+  });
+
+  test("preserves previously hidden nodes when hiding more selected nodes", () => {
+    const first = hideSelectedNodes(toggleSelectedNode(emptyViewState(), "A"));
+    const second = hideSelectedNodes(toggleSelectedNode(first, "B"));
+
+    expect([...second.hiddenNodeIds]).toEqual(["A", "B"]);
+  });
+
+  test("returns same object when hiding with no selection", () => {
+    const viewState = emptyViewState();
+
+    expect(hideSelectedNodes(viewState)).toBe(viewState);
+  });
+
+  test("unhides all hidden nodes", () => {
+    const hidden = hideSelectedNodes(toggleSelectedNode(emptyViewState(), "A"));
+    const visible = unhideAllNodes(hidden);
+
+    expect([...hidden.hiddenNodeIds]).toEqual(["A"]);
+    expect([...visible.hiddenNodeIds]).toEqual([]);
+  });
+
+  test("returns same object when unhiding with no hidden nodes", () => {
+    const viewState = emptyViewState();
+
+    expect(unhideAllNodes(viewState)).toBe(viewState);
   });
 });

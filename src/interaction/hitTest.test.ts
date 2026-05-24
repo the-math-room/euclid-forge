@@ -12,9 +12,77 @@ import type { Viewport } from "../rendering/viewport";
 import { worldToScreen } from "../rendering/viewport";
 import {
   hitTestFreePoint,
+  hitTestPoint,
   hitTestTriangleInterior,
   hitTestTriangleSelection,
 } from "./hitTest";
+
+describe("interaction/hitTestPoint", () => {
+  const viewport: Viewport = {
+    width: 800,
+    height: 600,
+    center: vec2(0, 0),
+    zoom: 80,
+  };
+
+  test("finds a nearby free point", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestPoint(evaluated, viewport, worldToScreen(viewport, vec2(-2, -1))),
+    ).toBe("A");
+  });
+
+  test("finds a nearby constrained centroid", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestPoint(evaluated, viewport, worldToScreen(viewport, vec2(0, 0))),
+    ).toBe("G");
+  });
+
+  test("finds a nearby constrained midpoint", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      triangleSideMidpointNode("M_AB", "ABC", "AB", "M"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestPoint(evaluated, viewport, worldToScreen(viewport, vec2(0, -1))),
+    ).toBe("M_AB");
+  });
+
+  test("returns null when no point is nearby", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(hitTestPoint(evaluated, viewport, { x: 10, y: 10 })).toBeNull();
+  });
+});
 
 describe("interaction/hitTestFreePoint", () => {
   const viewport: Viewport = {
