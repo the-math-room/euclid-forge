@@ -1,11 +1,11 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { visibleEvaluatedScene } from "../evaluation/visibleScene";
 import {
-  hitTestFreePoint,
-  hitTestPoint,
-  hitTestSegmentSelection,
+  hitTestFreePointTarget,
+  hitTestPointTarget,
+  hitTestSegmentTarget,
   hitTestTriangleInterior,
-  hitTestTriangleSelection,
+  hitTestTriangleTarget,
 } from "../interaction/hitTest";
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
@@ -52,16 +52,16 @@ export function pointerDownIntent(
   const evaluated = visibleEvaluatedSceneForInteraction(state);
 
   if (input.shiftKey) {
-    const pointHit = hitTestPoint(evaluated, input.viewport, input.point);
+    const pointHit = hitTestPointTarget(evaluated, input.viewport, input.point);
 
     if (pointHit) {
       return {
         kind: "SELECT_NODE",
-        id: pointHit,
+        id: pointHit.id,
       };
     }
 
-    const segmentHit = hitTestSegmentSelection(
+    const segmentHit = hitTestSegmentTarget(
       evaluated,
       input.viewport,
       input.point,
@@ -70,11 +70,11 @@ export function pointerDownIntent(
     if (segmentHit) {
       return {
         kind: "SELECT_NODE",
-        id: segmentHit,
+        id: segmentHit.id,
       };
     }
 
-    const triangleHit = hitTestTriangleSelection(
+    const triangleHit = hitTestTriangleTarget(
       evaluated,
       input.viewport,
       input.point,
@@ -92,7 +92,7 @@ export function pointerDownIntent(
     };
   }
 
-  const freePointHit = hitTestFreePoint(
+  const freePointHit = hitTestFreePointTarget(
     state.graph,
     evaluated,
     input.viewport,
@@ -102,7 +102,7 @@ export function pointerDownIntent(
   if (freePointHit) {
     return {
       kind: "DRAG_FREE_POINT",
-      id: freePointHit,
+      id: freePointHit.id,
     };
   }
 

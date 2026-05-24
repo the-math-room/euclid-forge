@@ -15,16 +15,32 @@ export type TriangleSelectionHit = Readonly<{
   id: NodeId;
 }>;
 
-export function hitTestPoint(
+export type PointHit = Readonly<{
+  kind: "POINT";
+  id: NodeId;
+  distancePx: number;
+}>;
+
+export type SegmentHit = Readonly<{
+  kind: "SEGMENT";
+  id: NodeId;
+  distancePx: number;
+}>;
+
+export type TriangleHitTarget = Readonly<{
+  kind: "TRIANGLE";
+  id: NodeId;
+}>;
+
+export type HitTarget = PointHit | SegmentHit | TriangleHitTarget;
+
+export function hitTestPointTarget(
   evaluated: EvaluatedScene,
   viewport: Viewport,
   screenPoint: ScreenPoint,
   radiusPx = 12,
-): NodeId | null {
-  let best: Readonly<{
-    id: NodeId;
-    distance: number;
-  }> | null = null;
+): PointHit | null {
+  let best: PointHit | null = null;
 
   for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "POINT") {
@@ -32,30 +48,40 @@ export function hitTestPoint(
     }
 
     const screen = worldToScreen(viewport, value.point);
-    const distance = Math.hypot(screen.x - screenPoint.x, screen.y - screenPoint.y);
+    const distancePx = Math.hypot(
+      screen.x - screenPoint.x,
+      screen.y - screenPoint.y,
+    );
 
-    if (distance <= radiusPx && (!best || distance < best.distance)) {
+    if (distancePx <= radiusPx && (!best || distancePx < best.distancePx)) {
       best = {
+        kind: "POINT",
         id: value.id,
-        distance,
+        distancePx,
       };
     }
   }
 
-  return best?.id ?? null;
+  return best;
 }
 
-export function hitTestFreePoint(
-  graph: Graph,
+export function hitTestPoint(
   evaluated: EvaluatedScene,
   viewport: Viewport,
   screenPoint: ScreenPoint,
   radiusPx = 12,
 ): NodeId | null {
-  let best: Readonly<{
-    id: NodeId;
-    distance: number;
-  }> | null = null;
+  return hitTestPointTarget(evaluated, viewport, screenPoint, radiusPx)?.id ?? null;
+}
+
+export function hitTestFreePointTarget(
+  graph: Graph,
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+  radiusPx = 12,
+): PointHit | null {
+  let best: PointHit | null = null;
 
   for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (value.kind !== "POINT") {
@@ -67,17 +93,64 @@ export function hitTestFreePoint(
     }
 
     const screen = worldToScreen(viewport, value.point);
-    const distance = Math.hypot(screen.x - screenPoint.x, screen.y - screenPoint.y);
+    const distancePx = Math.hypot(
+      screen.x - screenPoint.x,
+      screen.y - screenPoint.y,
+    );
 
-    if (distance <= radiusPx && (!best || distance < best.distance)) {
+    if (distancePx <= radiusPx && (!best || distancePx < best.distancePx)) {
       best = {
+        kind: "POINT",
         id: value.id,
-        distance,
+        distancePx,
       };
     }
   }
 
-  return best?.id ?? null;
+  return best;
+}
+
+export function hitTestFreePoint(
+  graph: Graph,
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+  radiusPx = 12,
+): NodeId | null {
+  return hitTestFreePointTarget(
+    graph,
+    evaluated,
+    viewport,
+    screenPoint,
+    radiusPx,
+  )?.id ?? null;
+}
+
+export function hitTestSegmentTarget(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+  radiusPx = 8,
+): SegmentHit | null {
+  let best: SegmentHit | null = null;
+
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
+    if (value.kind !== "SEGMENT") {
+      continue;
+    }
+
+    const distancePx = distanceToSegmentScreen(viewport, screenPoint, value);
+
+    if (distancePx <= radiusPx && (!best || distancePx < best.distancePx)) {
+      best = {
+        kind: "SEGMENT",
+        id: value.id,
+        distancePx,
+      };
+    }
+  }
+
+  return best;
 }
 
 export function hitTestSegmentSelection(
@@ -86,34 +159,14 @@ export function hitTestSegmentSelection(
   screenPoint: ScreenPoint,
   radiusPx = 8,
 ): NodeId | null {
-  let best: Readonly<{
-    id: NodeId;
-    distance: number;
-  }> | null = null;
-
-  for (const value of reverseVisualOrder(evaluated.ordered)) {
-    if (value.kind !== "SEGMENT") {
-      continue;
-    }
-
-    const distance = distanceToSegmentScreen(viewport, screenPoint, value);
-
-    if (distance <= radiusPx && (!best || distance < best.distance)) {
-      best = {
-        id: value.id,
-        distance,
-      };
-    }
-  }
-
-  return best?.id ?? null;
+  return hitTestSegmentTarget(evaluated, viewport, screenPoint, radiusPx)?.id ?? null;
 }
 
-export function hitTestTriangleSelection(
+export function hitTestTriangleTarget(
   evaluated: EvaluatedScene,
   viewport: Viewport,
   screenPoint: ScreenPoint,
-): TriangleSelectionHit | null {
+): TriangleHitTarget | null {
   const worldPoint = screenToWorld(viewport, screenPoint);
 
   for (const value of reverseVisualOrder(evaluated.ordered)) {
@@ -126,11 +179,22 @@ export function hitTestTriangleSelection(
     }
 
     return {
+      kind: "TRIANGLE",
       id: value.id,
     };
   }
 
   return null;
+}
+
+export function hitTestTriangleSelection(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): TriangleSelectionHit | null {
+  const hit = hitTestTriangleTarget(evaluated, viewport, screenPoint);
+
+  return hit ? { id: hit.id } : null;
 }
 
 export function hitTestTriangleInterior(

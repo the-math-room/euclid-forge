@@ -13,10 +13,14 @@ import { worldToScreen } from "../rendering/viewport";
 import { testViewport } from "../rendering/testHelpers";
 import {
   hitTestFreePoint,
+  hitTestFreePointTarget,
   hitTestPoint,
+  hitTestPointTarget,
   hitTestSegmentSelection,
+  hitTestSegmentTarget,
   hitTestTriangleInterior,
   hitTestTriangleSelection,
+  hitTestTriangleTarget,
 } from "./hitTest";
 
 describe("interaction/hitTestPoint", () => {
