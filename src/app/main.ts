@@ -1,48 +1,26 @@
 import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateGraph";
-import {
-  handleKeyDown,
-  handlePointerCancel,
-  handlePointerDown,
-  handlePointerLeave,
-  handlePointerMove,
-  handlePointerUp,
-} from "./appController";
 import { createAppRuntime } from "./appRuntime";
 import { initialAppState } from "./appState";
-import {
-  isOpenShortcut,
-  isRedoShortcut,
-  isSaveShortcut,
-  isUndoShortcut,
-  shouldIgnoreKeyDownTarget,
-  viewportRotationDirectionForKey,
-} from "./keyboardShortcuts";
 import type { AppState } from "./appState";
+import { effectiveHiddenNodeIds } from "./effectiveVisibility";
+import { initialHistory } from "./history";
+import { connectDomEvents } from "./domEvents";
 import {
-  eventPoint,
   get2DContext,
   getCanvas,
   resizeCanvasToDisplaySize,
   viewportForCanvas,
 } from "./canvasSurface";
-import { effectiveHiddenNodeIds } from "./effectiveVisibility";
-import { initialHistory } from "./history";
 import { createRenderScheduler } from "./renderScheduler";
 import { statusSurfaceForDocument } from "./statusSurface";
 import { renderScene } from "../rendering/renderScene";
-import {
-  browserWorkspaceActionEnvironment,
-  openWorkspace,
-  saveWorkspace,
-} from "./workspaceActions";
+import { browserWorkspaceActionEnvironment } from "./workspaceActions";
 import {
   emptyViewportMotionState,
   isViewportMotionActive,
-  startViewportRotation,
   stepViewportMotion,
-  stopViewportRotation,
 } from "./viewportMotion";
 
 function render(
@@ -110,112 +88,19 @@ function main(): void {
     });
   };
 
-  window.addEventListener("resize", () => {
-    requestRender();
+  connectDomEvents({
+    windowTarget: window,
+    canvas,
+    runtime,
+    workspaceEnvironment,
+    getViewportMotion: () => viewportMotion,
+    setViewportMotion: (next) => {
+      viewportMotion = next;
+    },
+    requestViewportMotionFrame,
   });
 
-  window.addEventListener("keydown", (event) => {
-    if (shouldIgnoreKeyDownTarget(event.target)) {
-      return;
-    }
-
-    if (isSaveShortcut(event)) {
-      saveWorkspace(workspaceEnvironment, runtime.getState());
-      event.preventDefault();
-      return;
-    }
-
-    if (isOpenShortcut(event)) {
-      void openWorkspace({
-        environment: workspaceEnvironment,
-        setState: runtime.setState,
-        setHistory: runtime.setHistory,
-        requestRender: runtime.requestRender,
-      });
-      event.preventDefault();
-      return;
-    }
-
-    if (isUndoShortcut(event)) {
-      runtime.undo(event);
-      return;
-    }
-
-    if (isRedoShortcut(event)) {
-      runtime.redo(event);
-      return;
-    }
-
-    const rotateDirection = viewportRotationDirectionForKey(event.key);
-
-    if (rotateDirection !== null) {
-      viewportMotion = startViewportRotation(viewportMotion, rotateDirection);
-      requestViewportMotionFrame();
-      event.preventDefault();
-      return;
-    }
-
-    runtime.applyTransition(event, handleKeyDown(runtime.getState(), { key: event.key }));
-  });
-
-  window.addEventListener("keyup", (event) => {
-    const rotateDirection = viewportRotationDirectionForKey(event.key);
-
-    if (rotateDirection === null) {
-      return;
-    }
-
-    viewportMotion = stopViewportRotation(viewportMotion, rotateDirection);
-    event.preventDefault();
-  });
-
-  canvas.addEventListener("pointerdown", (event) => {
-    const state = runtime.getState();
-
-    runtime.applyTransition(
-      event,
-      handlePointerDown(state, {
-        pointerId: event.pointerId,
-        point: eventPoint(canvas, event),
-        viewport: viewportForCanvas(canvas, state.viewState),
-        shiftKey: event.shiftKey,
-      }),
-    );
-  });
-
-  canvas.addEventListener("pointermove", (event) => {
-    const state = runtime.getState();
-
-    runtime.applyTransition(
-      event,
-      handlePointerMove(state, {
-        pointerId: event.pointerId,
-        point: eventPoint(canvas, event),
-        viewport: viewportForCanvas(canvas, state.viewState),
-        shiftKey: event.shiftKey,
-      }),
-    );
-  });
-
-  canvas.addEventListener("pointerup", (event) => {
-    runtime.applyTransition(
-      event,
-      handlePointerUp(runtime.getState(), event.pointerId),
-    );
-  });
-
-  canvas.addEventListener("pointercancel", (event) => {
-    runtime.applyTransition(
-      event,
-      handlePointerCancel(runtime.getState(), event.pointerId),
-    );
-  });
-
-  canvas.addEventListener("pointerleave", (event) => {
-    runtime.applyTransition(event, handlePointerLeave(runtime.getState()));
-  });
-
-  requestRender();
+  runtime.requestRender();
 }
 
 main();

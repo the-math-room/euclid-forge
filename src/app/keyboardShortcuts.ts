@@ -51,17 +51,35 @@ export function viewportRotationDirectionForKey(
 }
 
 export function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
+  if (!isKeyboardEditableTarget(target)) {
     return false;
   }
 
-  if (target.isContentEditable) {
-    return true;
-  }
+  const tagName = target.tagName.toLowerCase();
 
   return (
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
+    target.isContentEditable ||
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select"
+  );
+}
+
+type KeyboardEditableTarget = EventTarget &
+  Readonly<{
+    tagName: string;
+    isContentEditable: boolean;
+  }>;
+
+function isKeyboardEditableTarget(
+  target: EventTarget | null,
+): target is KeyboardEditableTarget {
+  return (
+    typeof target === "object" &&
+    target !== null &&
+    "tagName" in target &&
+    typeof target.tagName === "string" &&
+    "isContentEditable" in target &&
+    typeof target.isContentEditable === "boolean"
   );
 }

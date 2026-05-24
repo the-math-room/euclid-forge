@@ -72,44 +72,20 @@ describe("app/keyboardShortcuts", () => {
   });
 
   test("ignores editable keyboard targets", () => {
-    class TestHTMLElement extends EventTarget {
-      isContentEditable = false;
-    }
+    const target = (
+      tagName: string,
+      isContentEditable = false,
+    ): EventTarget =>
+      ({
+        tagName,
+        isContentEditable,
+      }) as unknown as EventTarget;
 
-    class TestHTMLInputElement extends TestHTMLElement {}
-    class TestHTMLTextAreaElement extends TestHTMLElement {}
-    class TestHTMLSelectElement extends TestHTMLElement {}
-
-    const previousHTMLElement = globalThis.HTMLElement;
-    const previousHTMLInputElement = globalThis.HTMLInputElement;
-    const previousHTMLTextAreaElement = globalThis.HTMLTextAreaElement;
-    const previousHTMLSelectElement = globalThis.HTMLSelectElement;
-
-    globalThis.HTMLElement = TestHTMLElement as typeof HTMLElement;
-    globalThis.HTMLInputElement =
-      TestHTMLInputElement as typeof HTMLInputElement;
-    globalThis.HTMLTextAreaElement =
-      TestHTMLTextAreaElement as typeof HTMLTextAreaElement;
-    globalThis.HTMLSelectElement =
-      TestHTMLSelectElement as typeof HTMLSelectElement;
-
-    try {
-      const editable = new TestHTMLElement();
-      editable.isContentEditable = true;
-
-      expect(shouldIgnoreKeyDownTarget(new TestHTMLInputElement())).toBe(true);
-      expect(shouldIgnoreKeyDownTarget(new TestHTMLTextAreaElement())).toBe(
-        true,
-      );
-      expect(shouldIgnoreKeyDownTarget(new TestHTMLSelectElement())).toBe(true);
-      expect(shouldIgnoreKeyDownTarget(editable)).toBe(true);
-      expect(shouldIgnoreKeyDownTarget(new TestHTMLElement())).toBe(false);
-      expect(shouldIgnoreKeyDownTarget(null)).toBe(false);
-    } finally {
-      globalThis.HTMLElement = previousHTMLElement;
-      globalThis.HTMLInputElement = previousHTMLInputElement;
-      globalThis.HTMLTextAreaElement = previousHTMLTextAreaElement;
-      globalThis.HTMLSelectElement = previousHTMLSelectElement;
-    }
+    expect(shouldIgnoreKeyDownTarget(target("input"))).toBe(true);
+    expect(shouldIgnoreKeyDownTarget(target("textarea"))).toBe(true);
+    expect(shouldIgnoreKeyDownTarget(target("select"))).toBe(true);
+    expect(shouldIgnoreKeyDownTarget(target("div", true))).toBe(true);
+    expect(shouldIgnoreKeyDownTarget(target("div"))).toBe(false);
+    expect(shouldIgnoreKeyDownTarget(null)).toBe(false);
   });
 });
