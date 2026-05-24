@@ -1,4 +1,5 @@
 import type { EvaluatedSegment } from "../evaluation/evaluated";
+import { RENDER_THEME } from "./theme";
 import type { Viewport } from "./viewport";
 import { worldToScreen } from "./viewport";
 
@@ -20,8 +21,8 @@ export function renderSegment(
   ctx.save();
 
   if (hovered) {
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = RENDER_THEME.segment.hoverStroke;
+    ctx.lineWidth = RENDER_THEME.segment.hoverLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -29,8 +30,8 @@ export function renderSegment(
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = RENDER_THEME.segment.stroke;
+  ctx.lineWidth = RENDER_THEME.segment.lineWidthPx;
 
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);

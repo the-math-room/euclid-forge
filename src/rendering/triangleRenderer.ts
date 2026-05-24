@@ -1,4 +1,5 @@
 import type { EvaluatedTriangle } from "../evaluation/evaluated";
+import { RENDER_THEME } from "./theme";
 import type { Viewport } from "./viewport";
 import { worldToScreen } from "./viewport";
 
@@ -22,8 +23,8 @@ export function renderTriangle(
   ctx.save();
 
   if (hovered) {
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = RENDER_THEME.triangle.hoverStroke;
+    ctx.lineWidth = RENDER_THEME.triangle.hoverLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -34,8 +35,8 @@ export function renderTriangle(
   }
 
   if (selected) {
-    ctx.strokeStyle = "#f8fafc";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = RENDER_THEME.triangle.selectedStroke;
+    ctx.lineWidth = RENDER_THEME.triangle.selectedLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -45,8 +46,8 @@ export function renderTriangle(
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = RENDER_THEME.triangle.stroke;
+  ctx.lineWidth = RENDER_THEME.triangle.lineWidthPx;
 
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);

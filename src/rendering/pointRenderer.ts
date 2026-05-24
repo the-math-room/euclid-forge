@@ -1,34 +1,12 @@
-import type {
-  EvaluatedPoint,
-  EvaluatedPointRole,
-} from "../evaluation/evaluated";
+import type { EvaluatedPoint } from "../evaluation/evaluated";
+import { RENDER_THEME } from "./theme";
 import type { Viewport } from "./viewport";
 import { worldToScreen } from "./viewport";
-
-type PointStyle = Readonly<{
-  fill: string;
-  radiusPx: number;
-}>;
 
 export type PointRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
   hoveredNodeId?: string | null;
 }>;
-
-const POINT_STYLES: Record<EvaluatedPointRole, PointStyle> = {
-  FREE: {
-    fill: "#fbbf24",
-    radiusPx: 6,
-  },
-  MIDPOINT: {
-    fill: "#34d399",
-    radiusPx: 5,
-  },
-  CENTROID: {
-    fill: "#60a5fa",
-    radiusPx: 5,
-  },
-};
 
 export function renderPoint(
   ctx: CanvasRenderingContext2D,
@@ -37,27 +15,39 @@ export function renderPoint(
   options: PointRenderOptions = {},
 ): void {
   const screen = worldToScreen(viewport, point.point);
-  const style = POINT_STYLES[point.role];
+  const style = RENDER_THEME.point.styles[point.role];
   const selected = options.selectedNodeIds?.has(point.id) ?? false;
   const hovered = options.hoveredNodeId === point.id;
 
   ctx.save();
 
   if (hovered) {
-    ctx.strokeStyle = "#94a3b8";
+    ctx.strokeStyle = RENDER_THEME.point.hoverStroke;
     ctx.lineWidth = 2;
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y, style.radiusPx + 4, 0, Math.PI * 2);
+    ctx.arc(
+      screen.x,
+      screen.y,
+      style.radiusPx + RENDER_THEME.point.hoverRingOffsetPx,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
 
   if (selected) {
-    ctx.strokeStyle = "#f9fafb";
+    ctx.strokeStyle = RENDER_THEME.point.selectedStroke;
     ctx.lineWidth = 2;
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y, style.radiusPx + 6, 0, Math.PI * 2);
+    ctx.arc(
+      screen.x,
+      screen.y,
+      style.radiusPx + RENDER_THEME.point.selectedRingOffsetPx,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
 
@@ -67,9 +57,13 @@ export function renderPoint(
   ctx.arc(screen.x, screen.y, style.radiusPx, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#f9fafb";
-  ctx.font = "14px system-ui, sans-serif";
-  ctx.fillText(point.label, screen.x + 10, screen.y - 10);
+  ctx.fillStyle = RENDER_THEME.point.labelFill;
+  ctx.font = RENDER_THEME.point.labelFont;
+  ctx.fillText(
+    point.label,
+    screen.x + RENDER_THEME.point.labelOffsetX,
+    screen.y + RENDER_THEME.point.labelOffsetY,
+  );
 
   ctx.restore();
 }
