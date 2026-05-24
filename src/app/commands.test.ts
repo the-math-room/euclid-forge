@@ -10,6 +10,7 @@ import {
 import { appState } from "./appState";
 import {
   APP_COMMANDS,
+  appCommandDisabledReason,
   appCommandForKey,
 } from "./commands";
 import {
@@ -78,7 +79,10 @@ describe("app/commands", () => {
       "T1",
     );
 
-    expect(appCommandForKey("t")?.run(appState(graph, viewState, null))).toBeNull();
+    const command = appCommandForKey("t");
+    const state = appState(graph, viewState, null);
+
+    expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
 
   test("creates a centroid for one selected triangle", () => {
@@ -129,9 +133,10 @@ describe("app/commands", () => {
   test("hide selected is disabled when nothing is selected", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
 
-    expect(
-      appCommandForKey("h")?.run(appState(graph, emptyViewState(), null)),
-    ).toBeNull();
+    const command = appCommandForKey("h");
+    const state = appState(graph, emptyViewState(), null);
+
+    expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
 
   test("unhides all nodes", () => {
@@ -149,9 +154,10 @@ describe("app/commands", () => {
   test("unhide all is disabled when nothing is hidden", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
 
-    expect(
-      appCommandForKey("u")?.run(appState(graph, emptyViewState(), null)),
-    ).toBeNull();
+    const command = appCommandForKey("u");
+    const state = appState(graph, emptyViewState(), null);
+
+    expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
   test("deletes selected nodes when no unselected dependents exist", () => {
     const graph = createGraph([
@@ -201,21 +207,20 @@ describe("app/commands", () => {
     ]);
     const viewState = toggleSelectedNode(emptyViewState(), "A");
     const state = appState(graph, viewState, null);
+    const command = appCommandForKey("Delete");
 
-    expect(appCommandForKey("Delete")?.run(state)).toEqual({
-      state,
-      history: "ignore",
-      statusMessage:
-        "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
-    });
+    expect(command && appCommandDisabledReason(command, state)).toBe(
+      "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
+    );
   });
 
   test("delete selected is disabled when selection is empty", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
 
-    expect(
-      appCommandForKey("Delete")?.run(appState(graph, emptyViewState(), null)),
-    ).toBeNull();
+    const command = appCommandForKey("Delete");
+    const state = appState(graph, emptyViewState(), null);
+
+    expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
 
 });

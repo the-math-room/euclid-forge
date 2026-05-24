@@ -1,6 +1,5 @@
 import { applyGraphEdit } from "../representation/edit";
 import {
-  canDeleteNodes,
   deleteNodesDisabledReason,
 } from "../representation/deletePolicy";
 import type { NodeId } from "../representation/node";
@@ -26,219 +25,246 @@ export type CommandHistoryPolicy = "commit" | "ignore";
 export type AppCommandResult = Readonly<{
   state: AppState;
   history: CommandHistoryPolicy;
-  statusMessage?: string;
 }>;
 
 export type AppCommand = Readonly<{
   id: string;
   keys: readonly string[];
-  run: (state: AppState) => AppCommandResult | null;
+  disabledReason: (state: AppState) => string | null;
+  run: (state: AppState) => AppCommandResult;
 }>;
 
 export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
-  command("pan-viewport-left", ["arrowleft"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: -viewportPanStep(state), y: 0 }),
-        state.dragState,
+  command({
+    id: "pan-viewport-left",
+    keys: ["arrowleft"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          panViewport(state.viewState, { x: -viewportPanStep(state), y: 0 }),
+          state.dragState,
+        ),
       ),
-    ),
-  ),
-
-  command("pan-viewport-right", ["arrowright"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: viewportPanStep(state), y: 0 }),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("pan-viewport-up", ["arrowup"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: 0, y: viewportPanStep(state) }),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("pan-viewport-down", ["arrowdown"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        panViewport(state.viewState, { x: 0, y: -viewportPanStep(state) }),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("zoom-viewport-in", ["+", "="], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        zoomViewport(state.viewState, 1.25),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("zoom-viewport-out", ["-", "_"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        zoomViewport(state.viewState, 0.8),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("reset-viewport", ["0"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        resetViewport(state.viewState),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("rotate-viewport-counterclockwise", ["["], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        rotateViewportCounterclockwise(state.viewState),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("rotate-viewport-clockwise", ["]"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        rotateViewportClockwise(state.viewState),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("reset-viewport-rotation", ["\\"], (state) =>
-    ignore(
-      appState(
-        state.graph,
-        resetViewportRotation(state.viewState),
-        state.dragState,
-      ),
-    ),
-  ),
-
-  command("create-triangle", ["t"], (state) => {
-    const vertices = selectedFreePointVertices(state);
-
-    if (!vertices) {
-      return null;
-    }
-
-    return commit(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_TRIANGLE",
-          vertices,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
-      ),
-    );
   }),
 
-  command("create-centroid", ["g"], (state) => {
-    const triangle = selectedTriangle(state);
-
-    if (!triangle) {
-      return null;
-    }
-
-    return commit(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_CENTROID",
-          triangle,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
+  command({
+    id: "pan-viewport-right",
+    keys: ["arrowright"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          panViewport(state.viewState, { x: viewportPanStep(state), y: 0 }),
+          state.dragState,
+        ),
       ),
-    );
   }),
 
-  command("create-side-midpoints", ["m"], (state) => {
-    const triangle = selectedTriangle(state);
-
-    if (!triangle) {
-      return null;
-    }
-
-    return commit(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "ADD_MIDPOINTS",
-          triangle,
-        }),
-        clearSelection(state.viewState),
-        state.dragState,
+  command({
+    id: "pan-viewport-up",
+    keys: ["arrowup"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          panViewport(state.viewState, { x: 0, y: viewportPanStep(state) }),
+          state.dragState,
+        ),
       ),
-    );
   }),
 
-
-  command("delete-selected", ["delete", "backspace"], (state) => {
-    const selected = [...state.viewState.selectedNodeIds];
-    const disabledReason = deleteNodesDisabledReason(state.graph, selected);
-
-    if (disabledReason) {
-      if (selected.length === 0) {
-        return null;
-      }
-
-      return ignore(state, disabledReason);
-    }
-
-    return commit(
-      appState(
-        applyGraphEdit(state.graph, {
-          kind: "DELETE_NODES",
-          ids: selected,
-        }),
-        clearSelection(state.viewState),
-        null,
+  command({
+    id: "pan-viewport-down",
+    keys: ["arrowdown"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          panViewport(state.viewState, { x: 0, y: -viewportPanStep(state) }),
+          state.dragState,
+        ),
       ),
-    );
   }),
 
-  command("hide-selected", ["h"], (state) => {
-    const viewState = clearEffectivelyHiddenSelection(
-      state.graph,
-      hideSelectedNodes(state.viewState),
-    );
-
-    if (viewState === state.viewState) {
-      return null;
-    }
-
-    return commit(appState(state.graph, viewState, state.dragState));
+  command({
+    id: "zoom-viewport-in",
+    keys: ["+", "="],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          zoomViewport(state.viewState, 1.25),
+          state.dragState,
+        ),
+      ),
   }),
 
-  command("unhide-all", ["u"], (state) => {
-    const viewState = unhideAllNodes(state.viewState);
+  command({
+    id: "zoom-viewport-out",
+    keys: ["-", "_"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          zoomViewport(state.viewState, 0.8),
+          state.dragState,
+        ),
+      ),
+  }),
 
-    if (viewState === state.viewState) {
-      return null;
-    }
+  command({
+    id: "reset-viewport",
+    keys: ["0"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          resetViewport(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
 
-    return commit(appState(state.graph, viewState, state.dragState));
+  command({
+    id: "rotate-viewport-counterclockwise",
+    keys: ["["],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          rotateViewportCounterclockwise(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "rotate-viewport-clockwise",
+    keys: ["]"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          rotateViewportClockwise(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "reset-viewport-rotation",
+    keys: ["\\"],
+    run: (state) =>
+      ignore(
+        appState(
+          state.graph,
+          resetViewportRotation(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "create-triangle",
+    keys: ["t"],
+    disabledReason: (state) =>
+      selectedFreePointVertices(state) ? null : "",
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_TRIANGLE",
+            vertices: requireSelectedFreePointVertices(state),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "create-centroid",
+    keys: ["g"],
+    disabledReason: (state) => (selectedTriangle(state) ? null : ""),
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_CENTROID",
+            triangle: requireSelectedTriangle(state),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "create-side-midpoints",
+    keys: ["m"],
+    disabledReason: (state) => (selectedTriangle(state) ? null : ""),
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_MIDPOINTS",
+            triangle: requireSelectedTriangle(state),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "delete-selected",
+    keys: ["delete", "backspace"],
+    disabledReason: deleteSelectedDisabledReason,
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "DELETE_NODES",
+            ids: [...state.viewState.selectedNodeIds],
+          }),
+          clearSelection(state.viewState),
+          null,
+        ),
+      ),
+  }),
+
+  command({
+    id: "hide-selected",
+    keys: ["h"],
+    disabledReason: (state) =>
+      state.viewState.selectedNodeIds.size > 0 ? null : "",
+    run: (state) =>
+      commit(
+        appState(
+          state.graph,
+          clearEffectivelyHiddenSelection(
+            state.graph,
+            hideSelectedNodes(state.viewState),
+          ),
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "unhide-all",
+    keys: ["u"],
+    disabledReason: (state) =>
+      state.viewState.hiddenNodeIds.size > 0 ? null : "",
+    run: (state) =>
+      commit(
+        appState(
+          state.graph,
+          unhideAllNodes(state.viewState),
+          state.dragState,
+        ),
+      ),
   }),
 ]);
 
@@ -250,15 +276,26 @@ export function appCommandForKey(key: string): AppCommand | null {
   );
 }
 
-function command(
-  id: string,
-  keys: readonly string[],
-  run: AppCommand["run"],
-): AppCommand {
+export function appCommandDisabledReason(
+  command: AppCommand,
+  state: AppState,
+): string | null {
+  return command.disabledReason(state);
+}
+
+type CommandInit = Readonly<{
+  id: string;
+  keys: readonly string[];
+  disabledReason?: (state: AppState) => string | null;
+  run: AppCommand["run"];
+}>;
+
+function command(init: CommandInit): AppCommand {
   return Object.freeze({
-    id,
-    keys: Object.freeze(keys.map(normalizeCommandKey)),
-    run,
+    id: init.id,
+    keys: Object.freeze(init.keys.map(normalizeCommandKey)),
+    disabledReason: init.disabledReason ?? (() => null),
+    run: init.run,
   });
 }
 
@@ -273,14 +310,10 @@ function commit(state: AppState): AppCommandResult {
   });
 }
 
-function ignore(
-  state: AppState,
-  statusMessage?: string,
-): AppCommandResult {
+function ignore(state: AppState): AppCommandResult {
   return Object.freeze({
     state,
     history: "ignore",
-    ...(statusMessage ? { statusMessage } : {}),
   });
 }
 
@@ -314,6 +347,18 @@ function selectedFreePointVertices(
   return [a, b, c];
 }
 
+function requireSelectedFreePointVertices(
+  state: AppState,
+): readonly [NodeId, NodeId, NodeId] {
+  const vertices = selectedFreePointVertices(state);
+
+  if (!vertices) {
+    throw new Error("Cannot run create-triangle while disabled");
+  }
+
+  return vertices;
+}
+
 function selectedTriangle(state: AppState): NodeId | null {
   const selected = [...state.viewState.selectedNodeIds];
 
@@ -328,4 +373,24 @@ function selectedTriangle(state: AppState): NodeId | null {
   }
 
   return triangle;
+}
+
+function requireSelectedTriangle(state: AppState): NodeId {
+  const triangle = selectedTriangle(state);
+
+  if (!triangle) {
+    throw new Error("Cannot run triangle command while disabled");
+  }
+
+  return triangle;
+}
+
+function deleteSelectedDisabledReason(state: AppState): string | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length === 0) {
+    return "";
+  }
+
+  return deleteNodesDisabledReason(state.graph, selected);
 }

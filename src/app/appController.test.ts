@@ -894,4 +894,28 @@ describe("app/appController", () => {
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
   });
 
+
+  test("delete key explains why selected nodes cannot be deleted", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "Delete",
+    });
+
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
+    expect(transition.effects).toContainEqual({
+      kind: "SHOW_STATUS",
+      message:
+        "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
+    });
+    expect(transition.shouldPreventDefault).toBe(true);
+  });
+
 });

@@ -3,7 +3,10 @@ import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { screenToWorld } from "../rendering/viewport";
-import { appCommandForKey } from "./commands";
+import {
+  appCommandDisabledReason,
+  appCommandForKey,
+} from "./commands";
 import {
   hoverIntent,
   pointerDownIntent,
@@ -71,13 +74,17 @@ export function handleKeyDown(
     return unchanged(state);
   }
 
-  const result = command.run(state);
+  const disabledReason = appCommandDisabledReason(command, state);
 
-  if (!result) {
-    return unchanged(state);
+  if (disabledReason !== null) {
+    return disabledReason
+      ? changed(state, "ignore", disabledReason)
+      : unchanged(state);
   }
 
-  return changed(result.state, result.history, result.statusMessage);
+  const result = command.run(state);
+
+  return changed(result.state, result.history);
 }
 
 export function handlePointerDown(
