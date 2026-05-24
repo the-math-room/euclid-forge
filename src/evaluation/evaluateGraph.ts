@@ -24,7 +24,7 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
           id: node.id,
           point: vec2(node.x, node.y),
           label: node.label,
-          source: "FREE",
+          role: "FREE",
         });
         break;
       }
@@ -65,7 +65,7 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
           id: node.id,
           point: midpoint(segment.a, segment.b),
           label: node.label,
-          source: "CONSTRAINED",
+          role: "MIDPOINT",
         });
         break;
       }
@@ -78,7 +78,7 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
           id: node.id,
           point: centroid(triangle.a, triangle.b, triangle.c),
           label: node.label,
-          source: "CONSTRAINED",
+          role: "CENTROID",
         });
         break;
       }

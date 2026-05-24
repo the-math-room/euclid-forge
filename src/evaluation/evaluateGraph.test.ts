@@ -24,7 +24,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "A",
       point: vec2(-2, 0),
       label: "A",
-      source: "FREE",
+      role: "FREE",
     });
 
     expect(evaluated.values.get("B")).toEqual({
@@ -32,7 +32,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "B",
       point: vec2(2, 0),
       label: "B",
-      source: "FREE",
+      role: "FREE",
     });
   });
 
@@ -52,7 +52,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "G",
       point: vec2(0, 0),
       label: "G",
-      source: "CONSTRAINED",
+      role: "CENTROID",
     });
   });
 
@@ -82,7 +82,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "M",
       point: vec2(0, 0),
       label: "M",
-      source: "CONSTRAINED",
+      role: "MIDPOINT",
     });
 
     expect(evaluated.values.get("G")).toEqual({
@@ -90,7 +90,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "G",
       point: vec2(0, 2 / 3),
       label: "G",
-      source: "CONSTRAINED",
+      role: "CENTROID",
     });
   });
 
@@ -120,7 +120,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "M_AB",
       point: vec2(0, -1),
       label: "M",
-      source: "CONSTRAINED",
+      role: "MIDPOINT",
     });
 
     expect(evaluated.values.get("G")).toEqual({
@@ -128,7 +128,7 @@ describe("evaluation/evaluateGraph", () => {
       id: "G",
       point: vec2(0, 0),
       label: "G",
-      source: "CONSTRAINED",
+      role: "CENTROID",
     });
   });
 });

@@ -11,10 +11,10 @@ export function renderPoint(
 
   ctx.save();
 
-  ctx.fillStyle = point.source === "FREE" ? "#fbbf24" : "#34d399";
+  ctx.fillStyle = point.role === "FREE" ? "#fbbf24" : "#34d399";
 
   ctx.beginPath();
-  ctx.arc(screen.x, screen.y, point.source === "FREE" ? 6 : 5, 0, Math.PI * 2);
+  ctx.arc(screen.x, screen.y, point.role === "FREE" ? 6 : 5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = "#f9fafb";

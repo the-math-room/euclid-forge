@@ -31,7 +31,7 @@ describe("interaction/updateFreePoint", () => {
       id: "G",
       point: vec2(-2 / 3, 1),
       label: "G",
-      source: "CONSTRAINED",
+      role: "CENTROID",
     });
   });
 
