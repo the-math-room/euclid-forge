@@ -5,6 +5,7 @@ export type Viewport = Readonly<{
   height: number;
   center: Vec2;
   zoom: number;
+  rotation: number;
 }>;
 
 export type ScreenPoint = Readonly<{
@@ -13,15 +14,27 @@ export type ScreenPoint = Readonly<{
 }>;
 
 export function worldToScreen(viewport: Viewport, point: Vec2): ScreenPoint {
+  const dx = point.x - viewport.center.x;
+  const dy = point.y - viewport.center.y;
+  const cos = Math.cos(viewport.rotation);
+  const sin = Math.sin(viewport.rotation);
+  const rotatedX = dx * cos - dy * sin;
+  const rotatedY = dx * sin + dy * cos;
+
   return Object.freeze({
-    x: viewport.width / 2 + (point.x - viewport.center.x) * viewport.zoom,
-    y: viewport.height / 2 - (point.y - viewport.center.y) * viewport.zoom,
+    x: viewport.width / 2 + rotatedX * viewport.zoom,
+    y: viewport.height / 2 - rotatedY * viewport.zoom,
   });
 }
 
 export function screenToWorld(viewport: Viewport, point: ScreenPoint): Vec2 {
+  const rotatedX = (point.x - viewport.width / 2) / viewport.zoom;
+  const rotatedY = -(point.y - viewport.height / 2) / viewport.zoom;
+  const cos = Math.cos(viewport.rotation);
+  const sin = Math.sin(viewport.rotation);
+
   return Object.freeze({
-    x: viewport.center.x + (point.x - viewport.width / 2) / viewport.zoom,
-    y: viewport.center.y - (point.y - viewport.height / 2) / viewport.zoom,
+    x: viewport.center.x + rotatedX * cos + rotatedY * sin,
+    y: viewport.center.y - rotatedX * sin + rotatedY * cos,
   });
 }

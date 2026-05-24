@@ -29,6 +29,7 @@ const viewport: Viewport = {
   height: 600,
   center: vec2(0, 0),
   zoom: 80,
+  rotation: 0,
 };
 
 describe("app/appController", () => {
@@ -420,6 +421,7 @@ describe("app/appController", () => {
       hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
+      viewportRotation: 0,
     };
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
@@ -453,6 +455,7 @@ describe("app/appController", () => {
       hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
+      viewportRotation: 0,
     };
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
@@ -513,6 +516,7 @@ describe("app/appController", () => {
         ...emptyViewState(),
         viewportCenter: vec2(3, -4),
         viewportZoom: 120,
+        viewportRotation: Math.PI / 2,
       },
       null,
     );
@@ -521,6 +525,7 @@ describe("app/appController", () => {
 
     expect(transition.state.viewState.viewportCenter).toEqual(vec2(0, 0));
     expect(transition.state.viewState.viewportZoom).toBe(80);
+    expect(transition.state.viewState.viewportRotation).toBe(0);
   });
 
   test("pointerdown on a triangle records absolute drag starting positions", () => {
@@ -771,6 +776,41 @@ describe("app/appController", () => {
     expect(transition.state).toBe(state);
     expect(transition.shouldRender).toBe(false);
     expect(transition.shouldPreventDefault).toBe(false);
+  });
+
+  test("bracket keys rotate the viewport", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+
+    const counterclockwise = handleKeyDown(state, { key: "[" });
+    const clockwise = handleKeyDown(state, { key: "]" });
+
+    expect(counterclockwise.state.viewState.viewportRotation).toBeCloseTo(
+      Math.PI / 24,
+    );
+    expect(clockwise.state.viewState.viewportRotation).toBeCloseTo(
+      -Math.PI / 24,
+    );
+  });
+
+  test("backslash resets only viewport rotation", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        viewportCenter: vec2(3, -4),
+        viewportZoom: 120,
+        viewportRotation: Math.PI / 2,
+      },
+      null,
+    );
+
+    const transition = handleKeyDown(state, { key: "\\" });
+
+    expect(transition.state.viewState.viewportCenter).toEqual(vec2(3, -4));
+    expect(transition.state.viewState.viewportZoom).toBe(120);
+    expect(transition.state.viewState.viewportRotation).toBe(0);
   });
 
 });

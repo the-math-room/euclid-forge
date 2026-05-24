@@ -141,6 +141,7 @@ describe("app/clearEffectivelyHiddenSelection", () => {
       hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
+      viewportRotation: 0,
     };
 
     const next = clearEffectivelyHiddenSelection(graph, viewState);
@@ -165,6 +166,7 @@ describe("app/clearEffectivelyHiddenSelection", () => {
       hoveredNodeId: null,
       viewportCenter: vec2(0, 0),
       viewportZoom: 80,
+      viewportRotation: 0,
     };
 
     expect(clearEffectivelyHiddenSelection(graph, viewState)).toBe(viewState);

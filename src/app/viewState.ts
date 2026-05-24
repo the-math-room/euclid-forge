@@ -4,6 +4,8 @@ import type { NodeId } from "../representation/node";
 
 const DEFAULT_VIEWPORT_CENTER = vec2(0, 0);
 const DEFAULT_VIEWPORT_ZOOM = 80;
+const DEFAULT_VIEWPORT_ROTATION = 0;
+const VIEWPORT_ROTATION_STEP = Math.PI / 24;
 const VIEWPORT_MIN_ZOOM = 10;
 const VIEWPORT_MAX_ZOOM = 640;
 
@@ -13,6 +15,7 @@ export type ViewState = Readonly<{
   hoveredNodeId: NodeId | null;
   viewportCenter: Vec2;
   viewportZoom: number;
+  viewportRotation: number;
 }>;
 
 export function emptyViewState(): ViewState {
@@ -22,6 +25,7 @@ export function emptyViewState(): ViewState {
     hoveredNodeId: null,
     viewportCenter: DEFAULT_VIEWPORT_CENTER,
     viewportZoom: DEFAULT_VIEWPORT_ZOOM,
+    viewportRotation: DEFAULT_VIEWPORT_ROTATION,
   });
 }
 
@@ -144,8 +148,9 @@ export function zoomViewport(
 
 export function resetViewport(viewState: ViewState): ViewState {
   const withCenter = setViewportCenter(viewState, DEFAULT_VIEWPORT_CENTER);
+  const withZoom = setViewportZoom(withCenter, DEFAULT_VIEWPORT_ZOOM);
 
-  return setViewportZoom(withCenter, DEFAULT_VIEWPORT_ZOOM);
+  return setViewportRotation(withZoom, DEFAULT_VIEWPORT_ROTATION);
 }
 
 function clampZoom(zoom: number): number {
@@ -163,6 +168,46 @@ export function setHoveredNode(
   return Object.freeze({
     ...viewState,
     hoveredNodeId,
+  });
+}
+
+export function rotateViewport(
+  viewState: ViewState,
+  deltaRadians: number,
+): ViewState {
+  if (deltaRadians === 0) {
+    return viewState;
+  }
+
+  return setViewportRotation(
+    viewState,
+    viewState.viewportRotation + deltaRadians,
+  );
+}
+
+export function rotateViewportClockwise(viewState: ViewState): ViewState {
+  return rotateViewport(viewState, -VIEWPORT_ROTATION_STEP);
+}
+
+export function rotateViewportCounterclockwise(viewState: ViewState): ViewState {
+  return rotateViewport(viewState, VIEWPORT_ROTATION_STEP);
+}
+
+export function resetViewportRotation(viewState: ViewState): ViewState {
+  return setViewportRotation(viewState, DEFAULT_VIEWPORT_ROTATION);
+}
+
+export function setViewportRotation(
+  viewState: ViewState,
+  viewportRotation: number,
+): ViewState {
+  if (viewState.viewportRotation === viewportRotation) {
+    return viewState;
+  }
+
+  return Object.freeze({
+    ...viewState,
+    viewportRotation,
   });
 }
 

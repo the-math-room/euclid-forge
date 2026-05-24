@@ -22,6 +22,13 @@ import {
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
 import { createRenderScheduler } from "./renderScheduler";
 import { renderScene } from "../rendering/renderScene";
+import {
+  emptyViewportMotionState,
+  isViewportMotionActive,
+  startViewportRotation,
+  stepViewportMotion,
+  stopViewportRotation,
+} from "./viewportMotion";
 
 function render(
   canvas: HTMLCanvasElement,
@@ -82,6 +89,19 @@ function applyPointerCaptureEffect(
 }
 
 
+
+function viewportRotationDirectionForKey(key: string): -1 | 1 | null {
+  if (key === "[") {
+    return 1;
+  }
+
+  if (key === "]") {
+    return -1;
+  }
+
+  return null;
+}
+
 function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -103,6 +123,8 @@ function main(): void {
   const ctx = get2DContext(canvas);
 
   let state = initialAppState();
+  let viewportMotion = emptyViewportMotionState();
+  let viewportMotionFrame: number | null = null;
 
   const setState = (next: AppState): void => {
     state = next;
@@ -111,6 +133,31 @@ function main(): void {
   const requestRender = createRenderScheduler(() => {
     render(canvas, ctx, state);
   });
+
+  const requestViewportMotionFrame = (): void => {
+    if (viewportMotionFrame !== null) {
+      return;
+    }
+
+    viewportMotionFrame = requestAnimationFrame((timestampMs) => {
+      viewportMotionFrame = null;
+
+      const step = stepViewportMotion(state, viewportMotion, timestampMs);
+      viewportMotion = step.motion;
+
+      if (step.state !== state) {
+        state = step.state;
+      }
+
+      if (step.shouldRender) {
+        requestRender();
+      }
+
+      if (isViewportMotionActive(viewportMotion)) {
+        requestViewportMotionFrame();
+      }
+    });
+  };
 
   window.addEventListener("resize", () => {
     requestRender();
@@ -121,6 +168,15 @@ function main(): void {
       return;
     }
 
+    const rotateDirection = viewportRotationDirectionForKey(event.key);
+
+    if (rotateDirection !== null) {
+      viewportMotion = startViewportRotation(viewportMotion, rotateDirection);
+      requestViewportMotionFrame();
+      event.preventDefault();
+      return;
+    }
+
     applyTransition(
       canvas,
       event,
@@ -128,6 +184,17 @@ function main(): void {
       setState,
       requestRender,
     );
+  });
+
+  window.addEventListener("keyup", (event) => {
+    const rotateDirection = viewportRotationDirectionForKey(event.key);
+
+    if (rotateDirection === null) {
+      return;
+    }
+
+    viewportMotion = stopViewportRotation(viewportMotion, rotateDirection);
+    event.preventDefault();
   });
 
   canvas.addEventListener("pointerdown", (event) => {

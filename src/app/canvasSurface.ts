@@ -51,6 +51,7 @@ export function viewportForCanvas(
     height: rect.height,
     center: viewState.viewportCenter,
     zoom: viewState.viewportZoom,
+    rotation: viewState.viewportRotation,
   };
 }
 

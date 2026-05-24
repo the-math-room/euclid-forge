@@ -23,6 +23,9 @@ import {
   hideSelectedNodes,
   panViewport,
   resetViewport,
+  resetViewportRotation,
+  rotateViewportClockwise,
+  rotateViewportCounterclockwise,
   setHoveredNode,
   toggleSelectedNode,
   unhideAllNodes,
@@ -134,6 +137,36 @@ export function handleKeyDown(
     );
   }
 
+  if (key === "[") {
+    return changed(
+      appState(
+        state.graph,
+        rotateViewportCounterclockwise(state.viewState),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "]") {
+    return changed(
+      appState(
+        state.graph,
+        rotateViewportClockwise(state.viewState),
+        state.dragState,
+      ),
+    );
+  }
+
+  if (key === "\\") {
+    return changed(
+      appState(
+        state.graph,
+        resetViewportRotation(state.viewState),
+        state.dragState,
+      ),
+    );
+  }
+
   if (key === "t") {
     const vertices = selectedFreePointVertices(state);
 
@@ -222,14 +255,8 @@ export function handlePointerDown(
   input: PointerInput,
 ): AppTransition {
   const viewState = setHoveredNode(state.viewState, null);
-  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, viewState);
-  const evaluated = visibleEvaluatedScene(
-    evaluateGraph(state.graph),
-    hiddenNodeIds.size > 0
-      ? {
-          hiddenNodeIds,
-        }
-      : {},
+  const evaluated = visibleEvaluatedSceneForState(
+    appState(state.graph, viewState, state.dragState),
   );
 
   if (input.shiftKey) {
@@ -436,12 +463,11 @@ export function handlePointerCancel(
 
 
 
-function hitTestHoverTarget(
-  state: AppState,
-  input: PointerInput,
-): NodeId | null {
+
+function visibleEvaluatedSceneForState(state: AppState) {
   const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
-  const evaluated = visibleEvaluatedScene(
+
+  return visibleEvaluatedScene(
     evaluateGraph(state.graph),
     hiddenNodeIds.size > 0
       ? {
@@ -449,6 +475,13 @@ function hitTestHoverTarget(
         }
       : {},
   );
+}
+
+function hitTestHoverTarget(
+  state: AppState,
+  input: PointerInput,
+): NodeId | null {
+  const evaluated = visibleEvaluatedSceneForState(state);
 
   if (input.shiftKey) {
     const pointHit = hitTestPoint(evaluated, input.viewport, input.point);

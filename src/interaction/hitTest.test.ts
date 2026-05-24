@@ -25,6 +25,7 @@ describe("interaction/hitTestPoint", () => {
     height: 600,
     center: vec2(0, 0),
     zoom: 80,
+  rotation: 0,
   };
 
   test("finds a nearby free point", () => {
@@ -106,6 +107,7 @@ describe("interaction/hitTestFreePoint", () => {
     height: 600,
     center: vec2(0, 0),
     zoom: 80,
+  rotation: 0,
   };
 
   test("finds a nearby free point", () => {
@@ -199,6 +201,7 @@ describe("interaction/hitTestSegmentSelection", () => {
     height: 600,
     center: vec2(0, 0),
     zoom: 80,
+  rotation: 0,
   };
 
   test("finds a nearby segment", () => {
@@ -265,6 +268,7 @@ describe("interaction/hitTestTriangleSelection", () => {
     height: 600,
     center: vec2(0, 0),
     zoom: 80,
+  rotation: 0,
   };
 
   test("finds a selectable triangle from an interior point", () => {
@@ -352,6 +356,7 @@ describe("interaction/hitTestTriangleInterior", () => {
     height: 600,
     center: vec2(0, 0),
     zoom: 80,
+  rotation: 0,
   };
 
   test("finds a triangle from an interior point when all vertices are free", () => {

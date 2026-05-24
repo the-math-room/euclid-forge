@@ -6,8 +6,13 @@ import {
   hideSelectedNodes,
   panViewport,
   resetViewport,
-  setViewportCenter,
+  resetViewportRotation,
+  rotateViewport,
+  rotateViewportClockwise,
+  rotateViewportCounterclockwise,
   setHoveredNode,
+  setViewportCenter,
+  setViewportRotation,
   setViewportZoom,
   toggleSelectedNode,
   unhideAllNodes,
@@ -23,6 +28,7 @@ describe("app/viewState", () => {
     expect(viewState.hoveredNodeId).toBeNull();
     expect(viewState.viewportCenter).toEqual(vec2(0, 0));
     expect(viewState.viewportZoom).toBe(80);
+    expect(viewState.viewportRotation).toBe(0);
     expect(Object.isFrozen(viewState)).toBe(true);
   });
 
@@ -103,6 +109,7 @@ describe("app/viewState", () => {
 
     expect(next.viewportCenter).toEqual(vec2(3, -2));
     expect(next.viewportZoom).toBe(80);
+    expect(next.viewportRotation).toBe(0);
     expect([...next.selectedNodeIds]).toEqual(["A"]);
     expect([...next.hiddenNodeIds]).toEqual([]);
   });
@@ -119,6 +126,7 @@ describe("app/viewState", () => {
 
     expect(next.viewportCenter).toEqual(vec2(0, 0));
     expect(next.viewportZoom).toBe(120);
+    expect(next.viewportRotation).toBe(0);
     expect([...next.selectedNodeIds]).toEqual(["A"]);
     expect([...next.hiddenNodeIds]).toEqual([]);
   });
@@ -186,6 +194,7 @@ describe("app/viewState", () => {
 
     expect(next.viewportCenter).toEqual(vec2(0, 0));
     expect(next.viewportZoom).toBe(80);
+    expect(next.viewportRotation).toBe(0);
     expect([...next.selectedNodeIds]).toEqual([]);
     expect([...next.hiddenNodeIds]).toEqual(["A"]);
   });
@@ -210,6 +219,62 @@ describe("app/viewState", () => {
     const viewState = setHoveredNode(emptyViewState(), "A");
 
     expect(setHoveredNode(viewState, "A")).toBe(viewState);
+  });
+
+  test("sets viewport rotation", () => {
+    const viewState = emptyViewState();
+    const next = setViewportRotation(viewState, Math.PI / 2);
+
+    expect(next.viewportRotation).toBe(Math.PI / 2);
+    expect(next.viewportCenter).toEqual(vec2(0, 0));
+    expect(next.viewportZoom).toBe(80);
+  });
+
+  test("returns same object when setting viewport rotation to the current value", () => {
+    const viewState = emptyViewState();
+
+    expect(setViewportRotation(viewState, 0)).toBe(viewState);
+  });
+
+  test("rotates viewport by a delta", () => {
+    const viewState = emptyViewState();
+    const next = rotateViewport(viewState, Math.PI / 6);
+
+    expect(next.viewportRotation).toBe(Math.PI / 6);
+  });
+
+  test("returns same object when rotating viewport by zero", () => {
+    const viewState = emptyViewState();
+
+    expect(rotateViewport(viewState, 0)).toBe(viewState);
+  });
+
+  test("rotates viewport counterclockwise by the default step", () => {
+    const next = rotateViewportCounterclockwise(emptyViewState());
+
+    expect(next.viewportRotation).toBeCloseTo(Math.PI / 24);
+  });
+
+  test("rotates viewport clockwise by the default step", () => {
+    const next = rotateViewportClockwise(emptyViewState());
+
+    expect(next.viewportRotation).toBeCloseTo(-Math.PI / 24);
+  });
+
+  test("resets viewport rotation without changing center or zoom", () => {
+    const viewState = setViewportRotation(
+      setViewportZoom(
+        setViewportCenter(emptyViewState(), vec2(2, 3)),
+        120,
+      ),
+      Math.PI / 2,
+    );
+
+    const next = resetViewportRotation(viewState);
+
+    expect(next.viewportCenter).toEqual(vec2(2, 3));
+    expect(next.viewportZoom).toBe(120);
+    expect(next.viewportRotation).toBe(0);
   });
 
 });

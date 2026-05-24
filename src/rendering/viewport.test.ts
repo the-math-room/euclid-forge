@@ -10,6 +10,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(0, 0),
       zoom: 100,
+      rotation: 0,
     };
 
     expect(worldToScreen(viewport, vec2(0, 0))).toEqual({
@@ -24,6 +25,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(0, 0),
       zoom: 100,
+      rotation: 0,
     };
 
     expect(worldToScreen(viewport, vec2(2, 0))).toEqual({
@@ -38,6 +40,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(0, 0),
       zoom: 100,
+      rotation: 0,
     };
 
     expect(worldToScreen(viewport, vec2(0, 2))).toEqual({
@@ -52,6 +55,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(10, 20),
       zoom: 50,
+      rotation: 0,
     };
 
     expect(worldToScreen(viewport, vec2(10, 20))).toEqual({
@@ -66,6 +70,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(10, 20),
       zoom: 50,
+      rotation: 0,
     };
 
     expect(screenToWorld(viewport, { x: 400, y: 300 })).toEqual(vec2(10, 20));
@@ -77,6 +82,7 @@ describe("rendering/viewport", () => {
       height: 600,
       center: vec2(3, -4),
       zoom: 80,
+      rotation: 0,
     };
 
     const world = vec2(5.5, 2.25);
@@ -84,4 +90,36 @@ describe("rendering/viewport", () => {
 
     expect(screenToWorld(viewport, screen)).toEqual(world);
   });
+  test("rotates world coordinates around the viewport center", () => {
+    const viewport: Viewport = {
+      width: 800,
+      height: 600,
+      center: vec2(0, 0),
+      zoom: 100,
+      rotation: Math.PI / 2,
+    };
+
+    expect(worldToScreen(viewport, vec2(1, 0))).toEqual({
+      x: 400,
+      y: 200,
+    });
+  });
+
+  test("screenToWorld reverses worldToScreen with rotation", () => {
+    const viewport: Viewport = {
+      width: 800,
+      height: 600,
+      center: vec2(3, -4),
+      zoom: 80,
+      rotation: Math.PI / 3,
+    };
+
+    const world = vec2(5.5, 2.25);
+    const screen = worldToScreen(viewport, world);
+    const roundTrip = screenToWorld(viewport, screen);
+
+    expect(roundTrip.x).toBeCloseTo(world.x);
+    expect(roundTrip.y).toBeCloseTo(world.y);
+  });
+
 });
