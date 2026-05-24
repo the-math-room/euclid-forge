@@ -66,6 +66,7 @@ T                          create triangle from 3 selected free points
 G                          create centroid for selected triangle
 M                          create/reuse side segments and midpoints
 
+Delete / Backspace         delete selected nodes when dependency-safe
 H                          hide selected nodes
 U                          unhide all hidden nodes
 
@@ -85,6 +86,10 @@ Ctrl/Cmd+O                 open workspace JSON
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.
+
+Delete is conservative. It does not cascade. If selected nodes have unselected dependents, deletion is blocked and the app shows a status message explaining why.
+
+Undo restores successful deletes.
 
 ## Durable vs transient state
 
@@ -107,6 +112,7 @@ drag state
 pointer capture
 smooth viewport motion
 undo/redo stacks
+status messages
 ```
 
 Workspace save/load stores durable project state only.

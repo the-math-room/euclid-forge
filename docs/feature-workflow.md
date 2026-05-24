@@ -8,6 +8,33 @@ Keep the pipeline intact:
 user input → AppTransition → GraphEdit/ViewState → Graph/EvaluatedScene → render
 ```
 
+## Patch discipline
+
+Before patching, name the touched layers.
+
+Good patch sizes:
+
+```txt
+representation only
+app command only
+DOM/app-edge only
+rendering only
+docs only
+```
+
+If a patch touches more than three layers, split it unless there is a strong reason not to.
+
+For user-visible app-edge behavior, prefer:
+
+```txt
+model/policy
+command result
+transition/effect seam
+DOM surface
+smoke coverage
+docs
+```
+
 ## Add a construction
 
 1. Add syntax in `representation/node.ts`.
@@ -25,8 +52,9 @@ user input → AppTransition → GraphEdit/ViewState → Graph/EvaluatedScene �
 2. Give it a stable `id`.
 3. Define shortcut keys.
 4. Return `history: "commit"` only for durable editor changes.
-5. Add command tests.
-6. Let `appController.ts` delegate through `appCommandForKey`.
+5. Return a status message for useful blocked-user feedback.
+6. Add command tests.
+7. Let `appController.ts` delegate through `appCommandForKey`.
 
 Keyboard commands should be reusable by future menus, toolbars, and command palettes.
 
@@ -34,10 +62,11 @@ Keyboard commands should be reusable by future menus, toolbars, and command pale
 
 1. Decide the user intent.
 2. Keep hit testing in `interaction/`.
-3. Add or update transition behavior in `appController.ts`.
-4. Keep DOM effects in `main.ts` or app-edge helpers.
-5. Keep graph mutations in `representation/edit.ts`.
-6. Add controller tests.
+3. Put pointer hit policy in `app/pointerIntent.ts`.
+4. Add or update transition behavior in `appController.ts`.
+5. Keep DOM effects in app-edge helpers.
+6. Keep graph mutations in `representation/edit.ts`.
+7. Add controller and pointer-intent tests.
 
 Pointer gestures do not need to be forced into the keyboard command abstraction.
 
@@ -76,6 +105,7 @@ hover
 drag state
 pointer capture
 smooth viewport motion
+status messages
 ```
 
 ## Add viewport behavior
@@ -144,6 +174,7 @@ drag state
 hover
 pointer capture
 smooth motion state
+status messages
 history inside snapshots
 ```
 
@@ -181,6 +212,22 @@ render
 
 Saving should not affect history.
 
+## Add status feedback
+
+Status feedback is app-edge UI.
+
+Use:
+
+```txt
+statusSurface.ts
+transitionEffects.ts
+AppTransition.statusMessage
+```
+
+Status messages should explain blocked user actions. They should not mutate graph, view, history, or workspace state.
+
+Smoke-test status feedback when it is user-visible.
+
 ## Add derived geometry
 
 Derived geometry should depend on source construction.
@@ -196,23 +243,38 @@ Avoid storing derived coordinates in the graph.
 
 ## Add deletion
 
-Choose the dependency policy first.
-
-Recommended first policy:
+Conservative policy:
 
 ```txt
-reject delete when dependents exist
+delete selected nodes only if no unselected node depends on them
 ```
 
-Later options:
+Blocked delete:
 
 ```txt
-cascade delete
-prompt in UI
+does not mutate graph
+does not commit history
+shows a status message
+```
+
+Successful delete:
+
+```txt
+removes selected nodes
+clears selection
+commits history
+can be undone
+```
+
+Do not silently cascade.
+
+Possible later options:
+
+```txt
+select dependents
+cascade delete with confirmation
 delete branch/subconstruction
 ```
-
-Do not silently break dependencies.
 
 ## Tests
 
@@ -222,6 +284,7 @@ Use unit tests for:
 math
 graph validation
 graph edits
+delete policy
 evaluation
 visibility projections
 hit testing
@@ -234,6 +297,7 @@ commands
 app transitions
 render scheduling
 app-edge side effects
+status surface
 ```
 
 Use smoke tests for:
@@ -242,6 +306,8 @@ Use smoke tests for:
 browser wiring
 canvas rendering
 real pointer/keyboard interactions
+status feedback
+delete + undo
 file flows only when needed
 ```
 

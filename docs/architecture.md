@@ -43,11 +43,20 @@ applyGraphEdit
 dependenciesOf
 dependentsOf
 transitiveDependentsOf
+delete policy
 ```
 
 The graph is the mathematical construction document. It is not view state.
 
 Derived geometry is not stored as coordinates in the graph.
+
+Delete policy is conservative:
+
+```txt
+delete selected nodes only when no unselected node depends on them
+```
+
+Blocked deletes produce a reason. The app layer may show that reason, but the representation layer owns the dependency rule.
 
 ## `evaluation/`
 
@@ -70,6 +79,8 @@ EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
 Rendering may respect selection, hover, and hidden nodes. It does not edit constructions.
+
+Theme constants live in `rendering/theme.ts`.
 
 Labels are screen annotations. View rotation moves label anchor points, but labels stay upright.
 
@@ -115,10 +126,12 @@ workspaceFiles.ts        file/JSON primitives
 workspaceActions.ts      save/open orchestration
 keyboardShortcuts.ts     keyboard shortcut classification
 transitionEffects.ts     AppTransition side effects
+statusSurface.ts         status message DOM surface
 viewportMotion.ts        smooth transient viewport rotation
 effectiveVisibility.ts   graph-aware view projections
 canvasSurface.ts         canvas/viewport DOM utilities
 renderScheduler.ts       requestAnimationFrame coalescing
+pointerIntent.ts         pointer hit-policy seam
 ```
 
 ## Core rules
@@ -183,6 +196,37 @@ This avoids frame-to-frame drift.
 
 Triangles with constrained vertices are not body-draggable unless an explicit inverse edit is later defined.
 
+## Delete
+
+Delete is conservative.
+
+```txt
+Delete / Backspace
+→ selected nodes
+→ representation delete policy
+→ delete only if dependency-safe
+```
+
+A delete is dependency-safe when no unselected node depends on a selected node.
+
+Blocked deletes do not mutate graph state. They return a status message through the command/transition path.
+
+Successful deletes clear selection and commit history.
+
+Undo restores successful deletes.
+
+## Status messages
+
+Status messages are transient app-edge feedback.
+
+```txt
+statusSurface.ts
+```
+
+The status surface owns DOM creation and display. Status messages are not graph state, view state, workspace state, or history state.
+
+Currently used for blocked deletes.
+
 ## History
 
 Undo/redo is a linear timeline.
@@ -205,6 +249,7 @@ drag state
 pointer capture
 viewport motion
 history
+status messages
 ```
 
 Committing after undo discards the redo future.
@@ -233,6 +278,7 @@ drag state
 history
 pointer capture
 smooth viewport motion
+status messages
 ```
 
 Loading validates through `createGraph` before mutating app state. Successful load resets history to the loaded workspace.

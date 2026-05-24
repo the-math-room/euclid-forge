@@ -5,6 +5,7 @@ import {
   expectBluePointNear,
   expectGreenPointNear,
   expectLightEdgeNear,
+  expectNoYellowPointNear,
   expectYellowPointNear,
   getCanvasFrame,
   shiftClickWorld,
@@ -118,4 +119,30 @@ test("blocked delete shows a status message and keeps geometry", async ({
   await expect(status).toContainText("depends on it");
 
   await expectYellowPointNear(frame.canvas, { x: -2, y: -1 });
+});
+
+test("deletes an isolated point and undo restores it", async ({ page }) => {
+  await page.goto("/");
+
+  let frame = await getCanvasFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 3 });
+  await waitForAnimationFrame(page);
+
+  frame = await getCanvasFrame(page);
+
+  await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
+
+  await shiftClickWorld(page, frame, { x: 4, y: 3 });
+  await waitForAnimationFrame(page);
+
+  await page.keyboard.press("Delete");
+  await waitForAnimationFrame(page);
+
+  await expectNoYellowPointNear(frame.canvas, { x: 4, y: 3 });
+
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z");
+  await waitForAnimationFrame(page);
+
+  await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
 });

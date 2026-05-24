@@ -4,27 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Euclid Forge</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #111827;
+      }
+
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: #0f172a;
+      }
+
+      #geometry-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: #0f172a;
+      }
+    </style>
   </head>
   <body>
     <main id="app">
-      <canvas id="geometry-canvas"></canvas>
+      <canvas id="geometry-canvas" aria-label="Geometry construction canvas"></canvas>
 
-      <aside id="help-overlay" aria-label="Euclid Forge controls">
+      <aside id="help-overlay" aria-label="Controls">
         <strong>Euclid Forge</strong>
-        <span>Click empty space: add point</span>
+        <span>Click empty canvas: add point</span>
         <span>Drag point: move point</span>
-        <span>Drag triangle: move triangle</span>
-        <span>Shift-click points: select</span>
-        <span>T: create triangle from 3 selected points</span>
-        <span>G: create centroid for selected triangle</span>
-        <span>M: create/reuse side segments and midpoints</span>
+        <span>Drag triangle: move free vertices</span>
+        <span>Shift-click: select point/segment/triangle</span>
+        <span>T: triangle from 3 selected free points</span>
+        <span>G: centroid of selected triangle</span>
+        <span>M: side midpoints of selected triangle</span>
         <span>Delete/Backspace: delete selected nodes</span>
         <span>H: hide selected nodes</span>
         <span>U: unhide all hidden nodes</span>
         <span>Arrow keys: pan viewport</span>
         <span>+ / -: zoom viewport</span>
         <span>[ / ]: rotate viewport</span>
-        <span>\\: reset viewport rotation</span>
+        <span>\: reset viewport rotation</span>
         <span>0: reset viewport</span>
         <span>Ctrl/Cmd+S: save workspace</span>
         <span>Ctrl/Cmd+O: open workspace</span>

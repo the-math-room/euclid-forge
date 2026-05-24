@@ -101,6 +101,15 @@ export async function expectYellowPointNear(
   await expectPixelsNear(canvas, point, "yellow");
 }
 
+export async function expectNoYellowPointNear(
+  canvas: Locator,
+  point: WorldPoint,
+): Promise<void> {
+  const pixels = await countPixelsNearWorld(canvas, point, "yellow");
+
+  expect(pixels).toBe(0);
+}
+
 export async function expectGreenPointNear(
   canvas: Locator,
   point: WorldPoint,
