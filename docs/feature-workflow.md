@@ -39,10 +39,57 @@ selected nodes
 hidden nodes
 hovered node
 active tool
-viewport
+viewport center
+viewport zoom
 ```
 
 These should not become geometry nodes unless they have mathematical meaning.
+
+## Add viewport behavior
+
+Viewport center and zoom belong in `ViewState`.
+
+Canvas width and height should stay derived from the canvas.
+
+Good:
+
+```txt
+ViewState.viewportCenter
+ViewState.viewportZoom
+viewportForCanvas(canvas, viewState)
+```
+
+Avoid storing canvas dimensions as durable view state. They are environmental facts, not user intent.
+
+Keyboard, wheel, or gesture viewport interactions should update view state through helpers such as:
+
+```txt
+panViewport
+zoomViewport
+resetViewport
+setViewportCenter
+setViewportZoom
+```
+
+## Add visibility behavior
+
+Keep explicit user intent separate from graph-aware projections.
+
+Good:
+
+```txt
+ViewState.hiddenNodeIds
+```
+
+Then derive effective visibility from the graph:
+
+```txt
+effectiveHiddenNodeIds(graph, viewState)
+```
+
+Rendering and hit testing should use the same effective hidden set. Invisible geometry should not be selectable or draggable.
+
+When effective visibility changes, clean selection so effectively hidden nodes do not remain selected.
 
 ## Add derived geometry
 
@@ -66,8 +113,10 @@ math
 graph validation
 graph edits
 evaluation
+visibility projections
 hit testing
 app transitions
+view state
 render scheduling
 ```
 

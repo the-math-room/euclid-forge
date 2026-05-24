@@ -60,8 +60,13 @@ shift-click point          toggle point selection
 shift-click triangle body  toggle triangle selection
 T                          create triangle from 3 selected free points
 G                          create centroid for selected triangle
+M                          create/reuse side segments and midpoints
 H                          hide selected nodes
 U                          unhide all hidden nodes
+Arrow keys                 pan viewport
++ / =                      zoom in
+- / _                      zoom out
+0                          reset viewport
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.
