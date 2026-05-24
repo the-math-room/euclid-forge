@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateGraph } from "../evaluation/evaluateScene";
+import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import { freePoint, midpointNode, segmentNode } from "../representation/node";

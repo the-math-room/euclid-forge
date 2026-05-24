@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import { freePoint, midpointNode, segmentNode } from "../representation/node";
-import { evaluateGraph } from "./evaluateScene";
+import { evaluateGraph } from "./evaluateGraph";
 
 describe("evaluation/evaluateGraph", () => {
   test("evaluates free points", () => {

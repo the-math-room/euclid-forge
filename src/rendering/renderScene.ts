@@ -1,4 +1,4 @@
-import type { EvaluatedScene } from "../evaluation/evaluateScene";
+import type { EvaluatedScene } from "../evaluation/evaluateGraph";
 import type {
   EvaluatedPoint,
   EvaluatedSegment,

@@ -1,6 +1,6 @@
 import "../styles/app.css";
 
-import { evaluateGraph } from "../evaluation/evaluateScene";
+import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { hitTestFreePoint } from "../interaction/hitTest";
 import { updateFreePoint } from "../interaction/updateFreePoint";
 import { vec2 } from "../meaning/vec2";
