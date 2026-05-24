@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   clickWorld,
   dragWorld,
@@ -96,4 +96,26 @@ test("shift-selects three free points and creates a triangle with T", async ({
   await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });
   await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2.5 });
   await expectLightEdgeNear(frame.canvas, { x: 3, y: 2.5 });
+});
+
+test("blocked delete shows a status message and keeps geometry", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  await shiftClickWorld(page, frame, { x: -2, y: -1 });
+  await waitForAnimationFrame(page);
+
+  await page.keyboard.press("Delete");
+  await waitForAnimationFrame(page);
+
+  const status = page.locator("#status-message");
+
+  await expect(status).toBeVisible();
+  await expect(status).toContainText("Cannot delete A");
+  await expect(status).toContainText("depends on it");
+
+  await expectYellowPointNear(frame.canvas, { x: -2, y: -1 });
 });
