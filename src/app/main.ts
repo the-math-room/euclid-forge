@@ -1,11 +1,19 @@
 import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateScene";
-import type { Graph } from "../representation/graph";
+import { hitTestFreePoint } from "../interaction/hitTest";
+import { updateFreePoint } from "../interaction/updateFreePoint";
 import { vec2 } from "../meaning/vec2";
+import type { Graph } from "../representation/graph";
+import type { NodeId } from "../representation/node";
 import { renderScene } from "../rendering/renderScene";
-import type { Viewport } from "../rendering/viewport";
+import { screenToWorld } from "../rendering/viewport";
+import type { ScreenPoint, Viewport } from "../rendering/viewport";
 import { initialScene } from "./initialScene";
+
+type DragState = Readonly<{
+  nodeId: NodeId;
+}>;
 
 function getCanvas(): HTMLCanvasElement {
   const canvas = document.querySelector<HTMLCanvasElement>("#geometry-canvas");
@@ -40,6 +48,29 @@ function resizeCanvasToDisplaySize(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
+function viewportForCanvas(canvas: HTMLCanvasElement): Viewport {
+  const rect = canvas.getBoundingClientRect();
+
+  return {
+    width: rect.width,
+    height: rect.height,
+    center: vec2(0, 0),
+    zoom: 80,
+  };
+}
+
+function eventPoint(
+  canvas: HTMLCanvasElement,
+  event: PointerEvent,
+): ScreenPoint {
+  const rect = canvas.getBoundingClientRect();
+
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
 function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
@@ -48,14 +79,7 @@ function render(
   resizeCanvasToDisplaySize(canvas, ctx);
 
   const rect = canvas.getBoundingClientRect();
-
-  const viewport: Viewport = {
-    width: rect.width,
-    height: rect.height,
-    center: vec2(0, 0),
-    zoom: 80,
-  };
-
+  const viewport = viewportForCanvas(canvas);
   const evaluated = evaluateGraph(graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
@@ -65,10 +89,61 @@ function render(
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
-  const graph = initialScene();
+
+  let graph = initialScene();
+  let drag: DragState | null = null;
 
   window.addEventListener("resize", () => {
     render(canvas, ctx, graph);
+  });
+
+  canvas.addEventListener("pointerdown", (event) => {
+    const viewport = viewportForCanvas(canvas);
+    const evaluated = evaluateGraph(graph);
+    const hit = hitTestFreePoint(
+      graph,
+      evaluated,
+      viewport,
+      eventPoint(canvas, event),
+    );
+
+    if (!hit) {
+      drag = null;
+      return;
+    }
+
+    canvas.setPointerCapture(event.pointerId);
+    drag = { nodeId: hit };
+    event.preventDefault();
+  });
+
+  canvas.addEventListener("pointermove", (event) => {
+    if (!drag) {
+      return;
+    }
+
+    const viewport = viewportForCanvas(canvas);
+    const world = screenToWorld(viewport, eventPoint(canvas, event));
+
+    graph = updateFreePoint(graph, drag.nodeId, world);
+    render(canvas, ctx, graph);
+    event.preventDefault();
+  });
+
+  canvas.addEventListener("pointerup", (event) => {
+    if (drag) {
+      drag = null;
+      canvas.releasePointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+  });
+
+  canvas.addEventListener("pointercancel", (event) => {
+    if (drag) {
+      drag = null;
+      canvas.releasePointerCapture(event.pointerId);
+      event.preventDefault();
+    }
   });
 
   render(canvas, ctx, graph);

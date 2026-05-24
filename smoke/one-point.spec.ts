@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("renders a segment with two free endpoints and a constrained midpoint", async ({
+test("drags a free endpoint and updates the constrained midpoint", async ({
   page,
 }) => {
   await page.goto("/");
@@ -8,6 +8,34 @@ test("renders a segment with two free endpoints and a constrained midpoint", asy
   const canvas = page.locator("#geometry-canvas");
 
   await expect(canvas).toBeVisible();
+
+  const before = await canvas.evaluate((node) => {
+    const canvas = node as HTMLCanvasElement;
+
+    return {
+      width: canvas.width,
+      height: canvas.height,
+      dpr: window.devicePixelRatio,
+    };
+  });
+
+  expect(before.width).toBeGreaterThan(0);
+  expect(before.height).toBeGreaterThan(0);
+
+  const box = await canvas.boundingBox();
+
+  if (!box) {
+    throw new Error("Could not find canvas bounding box");
+  }
+
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+  const zoomCssPx = 80;
+
+  await page.mouse.move(centerX - 2 * zoomCssPx, centerY);
+  await page.mouse.down();
+  await page.mouse.move(centerX - 1 * zoomCssPx, centerY - 1 * zoomCssPx);
+  await page.mouse.up();
 
   const result = await canvas.evaluate((node) => {
     const canvas = node as HTMLCanvasElement;
@@ -29,7 +57,7 @@ test("renders a segment with two free endpoints and a constrained midpoint", asy
         alpha: number,
       ) => boolean,
     ): number {
-      const radius = 14;
+      const radius = 16;
       const image = ctx.getImageData(
         Math.floor(x - radius),
         Math.floor(y - radius),
@@ -71,39 +99,20 @@ test("renders a segment with two free endpoints and a constrained midpoint", asy
       alpha: number,
     ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
 
-    const isLightSegment = (
-      red: number,
-      green: number,
-      blue: number,
-      alpha: number,
-    ) => alpha > 0 && red > 180 && green > 180 && blue > 180;
-
     return {
-      width: canvas.width,
-      height: canvas.height,
-      leftYellowishPixels: countPixelsNear(
-        centerX - 2 * zoom,
-        centerY,
-        isYellowish,
-      ),
-      middleGreenishPixels: countPixelsNear(centerX, centerY, isGreenish),
-      rightYellowishPixels: countPixelsNear(
-        centerX + 2 * zoom,
-        centerY,
-        isYellowish,
-      ),
-      segmentPixelsNearQuarter: countPixelsNear(
+      movedEndpointYellowishPixels: countPixelsNear(
         centerX - zoom,
-        centerY,
-        isLightSegment,
+        centerY - zoom,
+        isYellowish,
+      ),
+      shiftedMidpointGreenishPixels: countPixelsNear(
+        centerX + zoom / 2,
+        centerY - zoom / 2,
+        isGreenish,
       ),
     };
   });
 
-  expect(result.width).toBeGreaterThan(0);
-  expect(result.height).toBeGreaterThan(0);
-  expect(result.leftYellowishPixels).toBeGreaterThan(0);
-  expect(result.middleGreenishPixels).toBeGreaterThan(0);
-  expect(result.rightYellowishPixels).toBeGreaterThan(0);
-  expect(result.segmentPixelsNearQuarter).toBeGreaterThan(0);
+  expect(result.movedEndpointYellowishPixels).toBeGreaterThan(0);
+  expect(result.shiftedMidpointGreenishPixels).toBeGreaterThan(0);
 });

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
-import { worldToScreen } from "./viewport";
+import { screenToWorld, worldToScreen } from "./viewport";
 import type { Viewport } from "./viewport";
 
 describe("rendering/viewport", () => {
@@ -58,5 +58,30 @@ describe("rendering/viewport", () => {
       x: 400,
       y: 300,
     });
+  });
+
+  test("maps screen center back to world center", () => {
+    const viewport: Viewport = {
+      width: 800,
+      height: 600,
+      center: vec2(10, 20),
+      zoom: 50,
+    };
+
+    expect(screenToWorld(viewport, { x: 400, y: 300 })).toEqual(vec2(10, 20));
+  });
+
+  test("screenToWorld reverses worldToScreen", () => {
+    const viewport: Viewport = {
+      width: 800,
+      height: 600,
+      center: vec2(3, -4),
+      zoom: 80,
+    };
+
+    const world = vec2(5.5, 2.25);
+    const screen = worldToScreen(viewport, world);
+
+    expect(screenToWorld(viewport, screen)).toEqual(world);
   });
 });
