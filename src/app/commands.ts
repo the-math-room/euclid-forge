@@ -1,3 +1,8 @@
+import {
+  centroidConstruction,
+  triangleConstruction,
+  triangleSideMidpointConstruction,
+} from "../representation/constructions";
 import { applyGraphEdit } from "../representation/edit";
 import {
   deleteNodesDisabledReason,
@@ -174,8 +179,11 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       commit(
         appState(
           applyGraphEdit(state.graph, {
-            kind: "ADD_TRIANGLE",
-            vertices: requireSelectedFreePointVertices(state),
+            kind: "ADD_NODES",
+            nodes: triangleConstruction(
+              state.graph,
+              requireSelectedFreePointVertices(state),
+            ),
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -191,8 +199,11 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       commit(
         appState(
           applyGraphEdit(state.graph, {
-            kind: "ADD_CENTROID",
-            triangle: requireSelectedTriangle(state),
+            kind: "ADD_NODES",
+            nodes: centroidConstruction(
+              state.graph,
+              requireSelectedTriangle(state),
+            ),
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -208,8 +219,11 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       commit(
         appState(
           applyGraphEdit(state.graph, {
-            kind: "ADD_MIDPOINTS",
-            triangle: requireSelectedTriangle(state),
+            kind: "ADD_NODES",
+            nodes: triangleSideMidpointConstruction(
+              state.graph,
+              requireSelectedTriangle(state),
+            ),
           }),
           clearSelection(state.viewState),
           state.dragState,
