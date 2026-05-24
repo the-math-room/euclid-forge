@@ -131,7 +131,11 @@ function main(): void {
   canvas.addEventListener("pointerup", (event) => {
     if (drag) {
       drag = null;
-      canvas.releasePointerCapture(event.pointerId);
+
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+
       event.preventDefault();
     }
   });
@@ -139,7 +143,11 @@ function main(): void {
   canvas.addEventListener("pointercancel", (event) => {
     if (drag) {
       drag = null;
-      canvas.releasePointerCapture(event.pointerId);
+
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+
       event.preventDefault();
     }
   });

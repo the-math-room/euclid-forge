@@ -28,7 +28,7 @@ export function hitTestFreePoint(
       continue;
     }
 
-    if (!isFreePoint(graph, value)) {
+    if (!isFreePoint(graph, value.id)) {
       continue;
     }
 
@@ -69,17 +69,23 @@ export function hitTestTriangleInterior(
       continue;
     }
 
+    const vertexIds = triangleVertexIds(node);
+
+    if (!vertexIds.every((id) => isFreePoint(graph, id))) {
+      continue;
+    }
+
     return {
       id: value.id,
-      vertexIds: triangleVertexIds(node),
+      vertexIds,
     };
   }
 
   return null;
 }
 
-function isFreePoint(graph: Graph, value: EvaluatedPoint): boolean {
-  return graph.byId.get(value.id)?.kind === "FREE_POINT";
+function isFreePoint(graph: Graph, id: NodeId): boolean {
+  return graph.byId.get(id)?.kind === "FREE_POINT";
 }
 
 function triangleVertexIds(

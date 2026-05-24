@@ -57,13 +57,16 @@ export function createGraph(nodes: readonly GeometryNode[]): Graph {
   }
 
   const ordered: GeometryNode[] = [];
+  let head = 0;
 
-  while (queue.length > 0) {
-    const id = queue.shift();
+  while (head < queue.length) {
+    const id = queue[head];
 
     if (!id) {
       throw new Error("Internal topological sort queue error");
     }
+
+    head += 1;
 
     const node = byId.get(id);
 

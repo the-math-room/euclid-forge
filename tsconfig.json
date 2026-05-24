@@ -20,5 +20,5 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true
   },
-  "include": ["src", "playwright.config.ts"]
+  "include": ["src", "smoke", "playwright.config.ts"]
 }

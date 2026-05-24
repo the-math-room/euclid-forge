@@ -96,7 +96,7 @@ describe("interaction/hitTestTriangleInterior", () => {
     zoom: 80,
   };
 
-  test("finds a triangle from an interior point", () => {
+  test("finds a triangle from an interior point when all vertices are free", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
@@ -111,6 +111,51 @@ describe("interaction/hitTestTriangleInterior", () => {
       id: "ABC",
       vertexIds: ["A", "B", "C"],
     });
+  });
+
+  test("does not hit a triangle with a constrained vertex", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+      triangleNode("ABG", "A", "B", "G"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+    const screen = worldToScreen(viewport, vec2(0, -0.5));
+
+    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toEqual({
+      id: "ABC",
+      vertexIds: ["A", "B", "C"],
+    });
+  });
+
+  test("returns null when the containing triangle has a constrained vertex", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+      triangleNode("ABG", "A", "B", "G"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+    const screen = worldToScreen(viewport, vec2(0, -0.75));
+
+    // ABG contains this point, but ABG is not draggable because G is constrained.
+    // ABC also contains this point, so isolate ABG to test constrained-vertex behavior
+    // without depending on future triangle stacking or priority policy.
+    const constrainedOnly = {
+      values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
+      ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
+    };
+
+    expect(
+      hitTestTriangleInterior(graph, constrainedOnly, viewport, screen),
+    ).toBeNull();
   });
 
   test("returns null outside the triangle", () => {
