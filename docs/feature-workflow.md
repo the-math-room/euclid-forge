@@ -5,7 +5,13 @@ Prefer small vertical changes.
 Keep the pipeline intact:
 
 ```txt
-user input → AppTransition → GraphEdit/ViewState → Graph/EvaluatedScene → render
+user input
+→ AppController / Command
+→ AppTransition
+→ AppRuntime
+→ GraphEdit/ViewState
+→ Graph/EvaluatedScene
+→ render
 ```
 
 ## Patch discipline
@@ -28,8 +34,9 @@ For user-visible app-edge behavior, prefer:
 
 ```txt
 model/policy
-command result
-transition/effect seam
+command or pointer intent
+transition/effect protocol
+runtime/event seam
 DOM surface
 smoke coverage
 docs
@@ -51,12 +58,20 @@ docs
 1. Add or update a command in `app/commands.ts`.
 2. Give it a stable `id`.
 3. Define shortcut keys.
-4. Return `history: "commit"` only for durable editor changes.
-5. Return a status message for useful blocked-user feedback.
+4. Define `disabledReason(state)`.
+5. Return `history: "commit"` only for durable editor changes.
 6. Add command tests.
-7. Let `appController.ts` delegate through `appCommandForKey`.
+7. Let `appController.ts` handle command eligibility and status feedback.
 
 Keyboard commands should be reusable by future menus, toolbars, and command palettes.
+
+Use disabled reasons intentionally:
+
+```txt
+null      enabled
+""        disabled silently
+message   disabled with user-facing feedback
+```
 
 ## Add a pointer interaction
 
@@ -64,11 +79,68 @@ Keyboard commands should be reusable by future menus, toolbars, and command pale
 2. Keep hit testing in `interaction/`.
 3. Put pointer hit policy in `app/pointerIntent.ts`.
 4. Add or update transition behavior in `appController.ts`.
-5. Keep DOM effects in app-edge helpers.
+5. Emit `AppEffect[]` for app-edge effects.
 6. Keep graph mutations in `representation/edit.ts`.
 7. Add controller and pointer-intent tests.
 
 Pointer gestures do not need to be forced into the keyboard command abstraction.
+
+## Add an app effect
+
+Use `AppEffect[]` for app-edge effects.
+
+Good examples:
+
+```txt
+pointer capture
+status feedback
+future dialogs or notifications
+```
+
+App effects are interpreted in `transitionEffects.ts`.
+
+Do not put app effects in:
+
+```txt
+Graph
+ViewState
+Workspace
+History snapshot
+```
+
+## Add DOM event wiring
+
+Keep DOM listener setup in `app/domEvents.ts`.
+
+`domEvents.ts` should translate browser events into:
+
+```txt
+appController handlers
+appRuntime methods
+workspace actions
+viewport motion requests
+```
+
+Do not let `domEvents.ts` own graph edits, history mutation, rendering internals, or status DOM details.
+
+Inject browser dependencies such as `windowTarget`, `canvas`, and workspace environment so the wiring remains unit-testable.
+
+## Add runtime behavior
+
+Runtime coordination belongs in `appRuntime.ts`.
+
+Good responsibilities:
+
+```txt
+current AppState
+history
+transition application
+undo/redo
+requestRender
+status effect handling
+```
+
+Avoid moving domain logic into the runtime. The runtime coordinates; it does not decide construction semantics.
 
 ## Add view state
 
@@ -195,7 +267,7 @@ Workspace serialization belongs in `app/`.
 ```txt
 workspace.ts         pure workspace format
 workspaceFiles.ts    file/JSON primitives
-workspaceActions.ts  browser save/open orchestration
+workspaceActions.ts  save/open orchestration
 ```
 
 Loading should:
@@ -219,9 +291,10 @@ Status feedback is app-edge UI.
 Use:
 
 ```txt
-statusSurface.ts
+AppEffect kind: SHOW_STATUS
 transitionEffects.ts
-AppTransition.statusMessage
+appRuntime.ts
+statusSurface.ts
 ```
 
 Status messages should explain blocked user actions. They should not mutate graph, view, history, or workspace state.
@@ -254,7 +327,7 @@ Blocked delete:
 ```txt
 does not mutate graph
 does not commit history
-shows a status message
+emits SHOW_STATUS
 ```
 
 Successful delete:
@@ -293,8 +366,10 @@ viewport motion
 view state
 history
 workspace serialization
-commands
+commands and eligibility
 app transitions
+runtime coordination
+DOM event wiring
 render scheduling
 app-edge side effects
 status surface

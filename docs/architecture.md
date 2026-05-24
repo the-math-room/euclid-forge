@@ -114,9 +114,11 @@ Within a kind, later visual order wins exact ties. Triangles use reverse visual 
 Browser shell and user transitions.
 
 ```txt
-main.ts                  DOM wiring and runtime state
-appController.ts         pointer input → AppTransition
-commands.ts              keyboard command definitions
+main.ts                  app composition
+domEvents.ts             DOM listener wiring
+appRuntime.ts            state/history/render/status coordinator
+appController.ts         pointer and key input → AppTransition
+commands.ts              keyboard command definitions and eligibility
 appState.ts              Graph + ViewState + DragState
 viewState.ts             view state helpers
 dragState.ts             active drag description
@@ -125,7 +127,7 @@ workspace.ts             pure workspace serialization
 workspaceFiles.ts        file/JSON primitives
 workspaceActions.ts      save/open orchestration
 keyboardShortcuts.ts     keyboard shortcut classification
-transitionEffects.ts     AppTransition side effects
+transitionEffects.ts     AppTransition effect interpreter
 statusSurface.ts         status message DOM surface
 viewportMotion.ts        smooth transient viewport rotation
 effectiveVisibility.ts   graph-aware view projections
@@ -144,6 +146,76 @@ Selection, visibility, hover, and viewport intent are view state.
 Rendering consumes evaluated geometry.
 DOM effects stay at the app edge.
 ```
+
+## App transition protocol
+
+`AppTransition` is the app protocol between controller logic and the runtime/effects layer.
+
+It carries:
+
+```txt
+next AppState
+whether to render
+whether to prevent default
+history policy
+AppEffect[]
+```
+
+`AppEffect[]` currently includes:
+
+```txt
+SET_POINTER_CAPTURE
+RELEASE_POINTER_CAPTURE
+SHOW_STATUS
+```
+
+Effects are app-edge instructions. They are not graph state, view state, workspace state, or history state.
+
+`transitionEffects.ts` is the effect interpreter.
+
+## Runtime and event wiring
+
+`main.ts` should stay small. It composes browser surfaces, creates the runtime, connects DOM events, and requests the initial render.
+
+`appRuntime.ts` owns mutable runtime coordination:
+
+```txt
+current AppState
+history
+AppTransition application
+undo/redo
+render scheduling
+status feedback
+```
+
+`domEvents.ts` owns browser listener wiring. It translates DOM events into controller calls and runtime methods. It receives browser dependencies as inputs so event wiring can be unit-tested without relying on global browser objects.
+
+`keyboardShortcuts.ts` uses structural keyboard target checks rather than browser constructor globals, so shortcut logic remains unit-testable in Node.
+
+## Commands
+
+Commands live in `commands.ts`.
+
+Each command has:
+
+```txt
+id
+keys
+disabledReason(state)
+run(state)
+```
+
+`disabledReason(state)` returns:
+
+```txt
+null      command is enabled
+""        command is disabled silently
+message   command is disabled and the app should explain why
+```
+
+`appController.ts` checks eligibility before running commands.
+
+This keeps keyboard behavior aligned with future menus, toolbars, and command palettes.
 
 ## Viewport
 
@@ -209,7 +281,7 @@ Delete / Backspace
 
 A delete is dependency-safe when no unselected node depends on a selected node.
 
-Blocked deletes do not mutate graph state. They return a status message through the command/transition path.
+Blocked deletes do not mutate graph state. They produce a `SHOW_STATUS` effect.
 
 Successful deletes clear selection and commit history.
 
@@ -220,6 +292,9 @@ Undo restores successful deletes.
 Status messages are transient app-edge feedback.
 
 ```txt
+SHOW_STATUS AppEffect
+transitionEffects.ts
+appRuntime.ts
 statusSurface.ts
 ```
 

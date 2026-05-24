@@ -117,6 +117,25 @@ status messages
 
 Workspace save/load stores durable project state only.
 
+## Runtime seams
+
+```txt
+main.ts          app composition
+domEvents.ts     DOM listener wiring
+appRuntime.ts    state/history/render/status coordinator
+AppTransition    state/render/history/effects protocol
+AppEffect[]      app-edge effects such as pointer capture and status feedback
+```
+
+Commands have explicit eligibility:
+
+```txt
+command.disabledReason(state)
+command.run(state)
+```
+
+This supports keyboard shortcuts now and future menus, toolbars, and command palettes later.
+
 ## Architecture
 
 See:
