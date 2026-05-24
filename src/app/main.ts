@@ -9,7 +9,7 @@ import {
   handlePointerMove,
   handlePointerUp,
 } from "./appController";
-import type { AppTransition, PointerCaptureEffect } from "./appController";
+import type { AppTransition } from "./appController";
 import { initialAppState } from "./appState";
 import {
   isOpenShortcut,
@@ -36,6 +36,7 @@ import {
   undoHistory,
 } from "./history";
 import { createRenderScheduler } from "./renderScheduler";
+import { applyTransition } from "./transitionEffects";
 import { renderScene } from "../rendering/renderScene";
 import { deserializeWorkspace } from "./workspace";
 import {
@@ -68,50 +69,6 @@ function render(
     hoveredNodeId: state.viewState.hoveredNodeId,
     hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
   });
-}
-
-function applyTransition(
-  canvas: HTMLCanvasElement,
-  event: Event,
-  transition: AppTransition,
-  setState: (state: AppState) => void,
-  requestRender: () => void,
-  commitStateToHistory: (state: AppState) => void,
-): void {
-  setState(transition.state);
-
-  if (transition.history === "commit") {
-    commitStateToHistory(transition.state);
-  }
-
-  if (transition.pointerCapture) {
-    applyPointerCaptureEffect(canvas, transition.pointerCapture);
-  }
-
-  if (transition.shouldRender) {
-    requestRender();
-  }
-
-  if (transition.shouldPreventDefault) {
-    event.preventDefault();
-  }
-}
-
-function applyPointerCaptureEffect(
-  canvas: HTMLCanvasElement,
-  effect: PointerCaptureEffect,
-): void {
-  switch (effect.kind) {
-    case "SET_POINTER_CAPTURE":
-      canvas.setPointerCapture(effect.pointerId);
-      break;
-
-    case "RELEASE_POINTER_CAPTURE":
-      if (canvas.hasPointerCapture(effect.pointerId)) {
-        canvas.releasePointerCapture(effect.pointerId);
-      }
-      break;
-  }
 }
 
 async function openWorkspaceFromFile(
@@ -238,14 +195,14 @@ function main(): void {
       return;
     }
 
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handleKeyDown(state, { key: event.key }),
+      transition: handleKeyDown(state, { key: event.key }),
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   window.addEventListener("keyup", (event) => {
@@ -260,10 +217,10 @@ function main(): void {
   });
 
   canvas.addEventListener("pointerdown", (event) => {
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handlePointerDown(state, {
+      transition: handlePointerDown(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
         viewport: viewportForCanvas(canvas, state.viewState),
@@ -272,14 +229,14 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   canvas.addEventListener("pointermove", (event) => {
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handlePointerMove(state, {
+      transition: handlePointerMove(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
         viewport: viewportForCanvas(canvas, state.viewState),
@@ -288,40 +245,40 @@ function main(): void {
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   canvas.addEventListener("pointerup", (event) => {
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handlePointerUp(state, event.pointerId),
+      transition: handlePointerUp(state, event.pointerId),
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   canvas.addEventListener("pointercancel", (event) => {
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handlePointerCancel(state, event.pointerId),
+      transition: handlePointerCancel(state, event.pointerId),
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   canvas.addEventListener("pointerleave", (event) => {
-    applyTransition(
+    applyTransition({
       canvas,
       event,
-      handlePointerLeave(state),
+      transition: handlePointerLeave(state),
       setState,
       requestRender,
       commitStateToHistory,
-    );
+    });
   });
 
   requestRender();
