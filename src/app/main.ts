@@ -29,6 +29,7 @@ import {
 } from "./history";
 import { createRenderScheduler } from "./renderScheduler";
 import { renderScene } from "../rendering/renderScene";
+import { deserializeWorkspace } from "./workspace";
 import {
   emptyViewportMotionState,
   isViewportMotionActive,
@@ -36,6 +37,11 @@ import {
   stepViewportMotion,
   stopViewportRotation,
 } from "./viewportMotion";
+import {
+  chooseWorkspaceFile,
+  downloadWorkspaceJson,
+  workspaceFromJsonText,
+} from "./workspaceFiles";
 
 function render(
   canvas: HTMLCanvasElement,
@@ -103,6 +109,25 @@ function applyPointerCaptureEffect(
 
 
 
+
+function isSaveShortcut(event: KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === "s"
+  );
+}
+
+function isOpenShortcut(event: KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === "o"
+  );
+}
+
 function isUndoShortcut(event: KeyboardEvent): boolean {
   return (
     (event.ctrlKey || event.metaKey) &&
@@ -149,6 +174,35 @@ function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {
   );
 }
 
+
+async function openWorkspaceFromFile(
+  setState: (state: AppState) => void,
+  setHistory: (history: ReturnType<typeof initialHistory>) => void,
+  requestRender: () => void,
+): Promise<void> {
+  const file = await chooseWorkspaceFile(document);
+
+  if (!file) {
+    return;
+  }
+
+  try {
+    const workspace = workspaceFromJsonText(await file.text());
+    const nextState = deserializeWorkspace(workspace);
+
+    setState(nextState);
+    setHistory(initialHistory(nextState));
+    requestRender();
+  } catch (error) {
+    console.error(error);
+    window.alert(
+      error instanceof Error
+        ? error.message
+        : "Could not open workspace file",
+    );
+  }
+}
+
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
@@ -164,6 +218,10 @@ function main(): void {
 
   const commitStateToHistory = (next: AppState): void => {
     history = commitHistory(history, next);
+  };
+
+  const setHistory = (next: typeof history): void => {
+    history = next;
   };
 
   const requestRender = createRenderScheduler(() => {
@@ -201,6 +259,18 @@ function main(): void {
 
   window.addEventListener("keydown", (event) => {
     if (shouldIgnoreKeyDownTarget(event.target)) {
+      return;
+    }
+
+    if (isSaveShortcut(event)) {
+      downloadWorkspaceJson(document, URL, state);
+      event.preventDefault();
+      return;
+    }
+
+    if (isOpenShortcut(event)) {
+      void openWorkspaceFromFile(setState, setHistory, requestRender);
+      event.preventDefault();
       return;
     }
 
