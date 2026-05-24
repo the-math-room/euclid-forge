@@ -37,6 +37,15 @@ test("drags a free endpoint and updates the constrained midpoint", async ({
   await page.mouse.move(centerX - 1 * zoomCssPx, centerY - 1 * zoomCssPx);
   await page.mouse.up();
 
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      }),
+  );
+
   const result = await canvas.evaluate((node) => {
     const canvas = node as HTMLCanvasElement;
     const maybeCtx = canvas.getContext("2d");
