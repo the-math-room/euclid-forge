@@ -9,7 +9,7 @@ import {
   handlePointerMove,
   handlePointerUp,
 } from "./appController";
-import type { AppTransition } from "./appController";
+import { createAppRuntime } from "./appRuntime";
 import { initialAppState } from "./appState";
 import {
   isOpenShortcut,
@@ -28,16 +28,9 @@ import {
   viewportForCanvas,
 } from "./canvasSurface";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
-import {
-  appStateFromHistory,
-  commitHistory,
-  initialHistory,
-  redoHistory,
-  undoHistory,
-} from "./history";
+import { initialHistory } from "./history";
 import { createRenderScheduler } from "./renderScheduler";
 import { statusSurfaceForDocument } from "./statusSurface";
-import { applyTransition } from "./transitionEffects";
 import { renderScene } from "../rendering/renderScene";
 import {
   browserWorkspaceActionEnvironment,
@@ -77,26 +70,19 @@ function main(): void {
   const statusSurface = statusSurfaceForDocument(document);
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
-  let state = initialAppState();
-  let history = initialHistory(state);
+  const initialState = initialAppState();
+  const requestRender = createRenderScheduler(() => {
+    render(canvas, ctx, runtime.getState());
+  });
+  const runtime = createAppRuntime({
+    canvas,
+    initialState,
+    initialHistory: initialHistory(initialState),
+    requestRender,
+    statusSurface,
+  });
   let viewportMotion = emptyViewportMotionState();
   let viewportMotionFrame: number | null = null;
-
-  const setState = (next: AppState): void => {
-    state = next;
-  };
-
-  const commitStateToHistory = (next: AppState): void => {
-    history = commitHistory(history, next);
-  };
-
-  const setHistory = (next: typeof history): void => {
-    history = next;
-  };
-
-  const requestRender = createRenderScheduler(() => {
-    render(canvas, ctx, state);
-  });
 
   const requestViewportMotionFrame = (): void => {
     if (viewportMotionFrame !== null) {
@@ -106,15 +92,16 @@ function main(): void {
     viewportMotionFrame = requestAnimationFrame((timestampMs) => {
       viewportMotionFrame = null;
 
-      const step = stepViewportMotion(state, viewportMotion, timestampMs);
+      const currentState = runtime.getState();
+      const step = stepViewportMotion(currentState, viewportMotion, timestampMs);
       viewportMotion = step.motion;
 
-      if (step.state !== state) {
-        state = step.state;
+      if (step.state !== currentState) {
+        runtime.setState(step.state);
       }
 
       if (step.shouldRender) {
-        requestRender();
+        runtime.requestRender();
       }
 
       if (isViewportMotionActive(viewportMotion)) {
@@ -133,7 +120,7 @@ function main(): void {
     }
 
     if (isSaveShortcut(event)) {
-      saveWorkspace(workspaceEnvironment, state);
+      saveWorkspace(workspaceEnvironment, runtime.getState());
       event.preventDefault();
       return;
     }
@@ -141,27 +128,21 @@ function main(): void {
     if (isOpenShortcut(event)) {
       void openWorkspace({
         environment: workspaceEnvironment,
-        setState,
-        setHistory,
-        requestRender,
+        setState: runtime.setState,
+        setHistory: runtime.setHistory,
+        requestRender: runtime.requestRender,
       });
       event.preventDefault();
       return;
     }
 
     if (isUndoShortcut(event)) {
-      history = undoHistory(history);
-      state = appStateFromHistory(history);
-      requestRender();
-      event.preventDefault();
+      runtime.undo(event);
       return;
     }
 
     if (isRedoShortcut(event)) {
-      history = redoHistory(history);
-      state = appStateFromHistory(history);
-      requestRender();
-      event.preventDefault();
+      runtime.redo(event);
       return;
     }
 
@@ -174,19 +155,7 @@ function main(): void {
       return;
     }
 
-    applyTransition({
-      canvas,
-      event,
-      transition: handleKeyDown(state, { key: event.key }),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+    runtime.applyTransition(event, handleKeyDown(runtime.getState(), { key: event.key }));
   });
 
   window.addEventListener("keyup", (event) => {
@@ -201,93 +170,49 @@ function main(): void {
   });
 
   canvas.addEventListener("pointerdown", (event) => {
-    applyTransition({
-      canvas,
+    const state = runtime.getState();
+
+    runtime.applyTransition(
       event,
-      transition: handlePointerDown(state, {
+      handlePointerDown(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
         viewport: viewportForCanvas(canvas, state.viewState),
         shiftKey: event.shiftKey,
       }),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+    );
   });
 
   canvas.addEventListener("pointermove", (event) => {
-    applyTransition({
-      canvas,
+    const state = runtime.getState();
+
+    runtime.applyTransition(
       event,
-      transition: handlePointerMove(state, {
+      handlePointerMove(state, {
         pointerId: event.pointerId,
         point: eventPoint(canvas, event),
         viewport: viewportForCanvas(canvas, state.viewState),
         shiftKey: event.shiftKey,
       }),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+    );
   });
 
   canvas.addEventListener("pointerup", (event) => {
-    applyTransition({
-      canvas,
+    runtime.applyTransition(
       event,
-      transition: handlePointerUp(state, event.pointerId),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+      handlePointerUp(runtime.getState(), event.pointerId),
+    );
   });
 
   canvas.addEventListener("pointercancel", (event) => {
-    applyTransition({
-      canvas,
+    runtime.applyTransition(
       event,
-      transition: handlePointerCancel(state, event.pointerId),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+      handlePointerCancel(runtime.getState(), event.pointerId),
+    );
   });
 
   canvas.addEventListener("pointerleave", (event) => {
-    applyTransition({
-      canvas,
-      event,
-      transition: handlePointerLeave(state),
-      setState,
-      requestRender,
-      commitStateToHistory,
-      showStatusMessage: (message) => {
-        if (message) {
-          statusSurface.show(message);
-        }
-      },
-    });
+    runtime.applyTransition(event, handlePointerLeave(runtime.getState()));
   });
 
   requestRender();
