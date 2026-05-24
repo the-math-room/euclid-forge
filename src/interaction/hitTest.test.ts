@@ -10,7 +10,11 @@ import {
 } from "../representation/node";
 import type { Viewport } from "../rendering/viewport";
 import { worldToScreen } from "../rendering/viewport";
-import { hitTestFreePoint, hitTestTriangleInterior } from "./hitTest";
+import {
+  hitTestFreePoint,
+  hitTestTriangleInterior,
+  hitTestTriangleSelection,
+} from "./hitTest";
 
 describe("interaction/hitTestFreePoint", () => {
   const viewport: Viewport = {
@@ -88,6 +92,70 @@ describe("interaction/hitTestFreePoint", () => {
   });
 });
 
+describe("interaction/hitTestTriangleSelection", () => {
+  const viewport: Viewport = {
+    width: 800,
+    height: 600,
+    center: vec2(0, 0),
+    zoom: 80,
+  };
+
+  test("finds a selectable triangle from an interior point", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestTriangleSelection(evaluated, viewport, worldToScreen(viewport, vec2(0, 0))),
+    ).toEqual({ id: "ABC" });
+  });
+
+  test("finds a triangle even when it has a constrained vertex", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+      triangleNode("ABG", "A", "B", "G"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+    const constrainedOnly = {
+      values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
+      ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
+    };
+
+    expect(
+      hitTestTriangleSelection(
+        constrainedOnly,
+        viewport,
+        worldToScreen(viewport, vec2(0, -0.75)),
+      ),
+    ).toEqual({ id: "ABG" });
+  });
+
+  test("returns null outside triangles", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(
+      hitTestTriangleSelection(evaluated, viewport, worldToScreen(viewport, vec2(3, 3))),
+    ).toBeNull();
+  });
+});
+
 describe("interaction/hitTestTriangleInterior", () => {
   const viewport: Viewport = {
     width: 800,
@@ -145,9 +213,6 @@ describe("interaction/hitTestTriangleInterior", () => {
     const evaluated = evaluateGraph(graph);
     const screen = worldToScreen(viewport, vec2(0, -0.75));
 
-    // ABG contains this point, but ABG is not draggable because G is constrained.
-    // ABC also contains this point, so isolate ABG to test constrained-vertex behavior
-    // without depending on future triangle stacking or priority policy.
     const constrainedOnly = {
       values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
       ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),

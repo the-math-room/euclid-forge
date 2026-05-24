@@ -57,7 +57,8 @@ To share the current source state:
 click empty canvas        add free point
 drag free point           move that point
 drag triangle body        translate its free vertices
-shift-click free point    toggle selection
+shift-click free point    toggle point selection
+shift-click triangle body  toggle triangle selection
 press T                   create triangle from exactly 3 selected free points
 ```
 

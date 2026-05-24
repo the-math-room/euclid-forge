@@ -8,9 +8,10 @@ import { renderPoints } from "./pointRenderer";
 import type { PointRenderOptions } from "./pointRenderer";
 import { renderSegments } from "./segmentRenderer";
 import { renderTriangles } from "./triangleRenderer";
+import type { TriangleRenderOptions } from "./triangleRenderer";
 import type { Viewport } from "./viewport";
 
-export type RenderSceneOptions = PointRenderOptions;
+export type RenderSceneOptions = PointRenderOptions & TriangleRenderOptions;
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -30,7 +31,7 @@ export function renderScene(
     (value): value is EvaluatedPoint => value.kind === "POINT",
   );
 
-  renderTriangles(ctx, viewport, triangles);
+  renderTriangles(ctx, viewport, triangles, options);
   renderSegments(ctx, viewport, segments);
   renderPoints(ctx, viewport, points, options);
 }

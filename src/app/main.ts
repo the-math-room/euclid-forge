@@ -4,6 +4,7 @@ import { evaluateGraph } from "../evaluation/evaluateGraph";
 import {
   hitTestFreePoint,
   hitTestTriangleInterior,
+  hitTestTriangleSelection,
 } from "../interaction/hitTest";
 import { deltaBetween } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
@@ -131,6 +132,26 @@ function main(): void {
         kind: "FREE_POINT",
         nodeId: pointHit,
       };
+      event.preventDefault();
+      return;
+    }
+
+    if (event.shiftKey) {
+      const triangleSelectionHit = hitTestTriangleSelection(
+        evaluated,
+        viewport,
+        pointer,
+      );
+
+      if (triangleSelectionHit) {
+        viewState = toggleSelectedNode(viewState, triangleSelectionHit.id);
+        drag = null;
+        requestRender();
+        event.preventDefault();
+        return;
+      }
+
+      drag = null;
       event.preventDefault();
       return;
     }

@@ -1,5 +1,5 @@
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import type { EvaluatedPoint, EvaluatedTriangle } from "../evaluation/evaluated";
+import type { EvaluatedTriangle } from "../evaluation/evaluated";
 import type { Vec2 } from "../meaning/vec2";
 import type { Graph } from "../representation/graph";
 import type { NodeId, TriangleNode } from "../representation/node";
@@ -9,6 +9,10 @@ import { screenToWorld, worldToScreen } from "../rendering/viewport";
 export type TriangleHit = Readonly<{
   id: NodeId;
   vertexIds: readonly [NodeId, NodeId, NodeId];
+}>;
+
+export type TriangleSelectionHit = Readonly<{
+  id: NodeId;
 }>;
 
 export function hitTestFreePoint(
@@ -44,6 +48,30 @@ export function hitTestFreePoint(
   }
 
   return best?.id ?? null;
+}
+
+export function hitTestTriangleSelection(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): TriangleSelectionHit | null {
+  const worldPoint = screenToWorld(viewport, screenPoint);
+
+  for (const value of evaluated.ordered) {
+    if (value.kind !== "TRIANGLE") {
+      continue;
+    }
+
+    if (!pointInTriangle(worldPoint, value)) {
+      continue;
+    }
+
+    return {
+      id: value.id,
+    };
+  }
+
+  return null;
 }
 
 export function hitTestTriangleInterior(
