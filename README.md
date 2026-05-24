@@ -55,8 +55,10 @@ npm run build
 ```txt
 click empty canvas         add free point
 drag free point            move free point
-drag triangle body         translate free vertices
+drag triangle body         translate its free vertices
+hover geometry             preview the object that would be targeted
 shift-click point          toggle point selection
+shift-click segment        toggle segment selection
 shift-click triangle body  toggle triangle selection
 T                          create triangle from 3 selected free points
 G                          create centroid for selected triangle
@@ -66,7 +68,10 @@ U                          unhide all hidden nodes
 Arrow keys                 pan viewport
 + / =                      zoom in
 - / _                      zoom out
-0                          reset viewport
+[                          smooth rotate view counterclockwise while held
+]                          smooth rotate view clockwise while held
+\\                          reset view rotation only
+0                          reset viewport center, zoom, and rotation
 ```
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.
