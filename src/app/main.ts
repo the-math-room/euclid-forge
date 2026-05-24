@@ -92,9 +92,23 @@ function main(): void {
 
   let graph = initialScene();
   let drag: DragState | null = null;
+  let renderPending = false;
+
+  function requestRender(): void {
+    if (renderPending) {
+      return;
+    }
+
+    renderPending = true;
+
+    requestAnimationFrame(() => {
+      renderPending = false;
+      render(canvas, ctx, graph);
+    });
+  }
 
   window.addEventListener("resize", () => {
-    render(canvas, ctx, graph);
+    requestRender();
   });
 
   canvas.addEventListener("pointerdown", (event) => {
@@ -126,7 +140,7 @@ function main(): void {
     const world = screenToWorld(viewport, eventPoint(canvas, event));
 
     graph = updateFreePoint(graph, drag.nodeId, world);
-    render(canvas, ctx, graph);
+    requestRender();
     event.preventDefault();
   });
 
@@ -146,7 +160,7 @@ function main(): void {
     }
   });
 
-  render(canvas, ctx, graph);
+  requestRender();
 }
 
 main();
