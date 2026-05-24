@@ -1,6 +1,7 @@
 import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateGraph";
+import { addFreePoint } from "../interaction/addFreePoint";
 import {
   hitTestFreePoint,
   hitTestTriangleInterior,
@@ -51,6 +52,15 @@ function render(
   renderScene(ctx, viewport, evaluated);
 }
 
+function releasePointerCaptureIfHeld(
+  canvas: HTMLCanvasElement,
+  pointerId: number,
+): void {
+  if (canvas.hasPointerCapture(pointerId)) {
+    canvas.releasePointerCapture(pointerId);
+  }
+}
+
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
@@ -96,7 +106,10 @@ function main(): void {
       return;
     }
 
+    graph = addFreePoint(graph, screenToWorld(viewport, pointer));
     drag = null;
+    requestRender();
+    event.preventDefault();
   });
 
   canvas.addEventListener("pointermove", (event) => {
@@ -131,11 +144,7 @@ function main(): void {
   canvas.addEventListener("pointerup", (event) => {
     if (drag) {
       drag = null;
-
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-
+      releasePointerCaptureIfHeld(canvas, event.pointerId);
       event.preventDefault();
     }
   });
@@ -143,11 +152,7 @@ function main(): void {
   canvas.addEventListener("pointercancel", (event) => {
     if (drag) {
       drag = null;
-
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-
+      releasePointerCaptureIfHeld(canvas, event.pointerId);
       event.preventDefault();
     }
   });
