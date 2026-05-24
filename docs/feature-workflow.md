@@ -14,6 +14,8 @@ user input
 → render
 ```
 
+The geometry registry reduces shotgun surgery, but it does not remove the pipeline. New geometry should still respect the denotational layers.
+
 ## Patch discipline
 
 Before patching, name the touched layers.
@@ -22,36 +24,98 @@ Good patch sizes:
 
 ```txt
 representation only
+geometry definition only
 app command only
 DOM/app-edge only
 rendering only
+interaction only
 docs only
 ```
 
 If a patch touches more than three layers, split it unless there is a strong reason not to.
 
-For user-visible app-edge behavior, prefer:
+## Add a new geometry kind
+
+Start with the registry.
+
+1. Add node syntax in `representation/node.ts`.
+2. Add evaluated syntax in `evaluation/evaluated.ts`, if needed.
+3. Add a new file in `src/geometry/definitions/`.
+4. Implement the relevant definition sections:
+   - `representation.dependencies`
+   - `evaluation.evaluate`
+   - `rendering.render`, if visible
+   - `interaction.hitClass` and `interaction.hitTest`, if selectable/hoverable
+   - `construction.factories`, if users can create it by command/tool
+5. Register the definition in `geometryRegistry.ts`.
+6. Add focused unit tests.
+7. Add app command or pointer behavior only when user intent exists.
+8. Add smoke coverage only for browser-visible behavior.
+
+The goal is that most shape-specific behavior lives in one definition file.
+
+## Geometry definition checklist
+
+A definition may answer:
 
 ```txt
-model/policy
-command or pointer intent
-transition/effect protocol
-runtime/event seam
-DOM surface
-smoke coverage
-docs
+What dependencies does this node have?
+How does this node evaluate?
+How does this evaluated value render?
+What hit class does this shape belong to?
+How does this evaluated value hit-test?
+What construction factories create this shape?
+```
+
+Not every section is required.
+
+Examples:
+
+```txt
+FREE_POINT
+  dependencies
+  evaluation
+  rendering
+  interaction
+
+CIRCLE
+  dependencies
+  evaluation
+  rendering
+  interaction
+  construction
+
+CENTROID
+  dependencies
+  evaluation
+  rendering
+  interaction
+  construction
 ```
 
 ## Add a construction
 
-1. Add syntax in `representation/node.ts`.
-2. Add dependencies in `representation/dependencies.ts`.
-3. Add evaluated type in `evaluation/evaluated.ts`, if needed.
-4. Add evaluation in `evaluation/evaluateGraph.ts`.
-5. Add rendering only if drawing changes.
-6. Add `GraphEdit` support if users can create it.
-7. Add unit tests.
-8. Add smoke coverage only for browser-visible behavior.
+Prefer construction factories on geometry definitions when the construction primarily creates one kind.
+
+Good candidates:
+
+```txt
+circle from center + through point
+triangle from three vertices
+centroid from triangle
+```
+
+Keep compound construction in `representation/constructions.ts` when it creates or coordinates multiple kinds.
+
+Current example:
+
+```txt
+triangle side midpoints
+→ creates/reuses segments
+→ creates midpoint nodes
+```
+
+Command code should usually call stable wrappers from `representation/constructions.ts`, not reach directly into registry details.
 
 ## Add a keyboard command
 
@@ -62,8 +126,6 @@ docs
 5. Return `history: "commit"` only for durable editor changes.
 6. Add command tests.
 7. Let `appController.ts` handle command eligibility and status feedback.
-
-Keyboard commands should be reusable by future menus, toolbars, and command palettes.
 
 Use disabled reasons intentionally:
 
@@ -76,71 +138,59 @@ message   disabled with user-facing feedback
 ## Add a pointer interaction
 
 1. Decide the user intent.
-2. Keep hit testing in `interaction/`.
-3. Put pointer hit policy in `app/pointerIntent.ts`.
-4. Add or update transition behavior in `appController.ts`.
-5. Emit `AppEffect[]` for app-edge effects.
-6. Keep graph mutations in `representation/edit.ts`.
-7. Add controller and pointer-intent tests.
+2. Keep geometry-specific hit testing in geometry definitions.
+3. Keep hit selection helpers in `interaction/hitTest.ts`.
+4. Put pointer policy in `app/pointerIntent.ts`.
+5. Add or update transition behavior in `appController.ts`.
+6. Emit `AppEffect[]` for app-edge effects.
+7. Keep graph mutations in `representation/edit.ts`.
+8. Add controller and pointer-intent tests.
 
 Pointer gestures do not need to be forced into the keyboard command abstraction.
 
-## Add an app effect
+## Add hit testing for a shape
 
-Use `AppEffect[]` for app-edge effects.
-
-Good examples:
+Add the interaction section to the shape definition:
 
 ```txt
-pointer capture
-status feedback
-future dialogs or notifications
+interaction.hitClass
+interaction.hitTest
 ```
 
-App effects are interpreted in `transitionEffects.ts`.
-
-Do not put app effects in:
+Current hit classes:
 
 ```txt
-Graph
-ViewState
-Workspace
-History snapshot
+POINT
+LINEAR
+AREA
 ```
 
-## Add DOM event wiring
-
-Keep DOM listener setup in `app/domEvents.ts`.
-
-`domEvents.ts` should translate browser events into:
+Selection priority is:
 
 ```txt
-appController handlers
-appRuntime methods
-workspace actions
-viewport motion requests
+POINT > LINEAR > AREA
 ```
 
-Do not let `domEvents.ts` own graph edits, history mutation, rendering internals, or status DOM details.
+Within a class, closest-distance hits win when distance is available; exact ties preserve reverse visual order.
 
-Inject browser dependencies such as `windowTarget`, `canvas`, and workspace environment so the wiring remains unit-testable.
+Use `interaction/hitTest.ts` for shared policy and compatibility helper exports.
 
-## Add runtime behavior
+## Add rendering for a shape
 
-Runtime coordination belongs in `appRuntime.ts`.
+Prefer a small renderer in `rendering/` and call it from the shape definition's `rendering.render`.
 
-Good responsibilities:
+Keep global painter order in `rendering/renderScene.ts`.
+
+Current painter order:
 
 ```txt
-current AppState
-history
-transition application
-undo/redo
-requestRender
-status effect handling
+triangles
+circles
+segments
+points
 ```
 
-Avoid moving domain logic into the runtime. The runtime coordinates; it does not decide construction semantics.
+If a new kind needs a new global render bucket, change `renderScene.ts` deliberately and add tests/smoke coverage as appropriate.
 
 ## Add view state
 
@@ -180,23 +230,6 @@ smooth viewport motion
 status messages
 ```
 
-## Add viewport behavior
-
-Viewport center, zoom, and rotation belong in `ViewState`.
-
-Canvas width and height stay derived from the canvas.
-
-Good:
-
-```txt
-ViewState.viewportCenter
-ViewState.viewportZoom
-ViewState.viewportRotation
-viewportForCanvas(canvas, viewState)
-```
-
-Smooth animation state belongs in `viewportMotion.ts`, not in `ViewState`.
-
 ## Add visibility behavior
 
 Keep explicit user intent separate from graph-aware projections.
@@ -208,111 +241,21 @@ ViewState.hiddenNodeIds
 effectiveHiddenNodeIds(graph, viewState)
 ```
 
-Rendering and hit testing should use the same effective hidden set.
+Rendering and hit testing should use the same effective hidden set. Invisible geometry should not be selectable or draggable.
 
-Invisible geometry should not be selectable or draggable.
+## Add circle dragging
 
-When effective visibility changes, clean selection so effectively hidden nodes do not remain selected.
+Circle creation, rendering, selection, and deletion exist. Circle body dragging does not.
 
-## Add hover behavior
+A conservative circle drag feature would likely:
 
-Hover is preview state.
+1. Add a circle drag intent in `pointerIntent.ts`.
+2. Add a `CIRCLE` drag state with source point IDs and initial positions.
+3. Translate the free center and through points when both are free.
+4. Refuse or ignore constrained circle dragging until inverse edits are designed.
+5. Add unit tests before smoke coverage.
 
-It should:
-
-```txt
-use the same hit policy as click
-respect effective visibility
-clear during drag
-clear on pointer leave
-stay out of history
-stay out of serialization
-```
-
-## Add history behavior
-
-History is an app-shell concern.
-
-Use snapshots:
-
-```txt
-Snapshot = graph + normalized view state
-```
-
-Do not store:
-
-```txt
-drag state
-hover
-pointer capture
-smooth motion state
-status messages
-history inside snapshots
-```
-
-Use linear undo/redo.
-
-```txt
-commit after undo discards redo future
-```
-
-Use `history: "commit"` only for durable editor actions.
-
-Do not put ordinary viewport navigation in history unless the product decision changes.
-
-## Add workspace behavior
-
-Workspace serialization belongs in `app/`.
-
-```txt
-workspace.ts         pure workspace format
-workspaceFiles.ts    file/JSON primitives
-workspaceActions.ts  save/open orchestration
-```
-
-Loading should:
-
-```txt
-read file
-parse JSON
-validate workspace shape
-validate graph through createGraph
-only then set state
-reset history
-render
-```
-
-Saving should not affect history.
-
-## Add status feedback
-
-Status feedback is app-edge UI.
-
-Use:
-
-```txt
-AppEffect kind: SHOW_STATUS
-transitionEffects.ts
-appRuntime.ts
-statusSurface.ts
-```
-
-Status messages should explain blocked user actions. They should not mutate graph, view, history, or workspace state.
-
-Smoke-test status feedback when it is user-visible.
-
-## Add derived geometry
-
-Derived geometry should depend on source construction.
-
-Good:
-
-```txt
-CENTROID depends on TRIANGLE
-MIDPOINT depends on SEGMENT
-```
-
-Avoid storing derived coordinates in the graph.
+This should be treated as an explicit interaction feature, not a registry cleanup.
 
 ## Add deletion
 
@@ -341,14 +284,6 @@ can be undone
 
 Do not silently cascade.
 
-Possible later options:
-
-```txt
-select dependents
-cascade delete with confirmation
-delete branch/subconstruction
-```
-
 ## Tests
 
 Use unit tests for:
@@ -359,6 +294,7 @@ graph validation
 graph edits
 delete policy
 evaluation
+geometry registry dispatch
 visibility projections
 hit testing
 viewport transforms
@@ -387,6 +323,33 @@ file flows only when needed
 ```
 
 Smoke helpers live in `smoke/helpers/`.
+
+## Formatting and linting
+
+The current project relies on:
+
+```txt
+TypeScript strictness
+unit tests
+boundary checker
+smoke tests
+small patches
+manual cleanup
+```
+
+If formatting becomes noisy, add Prettier in a separate commit.
+
+Do not mix formatter adoption with architecture changes. First add config and a one-time format commit; only then consider adding `format:check` to CI.
+
+If linting is added, prefer narrow rules that catch bugs rather than broad style churn.
+
+Good first candidates:
+
+```txt
+unused imports
+no-floating-promises
+consistent type-only imports
+```
 
 ## Comments
 

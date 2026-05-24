@@ -44,12 +44,6 @@ npm run smoke
 npm run build
 ```
 
-## Source dump
-
-```bash
-./scripts/dump-source.sh > source-dump.txt
-```
-
 ## Current interactions
 
 ```txt
@@ -60,9 +54,11 @@ hover object               preview hit target
 
 shift-click point          toggle point selection
 shift-click segment        toggle segment selection
+shift-click circle body    toggle circle selection
 shift-click triangle body  toggle triangle selection
 
 T                          create triangle from 3 selected free points
+C                          create circle from 2 selected free points
 G                          create centroid for selected triangle
 M                          create/reuse side segments and midpoints
 
@@ -74,7 +70,7 @@ Arrow keys                 pan viewport
 + / =                      zoom in
 - / _                      zoom out
 hold [ / ]                 smoothly rotate viewport
-\                          reset viewport rotation
+\\                          reset viewport rotation
 0                          reset viewport
 
 Ctrl/Cmd+Z                 undo
@@ -87,9 +83,28 @@ Ctrl/Cmd+O                 open workspace JSON
 
 Three points do not automatically imply a triangle. A triangle is created only by explicit user intent.
 
+Two points do not automatically imply a circle. A circle is created only by explicit user intent.
+
 Delete is conservative. It does not cascade. If selected nodes have unselected dependents, deletion is blocked and the app shows a status message explaining why.
 
 Undo restores successful deletes.
+
+## Architecture
+
+The app is layered:
+
+```txt
+meaning
+→ representation
+→ evaluation
+→ rendering
+→ interaction
+→ app
+```
+
+`src/geometry` is the intentional cross-sectional seam. It contains per-kind geometry definitions for dependencies, evaluation, rendering, hit testing, and construction factories.
+
+This keeps the normal layers disciplined while reducing shape-related shotgun surgery.
 
 ## Durable vs transient state
 
@@ -136,7 +151,7 @@ command.run(state)
 
 This supports keyboard shortcuts now and future menus, toolbars, and command palettes later.
 
-## Architecture
+## Docs
 
 See:
 

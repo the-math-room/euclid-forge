@@ -1,4 +1,3 @@
-import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
 
@@ -38,8 +37,3 @@ export type GeometryHitCandidate = Readonly<{
   hitClass: GeometryHitClass;
   target: HitTarget;
 }>;
-
-export type EvaluatedByKind<K extends EvaluatedGeometry["kind"]> = Extract<
-  EvaluatedGeometry,
-  { kind: K }
->;

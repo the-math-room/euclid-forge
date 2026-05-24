@@ -1,6 +1,12 @@
-import type { EvaluatedGeometry, EvaluatedTriangle } from "../../evaluation/evaluated";
-import { triangleNode } from "../../representation/node";
-import type { GeometryNode, NodeId } from "../../representation/node";
+import type {
+  EvaluatedGeometry,
+  EvaluatedTriangle,
+} from "../../evaluation/evaluated";
+import {
+  triangleNode,
+  type GeometryNode,
+  type NodeId,
+} from "../../representation/node";
 import { renderTriangle } from "../../rendering/triangleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -56,7 +62,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
 
         return target
           ? {
-              hitClass: "AREA" as const,
+              hitClass: "AREA",
               target,
             }
           : null;
@@ -85,7 +91,8 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
           a: NodeId,
           b: NodeId,
           c: NodeId,
-        ): readonly GeometryNode[] => triangleConstructionNodes(graph, [a, b, c]),
+        ): readonly GeometryNode[] =>
+          triangleConstructionNodes(graph, [a, b, c]),
       }),
     }),
   });

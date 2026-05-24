@@ -1,7 +1,13 @@
-import type { EvaluatedGeometry, EvaluatedPoint } from "../../evaluation/evaluated";
+import type {
+  EvaluatedGeometry,
+  EvaluatedPoint,
+} from "../../evaluation/evaluated";
 import { centroid } from "../../meaning/vec2";
-import { centroidNode } from "../../representation/node";
-import type { GeometryNode, NodeId } from "../../representation/node";
+import {
+  centroidNode,
+  type GeometryNode,
+  type NodeId,
+} from "../../representation/node";
 import { renderPoint } from "../../rendering/pointRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -55,7 +61,7 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
 
         return target
           ? {
-              hitClass: "POINT" as const,
+              hitClass: "POINT",
               target,
             }
           : null;
@@ -80,16 +86,18 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
     construction: Object.freeze({
       factories: Object.freeze({
         centroid: (
-        { graph }: ConstructionContext,
-        triangle: NodeId,
-      ): readonly GeometryNode[] =>
-          centroidConstructionNodes(graph, triangle),
+          { graph }: ConstructionContext,
+          triangle: NodeId,
+        ): readonly GeometryNode[] => centroidConstructionNodes(graph, triangle),
       }),
     }),
   });
 
 function centroidConstructionNodes(
-  graph: Readonly<{ nodes: readonly GeometryNode[]; byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{
+    nodes: readonly GeometryNode[];
+    byId: ReadonlyMap<NodeId, GeometryNode>;
+  }>,
   triangle: NodeId,
 ): readonly GeometryNode[] {
   const node = graph.byId.get(triangle);

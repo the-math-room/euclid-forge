@@ -10,16 +10,18 @@ const layers = [
   "evaluation",
   "rendering",
   "interaction",
+  "geometry",
   "app",
   "styles",
 ];
 
 const allowedImports = {
   meaning: [],
-  representation: ["meaning"],
-  evaluation: ["meaning", "representation"],
-  rendering: ["meaning", "evaluation"],
-  interaction: ["meaning", "representation", "evaluation", "rendering"],
+  representation: ["meaning", "geometry"],
+  evaluation: ["meaning", "representation", "geometry"],
+  rendering: ["meaning", "evaluation", "geometry"],
+  interaction: ["meaning", "representation", "evaluation", "rendering", "geometry"],
+  geometry: ["meaning", "representation", "evaluation", "rendering"],
   app: ["meaning", "representation", "evaluation", "rendering", "interaction", "styles"],
   styles: [],
 };
@@ -46,13 +48,15 @@ function walk(dir) {
 
 function layerOfFile(file) {
   const rel = relative(SRC, file).replaceAll("\\", "/");
+
   return layers.find((layer) => rel === layer || rel.startsWith(`${layer}/`)) ?? null;
 }
 
 function layerOfResolvedPath(path) {
   const normalized = path.replaceAll("\\", "/");
+  const layerPattern = layers.join("|");
   const match = normalized.match(
-    /(?:^|\/)src\/(meaning|representation|evaluation|rendering|interaction|app|styles)(?:\/|$)/,
+    new RegExp(`(?:^|/)src/(${layerPattern})(?:/|$)`),
   );
 
   return match?.[1] ?? null;

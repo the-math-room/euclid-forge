@@ -1,6 +1,12 @@
-import type { EvaluatedCircle, EvaluatedGeometry } from "../../evaluation/evaluated";
-import { circleNode } from "../../representation/node";
-import type { GeometryNode, NodeId } from "../../representation/node";
+import type {
+  EvaluatedCircle,
+  EvaluatedGeometry,
+} from "../../evaluation/evaluated";
+import {
+  circleNode,
+  type GeometryNode,
+  type NodeId,
+} from "../../representation/node";
 import { renderCircle } from "../../rendering/circleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -57,7 +63,7 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
 
       return target
         ? {
-            hitClass: "AREA" as const,
+            hitClass: "AREA",
             target,
           }
         : null;
@@ -65,7 +71,10 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
   }),
 
   rendering: Object.freeze({
-    render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+    render: (
+      value: EvaluatedGeometry,
+      context: GeometryRenderContext,
+    ): void => {
       if (value.kind !== "CIRCLE") {
         throw new Error(
           `Expected CIRCLE evaluated value for CIRCLE, got ${value.kind}`,
@@ -89,7 +98,10 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
 });
 
 function circleConstructionNodes(
-  graph: Readonly<{ nodes: readonly GeometryNode[]; byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{
+    nodes: readonly GeometryNode[];
+    byId: ReadonlyMap<NodeId, GeometryNode>;
+  }>,
   center: NodeId,
   through: NodeId,
 ): readonly GeometryNode[] {

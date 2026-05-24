@@ -1,15 +1,20 @@
-import { hitPointValue } from "../hitGeometry";
-import type { EvaluatedGeometry } from "../../evaluation/evaluated";
-import type { EvaluatedPoint } from "../../evaluation/evaluated";
+import type {
+  EvaluatedGeometry,
+  EvaluatedPoint,
+} from "../../evaluation/evaluated";
 import { vec2 } from "../../meaning/vec2";
 import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
-import type { GeometryHitCandidate, GeometryHitContext } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
+import { hitPointValue } from "../hitGeometry";
+import type {
+  GeometryHitCandidate,
+  GeometryHitContext,
+} from "../interactionContext";
+import type { GeometryRenderContext } from "../renderingContext";
 
 export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
   Object.freeze({
@@ -46,7 +51,7 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
 
         return target
           ? {
-              hitClass: "POINT" as const,
+              hitClass: "POINT",
               target,
             }
           : null;
@@ -54,7 +59,10 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
     }),
 
     rendering: Object.freeze({
-      render: (value: EvaluatedGeometry, context: GeometryRenderContext): void => {
+      render: (
+        value: EvaluatedGeometry,
+        context: GeometryRenderContext,
+      ): void => {
         if (value.kind !== "POINT") {
           throw new Error(
             `Expected POINT evaluated value for FREE_POINT, got ${value.kind}`,

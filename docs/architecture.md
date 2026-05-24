@@ -1,6 +1,6 @@
 # Architecture
 
-Euclid Forge is a layered pipeline.
+Euclid Forge is a layered geometry editor with one intentional cross-sectional seam.
 
 ```txt
 meaning
@@ -11,13 +11,24 @@ meaning
 → app
 ```
 
-The boundary checker enforces import direction.
+The boundary checker enforces import direction. The `geometry/` directory is the exception-by-design: it gathers per-geometry behavior while keeping the rest of the pipeline layered.
+
+## Layer map
+
+```txt
+meaning/          pure math
+representation/   construction syntax and graph validity
+evaluation/       graph → evaluated geometry
+rendering/        evaluated geometry → canvas pixels
+interaction/      pure hit testing
+geometry/         per-kind geometry definitions and registry dispatch
+app/              browser shell, user intent, state/history/effects
+styles/           CSS
+```
 
 ## `meaning/`
 
-Pure math.
-
-No graph. No rendering. No DOM.
+Pure math. No graph, rendering, or DOM.
 
 Examples:
 
@@ -40,15 +51,12 @@ Graph
 GraphEdit
 createGraph
 applyGraphEdit
-dependenciesOf
-dependentsOf
-transitiveDependentsOf
+dependenciesOf / dependentsOf / transitiveDependentsOf
 delete policy
+thin construction wrappers
 ```
 
-The graph is the mathematical construction document. It is not view state.
-
-Derived geometry is not stored as coordinates in the graph.
+The graph is the mathematical construction document. It is not view state. Derived geometry is not stored as coordinates in the graph.
 
 Delete policy is conservative:
 
@@ -56,7 +64,7 @@ Delete policy is conservative:
 delete selected nodes only when no unselected node depends on them
 ```
 
-Blocked deletes produce a reason. The app layer may show that reason, but the representation layer owns the dependency rule.
+Blocked deletes produce a reason. The app layer may show that reason, but representation owns the dependency rule.
 
 ## `evaluation/`
 
@@ -66,9 +74,21 @@ Gives meaning to a validated graph.
 Graph → EvaluatedScene
 ```
 
-Evaluation derives geometry. It does not mutate the graph.
+Evaluation derives geometry and does not mutate the graph. Evaluation is dispatched through the geometry registry:
 
-Visibility over evaluated geometry lives here when it is independent of browser effects.
+```txt
+evaluateGraph
+→ evaluateGeometryNode
+→ geometry definition evaluation section
+```
+
+The evaluation context exposes safe dependency accessors:
+
+```txt
+getPoint(id)
+getSegment(id)
+getTriangle(id)
+```
 
 ## `rendering/`
 
@@ -78,36 +98,138 @@ Draws evaluated geometry.
 EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
+Global painter order is still centralized in `renderScene.ts`:
+
+```txt
+triangles
+circles
+segments
+points
+```
+
+Within each bucket, actual drawing dispatches through the geometry registry:
+
+```txt
+renderScene
+→ renderGeometryValue
+→ geometry definition rendering section
+```
+
 Rendering may respect selection, hover, and hidden nodes. It does not edit constructions.
-
-Theme constants live in `rendering/theme.ts`.
-
-Labels are screen annotations. View rotation moves label anchor points, but labels stay upright.
 
 ## `interaction/`
 
 Pure hit testing.
 
-Examples:
+Geometry-specific hit testing is dispatched through the registry:
 
 ```txt
-hitTestPoint
-hitTestFreePoint
-hitTestSegmentSelection
-hitTestTriangleSelection
-hitTestTriangleInterior
+hitTest.ts
+→ hitGeometryValue
+→ geometry definition interaction section
 ```
 
-Hit testing consumes an evaluated scene and a viewport. It does not own app state, DOM state, or graph mutations.
-
-Hit priority:
+Current hit classes:
 
 ```txt
-normal click: free point → triangle body → add point
-shift-click:  point → segment → triangle
+POINT
+LINEAR
+AREA
 ```
 
-Within a kind, later visual order wins exact ties. Triangles use reverse visual order for overlapping interiors.
+Selection priority is explicit:
+
+```txt
+POINT > LINEAR > AREA
+```
+
+Within a class, closest-distance hits win when distance is available; exact ties preserve reverse visual order.
+
+Pointer policy remains app-level:
+
+```txt
+normal click:
+  free point → triangle body → add point
+
+shift-click:
+  selectable geometry by hit class priority
+```
+
+Triangles are area-hit by interior. Circles are area-hit by disk, not only circumference.
+
+## `geometry/`
+
+`geometry/` is the intentional cross-sectional seam.
+
+It centralizes per-kind behavior that would otherwise become shotgun surgery across representation, evaluation, rendering, interaction, and construction.
+
+Each geometry definition can include:
+
+```txt
+representation.dependencies
+evaluation.evaluate
+rendering.render
+interaction.hitClass
+interaction.hitTest
+construction.factories
+```
+
+The registry is closed but centralized:
+
+```txt
+GeometryNode remains a closed union.
+Each kind has one definition file.
+geometryRegistry.ts erases definition-specific types at the seam.
+Core loops dispatch through the registry.
+```
+
+This avoids a runtime plugin system and preserves TypeScript exhaustiveness in the canonical node union.
+
+### Registry dispatch points
+
+```txt
+representation/dependencies.ts
+  dependenciesOf(node)
+  → dependenciesForGeometryNode(node)
+
+evaluation/evaluateGraph.ts
+  evaluateGraph(graph)
+  → evaluateGeometryNode(node, context)
+
+rendering/renderScene.ts
+  renderScene(...)
+  → renderGeometryValue(value, context)
+
+interaction/hitTest.ts
+  hit testing helpers
+  → hitGeometryValue(value, context)
+
+representation/constructions.ts
+  thin construction wrappers
+  → constructionFactoryForGeometryKind(kind, name)
+```
+
+### Construction factories
+
+Single-kind construction factories live on definitions:
+
+```txt
+circleConstruction   → CIRCLE definition
+triangleConstruction → TRIANGLE definition
+centroidConstruction → CENTROID definition
+```
+
+Compound constructions may remain outside a single shape definition when they create or coordinate multiple kinds.
+
+Current example:
+
+```txt
+triangleSideMidpointConstruction
+→ creates/reuses SEGMENT nodes
+→ creates MIDPOINT nodes
+```
+
+That function remains in `representation/constructions.ts` because it is a cross-kind construction rather than a pure TRIANGLE factory.
 
 ## `app/`
 
@@ -135,6 +257,10 @@ canvasSurface.ts         canvas/viewport DOM utilities
 renderScheduler.ts       requestAnimationFrame coalescing
 pointerIntent.ts         pointer hit-policy seam
 ```
+
+The app layer decides when user intent should trigger a construction, selection, drag, delete, history commit, status message, or DOM effect.
+
+The geometry registry knows how a shape behaves. The app layer decides when to use that behavior.
 
 ## Core rules
 
@@ -171,66 +297,6 @@ SHOW_STATUS
 
 Effects are app-edge instructions. They are not graph state, view state, workspace state, or history state.
 
-`transitionEffects.ts` is the effect interpreter.
-
-## Runtime and event wiring
-
-`main.ts` should stay small. It composes browser surfaces, creates the runtime, connects DOM events, and requests the initial render.
-
-`appRuntime.ts` owns mutable runtime coordination:
-
-```txt
-current AppState
-history
-AppTransition application
-undo/redo
-render scheduling
-status feedback
-```
-
-`domEvents.ts` owns browser listener wiring. It translates DOM events into controller calls and runtime methods. It receives browser dependencies as inputs so event wiring can be unit-tested without relying on global browser objects.
-
-`keyboardShortcuts.ts` uses structural keyboard target checks rather than browser constructor globals, so shortcut logic remains unit-testable in Node.
-
-## Commands
-
-Commands live in `commands.ts`.
-
-Each command has:
-
-```txt
-id
-keys
-disabledReason(state)
-run(state)
-```
-
-`disabledReason(state)` returns:
-
-```txt
-null      command is enabled
-""        command is disabled silently
-message   command is disabled and the app should explain why
-```
-
-`appController.ts` checks eligibility before running commands.
-
-This keeps keyboard behavior aligned with future menus, toolbars, and command palettes.
-
-## Viewport
-
-Viewport center, zoom, and rotation are view state.
-
-Canvas width and height are environmental facts derived at render/input time.
-
-```txt
-Graph says what exists mathematically.
-Evaluation says where mathematical things are.
-Viewport says how the user is looking at them.
-```
-
-Smooth hold-to-rotate is transient app state. It changes `viewportRotation` over animation frames, but the motion state itself is not durable.
-
 ## Visibility
 
 There are two visibility concepts:
@@ -240,23 +306,9 @@ explicitly hidden nodes   nodes the user directly hid
 effectively hidden nodes  explicitly hidden nodes plus graph dependents
 ```
 
-`ViewState.hiddenNodeIds` stores explicit user intent.
-
-`effectiveHiddenNodeIds(graph, viewState)` computes dependency-aware visibility.
+`ViewState.hiddenNodeIds` stores explicit user intent. `effectiveHiddenNodeIds(graph, viewState)` computes dependency-aware visibility.
 
 Rendering and interaction should consume the same effective visibility projection. Hidden or effectively hidden objects should not be visible, selectable, or draggable.
-
-Selection is cleaned so no effectively hidden node remains selected.
-
-## Hover
-
-Hover is preview state.
-
-```txt
-hoveredNodeId
-```
-
-Hover is not durable. It is not serialized. It is not stored in history. It clears on drag, pointerdown, pointerleave, and workspace load.
 
 ## Dragging
 
@@ -264,43 +316,7 @@ Free points are directly draggable.
 
 Triangle body dragging translates its free vertices. It stores the initial pointer world position and initial vertex positions, then computes absolute positions from the drag start.
 
-This avoids frame-to-frame drift.
-
-Triangles with constrained vertices are not body-draggable unless an explicit inverse edit is later defined.
-
-## Delete
-
-Delete is conservative.
-
-```txt
-Delete / Backspace
-→ selected nodes
-→ representation delete policy
-→ delete only if dependency-safe
-```
-
-A delete is dependency-safe when no unselected node depends on a selected node.
-
-Blocked deletes do not mutate graph state. They produce a `SHOW_STATUS` effect.
-
-Successful deletes clear selection and commit history.
-
-Undo restores successful deletes.
-
-## Status messages
-
-Status messages are transient app-edge feedback.
-
-```txt
-SHOW_STATUS AppEffect
-transitionEffects.ts
-appRuntime.ts
-statusSurface.ts
-```
-
-The status surface owns DOM creation and display. Status messages are not graph state, view state, workspace state, or history state.
-
-Currently used for blocked deletes.
+Circles are currently selectable and deletable, but not draggable as a body. Adding circle dragging should be an explicit interaction/edit feature.
 
 ## History
 
@@ -327,10 +343,6 @@ history
 status messages
 ```
 
-Committing after undo discards the redo future.
-
-Snapshots do not have their own undo/redo history.
-
 ## Workspace serialization
 
 A workspace stores durable project state:
@@ -345,15 +357,28 @@ viewport zoom
 viewport rotation
 ```
 
-It does not store:
+It does not store hover, drag state, history, pointer capture, smooth viewport motion, or status messages.
+
+## Boundary checker
+
+The boundary checker treats `geometry/` as an explicit seam.
+
+Allowed direction is intentionally narrow:
 
 ```txt
-hover
-drag state
-history
-pointer capture
-smooth viewport motion
-status messages
+geometry → meaning
+geometry → representation
+geometry → evaluation
+geometry → rendering
 ```
 
-Loading validates through `createGraph` before mutating app state. Successful load resets history to the loaded workspace.
+Layer code may depend on `geometry/` only at dispatch seams:
+
+```txt
+representation → geometry
+evaluation → geometry
+rendering → geometry
+interaction → geometry
+```
+
+`app/` should not depend on `geometry/` directly. It should go through the normal layer APIs.
