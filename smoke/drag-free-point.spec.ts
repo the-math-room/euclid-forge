@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("drags a free endpoint and updates the constrained midpoint", async ({
+test("drags a triangle vertex and updates connected constrained geometry", async ({
   page,
 }) => {
   await page.goto("/");
@@ -32,9 +32,10 @@ test("drags a free endpoint and updates the constrained midpoint", async ({
   const centerY = box.y + box.height / 2;
   const zoomCssPx = 80;
 
-  await page.mouse.move(centerX - 2 * zoomCssPx, centerY);
+  // Drag A from (-2, -1) to (-3, 1).
+  await page.mouse.move(centerX - 2 * zoomCssPx, centerY + 1 * zoomCssPx);
   await page.mouse.down();
-  await page.mouse.move(centerX - 1 * zoomCssPx, centerY - 1 * zoomCssPx);
+  await page.mouse.move(centerX - 3 * zoomCssPx, centerY - 1 * zoomCssPx);
   await page.mouse.up();
 
   await page.evaluate(
@@ -66,7 +67,7 @@ test("drags a free endpoint and updates the constrained midpoint", async ({
         alpha: number,
       ) => boolean,
     ): number {
-      const radius = 16;
+      const radius = 18;
       const image = ctx.getImageData(
         Math.floor(x - radius),
         Math.floor(y - radius),
@@ -108,20 +109,39 @@ test("drags a free endpoint and updates the constrained midpoint", async ({
       alpha: number,
     ) => alpha > 0 && red < 120 && green > 150 && blue > 100;
 
+    const isLightSegment = (
+      red: number,
+      green: number,
+      blue: number,
+      alpha: number,
+    ) => alpha > 0 && red > 180 && green > 180 && blue > 180;
+
     return {
-      movedEndpointYellowishPixels: countPixelsNear(
-        centerX - zoom,
-        centerY - zoom,
-        isYellowish,
-      ),
-      shiftedMidpointGreenishPixels: countPixelsNear(
-        centerX + zoom / 2,
-        centerY - zoom / 2,
+      movedA: countPixelsNear(centerX - 3 * zoom, centerY - 1 * zoom, isYellowish),
+      unchangedB: countPixelsNear(centerX + 2 * zoom, centerY + 1 * zoom, isYellowish),
+      unchangedC: countPixelsNear(centerX, centerY - 2 * zoom, isYellowish),
+      shiftedMidpoint: countPixelsNear(
+        centerX - 0.5 * zoom,
+        centerY,
         isGreenish,
+      ),
+      movedSegmentAB: countPixelsNear(
+        centerX - 1.75 * zoom,
+        centerY - 0.5 * zoom,
+        isLightSegment,
+      ),
+      movedSegmentCA: countPixelsNear(
+        centerX - 1.5 * zoom,
+        centerY - 1.5 * zoom,
+        isLightSegment,
       ),
     };
   });
 
-  expect(result.movedEndpointYellowishPixels).toBeGreaterThan(0);
-  expect(result.shiftedMidpointGreenishPixels).toBeGreaterThan(0);
+  expect(result.movedA).toBeGreaterThan(0);
+  expect(result.unchangedB).toBeGreaterThan(0);
+  expect(result.unchangedC).toBeGreaterThan(0);
+  expect(result.shiftedMidpoint).toBeGreaterThan(0);
+  expect(result.movedSegmentAB).toBeGreaterThan(0);
+  expect(result.movedSegmentCA).toBeGreaterThan(0);
 });

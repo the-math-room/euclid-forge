@@ -17,36 +17,57 @@ describe("interaction/hitTestFreePoint", () => {
 
   test("finds a nearby free point", () => {
     const graph = createGraph([
-      freePoint("A", -2, 0, "A"),
-      freePoint("B", 2, 0, "B"),
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
       segmentNode("AB", "A", "B"),
-      midpointNode("M", "AB", "M"),
+      segmentNode("BC", "B", "C"),
+      segmentNode("CA", "C", "A"),
+      midpointNode("M_AB", "AB", "M"),
     ]);
 
     const evaluated = evaluateGraph(graph);
-    const screen = worldToScreen(viewport, vec2(-2, 0));
+    const screen = worldToScreen(viewport, vec2(-2, -1));
 
     expect(hitTestFreePoint(graph, evaluated, viewport, screen)).toBe("A");
   });
 
-  test("ignores constrained midpoint", () => {
+  test("finds the closest nearby free point", () => {
     const graph = createGraph([
-      freePoint("A", -2, 0, "A"),
-      freePoint("B", 2, 0, "B"),
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
       segmentNode("AB", "A", "B"),
-      midpointNode("M", "AB", "M"),
+      segmentNode("BC", "B", "C"),
+      segmentNode("CA", "C", "A"),
+      midpointNode("M_AB", "AB", "M"),
     ]);
 
     const evaluated = evaluateGraph(graph);
-    const screen = worldToScreen(viewport, vec2(0, 0));
+    const screen = worldToScreen(viewport, vec2(0, 2));
+
+    expect(hitTestFreePoint(graph, evaluated, viewport, screen)).toBe("C");
+  });
+
+  test("ignores constrained midpoint", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M_AB", "AB", "M"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+    const screen = worldToScreen(viewport, vec2(0, -1));
 
     expect(hitTestFreePoint(graph, evaluated, viewport, screen)).toBeNull();
   });
 
   test("returns null when no free point is nearby", () => {
     const graph = createGraph([
-      freePoint("A", -2, 0, "A"),
-      freePoint("B", 2, 0, "B"),
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
     ]);
 
     const evaluated = evaluateGraph(graph);

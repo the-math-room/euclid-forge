@@ -4,9 +4,14 @@ import { freePoint, midpointNode, segmentNode } from "../representation/node";
 
 export function initialScene(): Graph {
   return createGraph([
-    freePoint("A", -2, 0, "A"),
-    freePoint("B", 2, 0, "B"),
+    freePoint("A", -2, -1, "A"),
+    freePoint("B", 2, -1, "B"),
+    freePoint("C", 0, 2, "C"),
+
     segmentNode("AB", "A", "B"),
-    midpointNode("M", "AB", "M"),
+    segmentNode("BC", "B", "C"),
+    segmentNode("CA", "C", "A"),
+
+    midpointNode("M_AB", "AB", "M"),
   ]);
 }

@@ -91,4 +91,47 @@ describe("evaluation/evaluateGraph", () => {
       source: "CONSTRAINED",
     });
   });
+
+  test("evaluates a triangle with a constrained midpoint on AB", () => {
+    const graph = createGraph([
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      segmentNode("AB", "A", "B"),
+      segmentNode("BC", "B", "C"),
+      segmentNode("CA", "C", "A"),
+      midpointNode("M_AB", "AB", "M"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.values.get("AB")).toEqual({
+      kind: "SEGMENT",
+      id: "AB",
+      a: vec2(-2, -1),
+      b: vec2(2, -1),
+    });
+
+    expect(evaluated.values.get("BC")).toEqual({
+      kind: "SEGMENT",
+      id: "BC",
+      a: vec2(2, -1),
+      b: vec2(0, 2),
+    });
+
+    expect(evaluated.values.get("CA")).toEqual({
+      kind: "SEGMENT",
+      id: "CA",
+      a: vec2(0, 2),
+      b: vec2(-2, -1),
+    });
+
+    expect(evaluated.values.get("M_AB")).toEqual({
+      kind: "POINT",
+      id: "M_AB",
+      point: vec2(0, -1),
+      label: "M",
+      source: "CONSTRAINED",
+    });
+  });
 });
