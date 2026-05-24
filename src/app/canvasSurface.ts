@@ -29,9 +29,13 @@ export function resizeCanvasToDisplaySize(
 ): void {
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
+  const targetWidth = Math.floor(rect.width * dpr);
+  const targetHeight = Math.floor(rect.height * dpr);
 
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+  }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
