@@ -2,17 +2,15 @@ import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import {
-  hitTestFreePoint,
-  hitTestPoint,
-  hitTestTriangleInterior,
-  hitTestTriangleSelection,
-} from "../interaction/hitTest";
-import { deltaBetween } from "../meaning/vec2";
-import { applyGraphEdit } from "../representation/edit";
-import type { Graph } from "../representation/graph";
-import type { NodeId } from "../representation/node";
-import { renderScene } from "../rendering/renderScene";
-import { screenToWorld } from "../rendering/viewport";
+  handleKeyDown,
+  handlePointerCancel,
+  handlePointerDown,
+  handlePointerMove,
+  handlePointerUp,
+} from "./appController";
+import type { AppTransition, PointerCaptureEffect } from "./appController";
+import { initialAppState } from "./appState";
+import type { AppState } from "./appState";
 import {
   eventPoint,
   get2DContext,
@@ -20,74 +18,78 @@ import {
   resizeCanvasToDisplaySize,
   viewportForCanvas,
 } from "./canvasSurface";
-import type { DragState } from "./dragState";
-import { initialScene } from "./initialScene";
 import { createRenderScheduler } from "./renderScheduler";
-import {
-  clearSelection,
-  emptyViewState,
-  hideSelectedNodes,
-  toggleSelectedNode,
-  unhideAllNodes,
-} from "./viewState";
-import type { ViewState } from "./viewState";
+import { renderScene } from "../rendering/renderScene";
 
 function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  graph: Graph,
-  viewState: ViewState,
+  state: AppState,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
   const rect = canvas.getBoundingClientRect();
   const viewport = viewportForCanvas(canvas);
-  const evaluated = evaluateGraph(graph);
+  const evaluated = evaluateGraph(state.graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
   renderScene(ctx, viewport, evaluated, {
-    selectedNodeIds: viewState.selectedNodeIds,
-    hiddenNodeIds: viewState.hiddenNodeIds,
+    selectedNodeIds: state.viewState.selectedNodeIds,
+    hiddenNodeIds: state.viewState.hiddenNodeIds,
   });
 }
 
-function releasePointerCaptureIfHeld(
+function applyTransition(
   canvas: HTMLCanvasElement,
-  pointerId: number,
+  event: Event,
+  transition: AppTransition,
+  setState: (state: AppState) => void,
+  requestRender: () => void,
 ): void {
-  if (canvas.hasPointerCapture(pointerId)) {
-    canvas.releasePointerCapture(pointerId);
+  setState(transition.state);
+
+  if (transition.pointerCapture) {
+    applyPointerCaptureEffect(canvas, transition.pointerCapture);
+  }
+
+  if (transition.shouldRender) {
+    requestRender();
+  }
+
+  if (transition.shouldPreventDefault) {
+    event.preventDefault();
   }
 }
 
-function selectedTriangleVertices(
-  viewState: ViewState,
-): readonly [NodeId, NodeId, NodeId] | null {
-  const selected = [...viewState.selectedNodeIds];
+function applyPointerCaptureEffect(
+  canvas: HTMLCanvasElement,
+  effect: PointerCaptureEffect,
+): void {
+  switch (effect.kind) {
+    case "SET_POINTER_CAPTURE":
+      canvas.setPointerCapture(effect.pointerId);
+      break;
 
-  if (selected.length !== 3) {
-    return null;
+    case "RELEASE_POINTER_CAPTURE":
+      if (canvas.hasPointerCapture(effect.pointerId)) {
+        canvas.releasePointerCapture(effect.pointerId);
+      }
+      break;
   }
-
-  const [a, b, c] = selected;
-
-  if (!a || !b || !c) {
-    return null;
-  }
-
-  return [a, b, c];
 }
 
 function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
 
-  let graph = initialScene();
-  let drag: DragState | null = null;
-  let viewState = emptyViewState();
+  let state = initialAppState();
+
+  const setState = (next: AppState): void => {
+    state = next;
+  };
 
   const requestRender = createRenderScheduler(() => {
-    render(canvas, ctx, graph, viewState);
+    render(canvas, ctx, state);
   });
 
   window.addEventListener("resize", () => {
@@ -95,197 +97,63 @@ function main(): void {
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key.toLowerCase() === "t") {
-      const vertices = selectedTriangleVertices(viewState);
-
-      if (!vertices) {
-        return;
-      }
-
-      graph = applyGraphEdit(graph, {
-        kind: "ADD_TRIANGLE",
-        vertices,
-      });
-
-      viewState = clearSelection(viewState);
-      requestRender();
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key.toLowerCase() === "g") {
-      const selected = [...viewState.selectedNodeIds];
-
-      if (selected.length !== 1) {
-        return;
-      }
-
-      const [triangle] = selected;
-
-      if (!triangle) {
-        return;
-      }
-
-      graph = applyGraphEdit(graph, {
-        kind: "ADD_CENTROID",
-        triangle,
-      });
-
-      viewState = clearSelection(viewState);
-      requestRender();
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key.toLowerCase() === "h") {
-      const nextViewState = hideSelectedNodes(viewState);
-
-      if (nextViewState === viewState) {
-        return;
-      }
-
-      viewState = nextViewState;
-      requestRender();
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key.toLowerCase() === "u") {
-      const nextViewState = unhideAllNodes(viewState);
-
-      if (nextViewState === viewState) {
-        return;
-      }
-
-      viewState = nextViewState;
-      requestRender();
-      event.preventDefault();
-    }
+    applyTransition(
+      canvas,
+      event,
+      handleKeyDown(state, { key: event.key }),
+      setState,
+      requestRender,
+    );
   });
 
   canvas.addEventListener("pointerdown", (event) => {
-    const viewport = viewportForCanvas(canvas);
-    const pointer = eventPoint(canvas, event);
-    const evaluated = evaluateGraph(graph);
-
-    if (event.shiftKey) {
-      const pointSelectionHit = hitTestPoint(evaluated, viewport, pointer);
-
-      if (pointSelectionHit) {
-        viewState = toggleSelectedNode(viewState, pointSelectionHit);
-        drag = null;
-        requestRender();
-        event.preventDefault();
-        return;
-      }
-
-      const triangleSelectionHit = hitTestTriangleSelection(
-        evaluated,
-        viewport,
-        pointer,
-      );
-
-      if (triangleSelectionHit) {
-        viewState = toggleSelectedNode(viewState, triangleSelectionHit.id);
-        drag = null;
-        requestRender();
-        event.preventDefault();
-        return;
-      }
-
-      drag = null;
-      event.preventDefault();
-      return;
-    }
-
-    const pointHit = hitTestFreePoint(graph, evaluated, viewport, pointer);
-
-    if (pointHit) {
-      canvas.setPointerCapture(event.pointerId);
-      drag = {
-        kind: "FREE_POINT",
-        nodeId: pointHit,
-      };
-      event.preventDefault();
-      return;
-    }
-
-    const triangleHit = hitTestTriangleInterior(graph, evaluated, viewport, pointer);
-
-    if (triangleHit) {
-      canvas.setPointerCapture(event.pointerId);
-      drag = {
-        kind: "TRIANGLE",
-        vertexIds: triangleHit.vertexIds,
-        previousWorldPoint: screenToWorld(viewport, pointer),
-      };
-      event.preventDefault();
-      return;
-    }
-
-    graph = applyGraphEdit(graph, {
-      kind: "ADD_FREE_POINT",
-      point: screenToWorld(viewport, pointer),
-    });
-    viewState = clearSelection(viewState);
-    drag = null;
-    requestRender();
-    event.preventDefault();
+    applyTransition(
+      canvas,
+      event,
+      handlePointerDown(state, {
+        pointerId: event.pointerId,
+        point: eventPoint(canvas, event),
+        viewport: viewportForCanvas(canvas),
+        shiftKey: event.shiftKey,
+      }),
+      setState,
+      requestRender,
+    );
   });
 
   canvas.addEventListener("pointermove", (event) => {
-    if (!drag) {
-      return;
-    }
-
-    const viewport = viewportForCanvas(canvas);
-    const world = screenToWorld(viewport, eventPoint(canvas, event));
-
-    switch (drag.kind) {
-      case "FREE_POINT": {
-        graph = applyGraphEdit(graph, {
-          kind: "MOVE_FREE_POINT",
-          id: drag.nodeId,
-          point: world,
-        });
-        break;
-      }
-
-      case "TRIANGLE": {
-        const delta = deltaBetween(drag.previousWorldPoint, world);
-
-        graph = applyGraphEdit(graph, {
-          kind: "TRANSLATE_FREE_POINTS",
-          ids: drag.vertexIds,
-          delta,
-        });
-
-        drag = {
-          ...drag,
-          previousWorldPoint: world,
-        };
-        break;
-      }
-    }
-
-    requestRender();
-    event.preventDefault();
+    applyTransition(
+      canvas,
+      event,
+      handlePointerMove(state, {
+        pointerId: event.pointerId,
+        point: eventPoint(canvas, event),
+        viewport: viewportForCanvas(canvas),
+        shiftKey: event.shiftKey,
+      }),
+      setState,
+      requestRender,
+    );
   });
 
   canvas.addEventListener("pointerup", (event) => {
-    if (drag) {
-      drag = null;
-      releasePointerCaptureIfHeld(canvas, event.pointerId);
-      event.preventDefault();
-    }
+    applyTransition(
+      canvas,
+      event,
+      handlePointerUp(state, event.pointerId),
+      setState,
+      requestRender,
+    );
   });
 
   canvas.addEventListener("pointercancel", (event) => {
-    if (drag) {
-      drag = null;
-      releasePointerCaptureIfHeld(canvas, event.pointerId);
-      event.preventDefault();
-    }
+    applyTransition(
+      canvas,
+      event,
+      handlePointerCancel(state, event.pointerId),
+      setState,
+      requestRender,
+    );
   });
 
   requestRender();
