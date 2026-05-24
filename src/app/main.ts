@@ -1,14 +1,9 @@
 import "../styles/app.css";
 
 import { evaluateGraph } from "../evaluation/evaluateScene";
-import type {
-  EvaluatedPoint,
-  EvaluatedSegment,
-} from "../evaluation/evaluated";
 import type { Graph } from "../representation/graph";
 import { vec2 } from "../meaning/vec2";
-import { renderPoints } from "../rendering/pointRenderer";
-import { renderSegments } from "../rendering/segmentRenderer";
+import { renderScene } from "../rendering/renderScene";
 import type { Viewport } from "../rendering/viewport";
 import { initialScene } from "./initialScene";
 
@@ -63,18 +58,8 @@ function render(
 
   const evaluated = evaluateGraph(graph);
 
-  const segments = evaluated.ordered.filter(
-    (value): value is EvaluatedSegment => value.kind === "SEGMENT",
-  );
-
-  const points = evaluated.ordered.filter(
-    (value): value is EvaluatedPoint => value.kind === "POINT",
-  );
-
   ctx.clearRect(0, 0, rect.width, rect.height);
-
-  renderSegments(ctx, viewport, segments);
-  renderPoints(ctx, viewport, points);
+  renderScene(ctx, viewport, evaluated);
 }
 
 function main(): void {
