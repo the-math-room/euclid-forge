@@ -1,5 +1,10 @@
 import type { AppTransition } from "./appController";
-import { appStateFromHistory, commitHistory, redoHistory, undoHistory } from "./history";
+import {
+  appStateFromHistory,
+  commitHistory,
+  redoHistory,
+  undoHistory,
+} from "./history";
 import type { HistoryState } from "./history";
 import { applyTransition } from "./transitionEffects";
 import type { AppState } from "./appState";

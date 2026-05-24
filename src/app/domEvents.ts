@@ -25,7 +25,6 @@ import {
   saveWorkspace,
 } from "./workspaceActions";
 import {
-  isViewportMotionActive,
   startViewportRotation,
   stopViewportRotation,
 } from "./viewportMotion";
@@ -156,8 +155,4 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
       handlePointerLeave(input.runtime.getState()),
     );
   });
-}
-
-export function isMotionActive(motion: ViewportMotionState): boolean {
-  return isViewportMotionActive(motion);
 }
