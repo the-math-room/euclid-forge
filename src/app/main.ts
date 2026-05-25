@@ -1,5 +1,7 @@
 import "../styles/app.css";
 
+import { installBuildInfoSurface } from "./buildInfo";
+
 import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
 import { createAppRuntime } from "./appRuntime";
 import { initialAppState } from "./appState";
@@ -46,6 +48,7 @@ function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
   const statusSurface = statusSurfaceForDocument(document);
+  installBuildInfoSurface(document);
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
   const initialState = initialAppState();

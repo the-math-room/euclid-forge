@@ -93,3 +93,30 @@ body {
     font-size: 12px;
   }
 }
+
+
+#build-info {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 8px 10px;
+  border: 1px solid rgb(148 163 184 / 0.25);
+  border-radius: 10px;
+  background: rgb(15 23 42 / 0.72);
+  color: #94a3b8;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  line-height: 1.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 520px) {
+  #build-info {
+    right: 8px;
+    bottom: 8px;
+    max-width: calc(100vw - 16px);
+    font-size: 11px;
+  }
+}
