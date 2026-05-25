@@ -107,7 +107,8 @@ describe("core/engine", () => {
     expect(engine.diagnostics()).toEqual([
       {
         nodeId: "X",
-        code: "UNDEFINED_GEOMETRY",
+        severity: "warning",
+        code: "NO_UNIQUE_INTERSECTION",
         message:
           "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
       },

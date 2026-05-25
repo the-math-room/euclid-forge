@@ -6,8 +6,11 @@ import type { EvaluatedGeometry } from "./evaluated";
 import type { EvaluationIssueCode } from "./evaluationIssue";
 import { GeometryEvaluationIssueError } from "./evaluationIssue";
 
+export type EvaluationIssueSeverity = "warning";
+
 export type EvaluationIssue = Readonly<{
   nodeId: NodeId;
+  severity: EvaluationIssueSeverity;
   code: EvaluationIssueCode;
   message: string;
 }>;
@@ -57,6 +60,7 @@ function evaluationIssueForError(
   if (error instanceof GeometryEvaluationIssueError) {
     return Object.freeze({
       nodeId: error.nodeId,
+      severity: "warning",
       code: error.code,
       message: error.message,
     });
@@ -68,6 +72,7 @@ function evaluationIssueForError(
   ) {
     return Object.freeze({
       nodeId,
+      severity: "warning",
       code: "MISSING_DEPENDENCY",
       message: `Cannot evaluate ${nodeId}; ${error.message}`,
     });

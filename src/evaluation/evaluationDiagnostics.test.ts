@@ -28,6 +28,7 @@ describe("evaluation diagnostics", () => {
     expect(evaluateGraph(graph).issues).toEqual([
       {
         nodeId: "X",
+        severity: "warning",
         code: "NO_REAL_INTERSECTION",
         message: "Cannot evaluate X; Circles do not intersect",
       },
