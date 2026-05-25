@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   parseSerializedWorkspace,
   serializeWorkspace,
-} from "../core/workspace";
+} from "../core";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
