@@ -64,6 +64,27 @@ describe("core/engine", () => {
   });
 
 
+
+  test("exposes dependency inspection", () => {
+    const engine = createGeometryEngine(
+      createGraph([
+        freePoint("A", 0, 0, "A"),
+        freePoint("B", 1, 0, "B"),
+        segmentNode("AB", "A", "B"),
+        {
+          kind: "MIDPOINT",
+          id: "M",
+          segment: "AB",
+          label: "M",
+        },
+      ]),
+    );
+
+    expect(engine.dependenciesOf("AB")).toEqual(["A", "B"]);
+    expect(engine.dependentsOf("A")).toEqual(["AB"]);
+    expect([...engine.transitiveDependentsOf(["A"])]).toEqual(["AB", "M"]);
+  });
+
   test("exposes evaluation diagnostics directly", () => {
     const engine = createGeometryEngine(
       createGraph([
