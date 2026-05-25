@@ -12,14 +12,14 @@ import type {
 } from "./node";
 import type { Graph } from "./graph";
 
-export function lineIntersectionConstruction(
+export function segmentIntersectionConstruction(
   graph: Graph,
   lineA: NodeId,
   lineB: NodeId,
 ): readonly GeometryNode[] {
   return constructionFactoryForGeometryKind(
-    "LINE_INTERSECTION",
-    "lineIntersection",
+    "SEGMENT_INTERSECTION",
+    "segmentIntersection",
   )(
     { graph },
     lineA,

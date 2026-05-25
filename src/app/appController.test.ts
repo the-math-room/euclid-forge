@@ -5,7 +5,7 @@ import {
   centroidNode,
   circleNode,
   freePoint,
-  lineIntersectionNode,
+  segmentIntersectionNode,
   midpointNode,
   segmentNode,
   triangleNode,
@@ -138,7 +138,7 @@ describe("app/appController", () => {
   });
 
 
-  test("creates a line intersection from two selected segments with I", () => {
+  test("creates a segment intersection from two selected segments with I", () => {
     const graph = createGraph([
       freePoint("A", -1, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -158,7 +158,7 @@ describe("app/appController", () => {
 
     expect(transition.history).toBe("commit");
     expect(transition.state.graph.byId.get("X1")).toEqual(
-      lineIntersectionNode("X1", "AB", "CD", "X1"),
+      segmentIntersectionNode("X1", "AB", "CD", "X1"),
     );
     expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
   });
@@ -181,7 +181,7 @@ describe("app/appController", () => {
     expect(transition.effects).toContainEqual({
       kind: "SHOW_STATUS",
       message:
-        "Select exactly two segment nodes to create an intersection. Triangle borders are not segments unless you create segment nodes for them.",
+        "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.",
     });
   });
 

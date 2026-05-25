@@ -5,7 +5,7 @@ import type {
 import { GeometryEvaluationIssueError } from "../../evaluation/evaluationIssue";
 import { segmentIntersection } from "../../meaning/vec2";
 import {
-  lineIntersectionNode,
+  segmentIntersectionNode,
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
@@ -23,30 +23,30 @@ import type {
 } from "../interactionContext";
 import type { GeometryRenderContext } from "../renderingContext";
 
-export const lineIntersectionDefinition: GeometryDefinition<"LINE_INTERSECTION"> =
+export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSECTION"> =
   Object.freeze({
-    kind: "LINE_INTERSECTION",
+    kind: "SEGMENT_INTERSECTION",
 
     representation: Object.freeze({
-      dependencies: (node: NodeByKind<"LINE_INTERSECTION">) => [
-        node.lineA,
-        node.lineB,
+      dependencies: (node: NodeByKind<"SEGMENT_INTERSECTION">) => [
+        node.segmentA,
+        node.segmentB,
       ],
     }),
 
     evaluation: Object.freeze({
       evaluate: (
-        node: NodeByKind<"LINE_INTERSECTION">,
+        node: NodeByKind<"SEGMENT_INTERSECTION">,
         context: EvaluationContext,
       ): EvaluatedPoint => {
-        const lineA = context.getSegment(node.lineA);
-        const lineB = context.getSegment(node.lineB);
-        const point = segmentIntersection(lineA.a, lineA.b, lineB.a, lineB.b);
+        const segmentA = context.getSegment(node.segmentA);
+        const segmentB = context.getSegment(node.segmentB);
+        const point = segmentIntersection(segmentA.a, segmentA.b, segmentB.a, segmentB.b);
 
         if (!point) {
           throw new GeometryEvaluationIssueError(
             node.id,
-            `Cannot evaluate ${node.id}; segments ${node.lineA} and ${node.lineB} do not have a unique bounded intersection`,
+            `Cannot evaluate ${node.id}; segments ${node.segmentA} and ${node.segmentB} do not have a unique bounded intersection`,
           );
         }
 
@@ -91,7 +91,7 @@ export const lineIntersectionDefinition: GeometryDefinition<"LINE_INTERSECTION">
       ): void => {
         if (value.kind !== "POINT") {
           throw new Error(
-            `Expected POINT evaluated value for LINE_INTERSECTION, got ${value.kind}`,
+            `Expected POINT evaluated value for SEGMENT_INTERSECTION, got ${value.kind}`,
           );
         }
 
@@ -101,45 +101,45 @@ export const lineIntersectionDefinition: GeometryDefinition<"LINE_INTERSECTION">
 
     construction: Object.freeze({
       factories: Object.freeze({
-        lineIntersection: (
+        segmentIntersection: (
           { graph }: ConstructionContext,
-          lineA: NodeId,
-          lineB: NodeId,
+          segmentA: NodeId,
+          segmentB: NodeId,
         ): readonly GeometryNode[] =>
-          lineIntersectionConstructionNodes(graph, lineA, lineB),
+          segmentIntersectionConstructionNodes(graph, segmentA, segmentB),
       }),
     }),
   });
 
-function lineIntersectionConstructionNodes(
+function segmentIntersectionConstructionNodes(
   graph: Readonly<{
     nodes: readonly GeometryNode[];
     byId: ReadonlyMap<NodeId, GeometryNode>;
   }>,
-  lineA: NodeId,
-  lineB: NodeId,
+  segmentA: NodeId,
+  segmentB: NodeId,
 ): readonly GeometryNode[] {
-  if (lineA === lineB) {
-    throw new Error("Cannot create line intersection from duplicate segments");
+  if (segmentA === segmentB) {
+    throw new Error("Cannot create segment intersection from duplicate segments");
   }
 
-  for (const id of [lineA, lineB]) {
+  for (const id of [segmentA, segmentB]) {
     const node = graph.byId.get(id);
 
     if (!node) {
-      throw new Error(`Cannot create line intersection with missing segment: ${id}`);
+      throw new Error(`Cannot create segment intersection with missing segment: ${id}`);
     }
 
     if (node.kind !== "SEGMENT") {
-      throw new Error(`Cannot create line intersection with non-segment: ${id}`);
+      throw new Error(`Cannot create segment intersection with non-segment: ${id}`);
     }
   }
 
   const existing = graph.nodes.find(
     (candidate) =>
-      candidate.kind === "LINE_INTERSECTION" &&
-      ((candidate.lineA === lineA && candidate.lineB === lineB) ||
-        (candidate.lineA === lineB && candidate.lineB === lineA)),
+      candidate.kind === "SEGMENT_INTERSECTION" &&
+      ((candidate.segmentA === segmentA && candidate.segmentB === segmentB) ||
+        (candidate.segmentA === segmentB && candidate.segmentB === segmentA)),
   );
 
   if (existing) {
@@ -148,7 +148,7 @@ function lineIntersectionConstructionNodes(
 
   const id = nextLineIntersectionId(graph);
 
-  return Object.freeze([lineIntersectionNode(id, lineA, lineB, id)]);
+  return Object.freeze([segmentIntersectionNode(id, segmentA, segmentB, id)]);
 }
 
 function nextLineIntersectionId(

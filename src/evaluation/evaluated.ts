@@ -9,7 +9,7 @@ export type EvaluatedPointRole =
 
 export type EvaluatedPoint = Readonly<{
   kind: "POINT";
-  sourceKind: "FREE_POINT" | "MIDPOINT" | "CENTROID" | "LINE_INTERSECTION";
+  sourceKind: "FREE_POINT" | "MIDPOINT" | "CENTROID" | "SEGMENT_INTERSECTION";
   zIndex?: number;
   id: NodeId;
   point: Vec2;

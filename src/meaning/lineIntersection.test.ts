@@ -18,7 +18,7 @@ describe("meaning/intersection helpers", () => {
     ).toEqual(vec2(0, 0));
   });
 
-  test("computes line intersection parameters", () => {
+  test("computes segment intersection parameters", () => {
     expect(
       lineIntersectionWithParameters(
         vec2(-1, 0),

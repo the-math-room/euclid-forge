@@ -4,13 +4,13 @@ import { createGraph } from "../representation/graph";
 import {
   circleNode,
   freePoint,
-  lineIntersectionNode,
+  segmentIntersectionNode,
   segmentNode,
 } from "../representation/node";
 import { evaluateGraph } from "./evaluateGraph";
 
-describe("evaluation/line intersection", () => {
-  test("evaluates a line intersection point", () => {
+describe("evaluation/segment intersection", () => {
+  test("evaluates a segment intersection point", () => {
     const graph = createGraph([
       freePoint("A", -1, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -18,14 +18,14 @@ describe("evaluation/line intersection", () => {
       freePoint("D", 0, 1, "D"),
       segmentNode("AB", "A", "B"),
       segmentNode("CD", "C", "D"),
-      lineIntersectionNode("X", "AB", "CD", "X"),
+      segmentIntersectionNode("X", "AB", "CD", "X"),
     ]);
 
     const evaluated = evaluateGraph(graph);
 
     expect(evaluated.values.get("X")).toEqual({
       kind: "POINT",
-      sourceKind: "LINE_INTERSECTION",
+      sourceKind: "SEGMENT_INTERSECTION",
       id: "X",
       point: vec2(0, 0),
       label: "X",
@@ -42,7 +42,7 @@ describe("evaluation/line intersection", () => {
       freePoint("D", 1, 1, "D"),
       segmentNode("AB", "A", "B"),
       segmentNode("CD", "C", "D"),
-      lineIntersectionNode("X", "AB", "CD", "X"),
+      segmentIntersectionNode("X", "AB", "CD", "X"),
     ]);
 
     const evaluated = evaluateGraph(graph);
@@ -67,7 +67,7 @@ describe("evaluation/line intersection", () => {
       freePoint("D", 2, 1, "D"),
       segmentNode("AB", "A", "B"),
       segmentNode("CD", "C", "D"),
-      lineIntersectionNode("X", "AB", "CD", "X"),
+      segmentIntersectionNode("X", "AB", "CD", "X"),
     ]);
 
     const evaluated = evaluateGraph(graph);
@@ -83,7 +83,7 @@ describe("evaluation/line intersection", () => {
     ]);
   });
 
-  test("omits dependents of undefined line intersections", () => {
+  test("omits dependents of undefined segment intersections", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -92,7 +92,7 @@ describe("evaluation/line intersection", () => {
       freePoint("E", 2, 2, "E"),
       segmentNode("AB", "A", "B"),
       segmentNode("CD", "C", "D"),
-      lineIntersectionNode("X", "AB", "CD", "X"),
+      segmentIntersectionNode("X", "AB", "CD", "X"),
       circleNode("circle", "X", "E"),
     ]);
 

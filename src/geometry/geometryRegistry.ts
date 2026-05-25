@@ -6,7 +6,7 @@ import type { EvaluationContext } from "./evaluationContext";
 import { centroidDefinition } from "./definitions/centroid";
 import { circleDefinition } from "./definitions/circle";
 import { freePointDefinition } from "./definitions/freePoint";
-import { lineIntersectionDefinition } from "./definitions/lineIntersection";
+import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { midpointDefinition } from "./definitions/midpoint";
 import { segmentDefinition } from "./definitions/segment";
 import { triangleDefinition } from "./definitions/triangle";
@@ -33,7 +33,7 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(triangleDefinition),
   eraseGeometryDefinition(midpointDefinition),
   eraseGeometryDefinition(centroidDefinition),
-  eraseGeometryDefinition(lineIntersectionDefinition),
+  eraseGeometryDefinition(segmentIntersectionDefinition),
 ] satisfies readonly AnyGeometryDefinition[]);
 
 const geometryDefinitionsByKind: ReadonlyMap<

@@ -8,12 +8,12 @@ import { emptyViewState, toggleSelectedNode } from "./viewState";
 import { createGraph } from "../representation/graph";
 import {
   freePoint,
-  lineIntersectionNode,
+  segmentIntersectionNode,
   segmentNode,
 } from "../representation/node";
 
-describe("app line intersection command", () => {
-  test("creates a line intersection from two selected segments", () => {
+describe("app segment intersection command", () => {
+  test("creates a segment intersection from two selected segments", () => {
     const graph = createGraph([
       freePoint("A", -1, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -31,7 +31,7 @@ describe("app line intersection command", () => {
 
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.get("X1")).toEqual(
-      lineIntersectionNode("X1", "AB", "CD", "X1"),
+      segmentIntersectionNode("X1", "AB", "CD", "X1"),
     );
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
   });
@@ -51,7 +51,7 @@ describe("app line intersection command", () => {
           appState(graph, toggleSelectedNode(emptyViewState(), "AB"), null),
         ),
     ).toBe(
-      "Select exactly two segment nodes to create an intersection. Triangle borders are not segments unless you create segment nodes for them.",
+      "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.",
     );
   });
 });

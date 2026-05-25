@@ -1,7 +1,7 @@
 import {
   centroidConstruction,
   circleConstruction,
-  lineIntersectionConstruction,
+  segmentIntersectionConstruction,
   segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
@@ -254,21 +254,21 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
 
 
   command({
-    id: "create-line-intersection",
+    id: "create-segment-intersection",
     keys: ["i"],
-    disabledReason: lineIntersectionDisabledReason,
+    disabledReason: segmentIntersectionDisabledReason,
     run: (state) => {
       const [lineA, lineB] = requireSelectedSegmentTuple(
         state,
         2,
-        "Cannot run create-line-intersection while disabled",
+        "Cannot run create-segment-intersection while disabled",
       );
 
       return commit(
         appState(
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
-            nodes: lineIntersectionConstruction(state.graph, lineA, lineB),
+            nodes: segmentIntersectionConstruction(state.graph, lineA, lineB),
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -516,12 +516,12 @@ function viewportPanStep(state: AppState): number {
 }
 
 
-function lineIntersectionDisabledReason(state: AppState): string | null {
+function segmentIntersectionDisabledReason(state: AppState): string | null {
   if (selectedSegmentTuple(state, 2)) {
     return null;
   }
 
-  return "Select exactly two segment nodes to create an intersection. Triangle borders are not segments unless you create segment nodes for them.";
+  return "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.";
 }
 
 function selectedNodesDisabledReason(state: AppState): string | null {
