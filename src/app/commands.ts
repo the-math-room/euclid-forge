@@ -3,6 +3,7 @@ import { curveIntersectionCandidatesForScene } from "@euclid-forge/core/evaluati
 import {
   centroidConstruction,
   circleConstruction,
+  lineConstruction,
   segmentIntersectionConstruction,
   segmentConstruction,
   triangleConstruction,
@@ -229,6 +230,30 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
             nodes,
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "create-line",
+    keys: ["l"],
+    disabledReason: (state) => (selectedSegmentEndpoints(state) ? null : ""),
+    run: (state) => {
+      const [a, b] = requireSelectedConstructiblePointTuple(
+        state,
+        2,
+        "Cannot run create-line while disabled",
+      );
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes: lineConstruction(state.graph, a, b),
           }),
           clearSelection(state.viewState),
           state.dragState,

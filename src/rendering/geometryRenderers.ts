@@ -1,5 +1,6 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
 import { renderCircle } from "./circleRenderer";
+import { renderLine } from "./lineRenderer";
 import { renderPoint } from "./pointRenderer";
 import { renderSegment } from "./segmentRenderer";
 import { renderTriangle } from "./triangleRenderer";
@@ -36,16 +37,7 @@ export function renderEvaluatedGeometry(
       return;
 
     case "LINE":
-      renderSegment(
-        context.ctx,
-        context.viewport,
-        {
-          ...value,
-          kind: "SEGMENT",
-          sourceKind: "SEGMENT",
-        },
-        context.options,
-      );
+      renderLine(context.ctx, context.viewport, value, context.options);
       return;
 
     case "CIRCLE":

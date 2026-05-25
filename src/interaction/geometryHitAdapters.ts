@@ -3,6 +3,7 @@ import type { Graph } from "@euclid-forge/core/representation/graph";
 import type { GeometryNode, NodeId } from "@euclid-forge/core/representation/node";
 import {
   hitCircleValue,
+  hitLineValue,
   hitPointValue,
   hitSegmentValue,
   hitTriangleValue,
@@ -41,14 +42,7 @@ export function hitGeometryValue(
     }
 
     case "LINE": {
-      const target = hitSegmentValue(
-        {
-          ...value,
-          kind: "SEGMENT",
-          sourceKind: "SEGMENT",
-        },
-        context,
-      );
+      const target = hitLineValue(value, context);
 
       return target
         ? {

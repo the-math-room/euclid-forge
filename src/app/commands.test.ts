@@ -5,6 +5,7 @@ import {
   centroidNode,
   circleNode,
   freePoint,
+  lineNode,
   midpointNode,
   segmentNode,
   triangleNode,
@@ -61,6 +62,25 @@ describe("app/commands", () => {
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.get("S_A_B")).toEqual(
       segmentNode("S_A_B", "A", "B"),
+    );
+    expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+  test("creates a line from two selected constructible points with L", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+
+    const result = appCommandForKey("l")?.run(appState(graph, viewState, null));
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.get("L_A_B")).toEqual(
+      lineNode("L_A_B", "A", "B"),
     );
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
   });

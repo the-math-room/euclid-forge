@@ -9,6 +9,7 @@ Euclid Forge is intentionally small and architecture-heavy. The core model is a 
 - Add and drag free points.
 - Shift-click to select points, segments, circles, triangles, and derived points.
 - Join selected constructible points with `J`: two points create a segment; three points create a triangle.
+- Construct lines with `L` from two selected constructible points.
 - Construct circles with `C` from center and through points.
 - Construct intersections with `I` from selected curve nodes.
 - Construct centroids with `G` and triangle side midpoints with `M`.
@@ -25,6 +26,7 @@ Euclid Forge is intentionally small and architecture-heavy. The core model is a 
 | Move draggable area body | Drag triangle/circle body |
 | Select / toggle selection | Shift-click geometry |
 | Join selected constructible points | `J` |
+| Line through two selected points | `L` |
 | Circle from center/through points | `C` |
 | Intersection from two selected curves | `I` |
 | Centroid of selected triangle | `G` |

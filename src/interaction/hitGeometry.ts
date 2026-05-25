@@ -1,5 +1,6 @@
 import type {
   EvaluatedCircle,
+  EvaluatedLine,
   EvaluatedPoint,
   EvaluatedSegment,
   EvaluatedTriangle,
@@ -41,6 +42,28 @@ export function hitSegmentValue(
   radiusPx = 8,
 ): SegmentHit | null {
   const distancePx = distanceToSegmentScreen(
+    context.viewport,
+    context.screenPoint,
+    value,
+  );
+
+  if (distancePx > radiusPx) {
+    return null;
+  }
+
+  return {
+    kind: "SEGMENT",
+    id: value.id,
+    distancePx,
+  };
+}
+
+export function hitLineValue(
+  value: EvaluatedLine,
+  context: GeometryHitContext,
+  radiusPx = 8,
+): SegmentHit | null {
+  const distancePx = distanceToLineScreen(
     context.viewport,
     context.screenPoint,
     value,
@@ -122,6 +145,34 @@ export function distanceToSegmentScreen(
     0,
     Math.min(1, (apx * abx + apy * aby) / abLengthSquared),
   );
+  const closest = {
+    x: a.x + t * abx,
+    y: a.y + t * aby,
+  };
+
+  return Math.hypot(screenPoint.x - closest.x, screenPoint.y - closest.y);
+}
+
+export function distanceToLineScreen(
+  viewport: GeometryHitContext["viewport"],
+  screenPoint: GeometryHitContext["screenPoint"],
+  line: EvaluatedLine,
+): number {
+  const a = worldToScreen(viewport, line.a);
+  const b = worldToScreen(viewport, line.b);
+
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const apx = screenPoint.x - a.x;
+  const apy = screenPoint.y - a.y;
+
+  const abLengthSquared = abx * abx + aby * aby;
+
+  if (abLengthSquared === 0) {
+    return Math.hypot(apx, apy);
+  }
+
+  const t = (apx * abx + apy * aby) / abLengthSquared;
   const closest = {
     x: a.x + t * abx,
     y: a.y + t * aby,
