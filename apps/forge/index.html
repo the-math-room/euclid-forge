@@ -36,33 +36,41 @@
         aria-label="Geometry construction canvas"
       ></canvas>
 
-      <aside id="help-overlay" aria-label="Controls">
-        <strong>Euclid Forge</strong>
-        <span>Click empty canvas: add point</span>
-        <span>Drag point: move point</span>
-        <span>Drag triangle/circle: move free source points</span>
-        <span>Shift-click: select point/segment/circle/triangle</span>
-        <span>J: join 2/3 selected free points into segment/triangle</span>
-        <span>L: line through two selected points</span>
-        <span>C: circle from center/through points</span>
-        <span>I: intersection of 2 selected segments</span>
-        <span>G: centroid of selected triangle</span>
-        <span>M: side midpoints of selected triangle</span>
-        <span>Delete/Backspace: delete selected nodes</span>
-        <span>H: hide selected nodes</span>
-        <span>U: unhide all hidden nodes</span>
-        <span>PageUp/PageDown: move selected forward/backward</span>
-        <span>Shift+PageUp/PageDown: move selected to front/back</span>
-        <span>Arrow keys: pan viewport</span>
-        <span>+ / -: zoom viewport</span>
-        <span>[ / ]: rotate viewport</span>
-        <span>\: reset viewport rotation</span>
-        <span>0: reset viewport</span>
-        <span>Ctrl/Cmd+S: save workspace</span>
-        <span>Ctrl/Cmd+O: open workspace</span>
-        <span>Ctrl/Cmd+Z: undo</span>
-        <span>Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y: redo</span>
-      </aside>
+      <details id="help-overlay" aria-label="Controls">
+        <summary>☰ Shortcuts</summary>
+        <div class="help-overlay__content">
+          <strong>Euclid Forge</strong>
+          <span>Move tool: select, drag, or pan viewport</span>
+          <span>Point tool: click empty canvas to add point</span>
+          <span>Shape tools: click points or empty canvas for inputs</span>
+          <span>Drag point: move point</span>
+          <span>Drag triangle/circle: move free source points</span>
+          <span>Shift-click: select point/segment/circle/triangle</span>
+          <span>J: join 2/3 selected points into segment/triangle</span>
+          <span>L: line through two selected points</span>
+          <span>C: circle from center/through points</span>
+          <span>I: intersection of 2 selected curves</span>
+          <span>G: centroid of selected triangle</span>
+          <span
+            >M: midpoint of selected segment or side midpoints of selected
+            triangle</span
+          >
+          <span>Delete/Backspace: delete selected nodes</span>
+          <span>H: hide selected nodes</span>
+          <span>U: unhide all hidden nodes</span>
+          <span>PageUp/PageDown: move selected forward/backward</span>
+          <span>Shift+PageUp/PageDown: move selected to front/back</span>
+          <span>Arrow keys: smooth pan viewport</span>
+          <span>+ / -: smooth zoom viewport</span>
+          <span>[ / ]: smooth rotate viewport</span>
+          <span>\: reset viewport rotation</span>
+          <span>0: reset viewport</span>
+          <span>Ctrl/Cmd+S: save workspace</span>
+          <span>Ctrl/Cmd+O: open workspace</span>
+          <span>Ctrl/Cmd+Z: undo</span>
+          <span>Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y: redo</span>
+        </div>
+      </details>
 
       <div id="status-message" role="status" aria-live="polite" hidden></div>
     </main>

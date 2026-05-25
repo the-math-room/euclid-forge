@@ -28,10 +28,8 @@ body {
   position: absolute;
   left: 16px;
   top: 16px;
-  display: grid;
-  gap: 4px;
-  max-width: min(280px, calc(100vw - 32px));
-  padding: 12px 14px;
+  z-index: 5;
+  max-width: min(340px, calc(100vw - 32px));
   border: 1px solid rgb(148 163 184 / 0.25);
   border-radius: 12px;
   background: rgb(15 23 42 / 0.72);
@@ -40,8 +38,25 @@ body {
     13px system-ui,
     sans-serif;
   line-height: 1.35;
-  pointer-events: none;
   user-select: none;
+}
+
+#help-overlay summary {
+  display: block;
+  padding: 10px 12px;
+  color: #f8fafc;
+  cursor: pointer;
+  list-style: none;
+}
+
+#help-overlay summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-overlay__content {
+  display: grid;
+  gap: 4px;
+  padding: 0 14px 12px;
 }
 
 #help-overlay strong {
