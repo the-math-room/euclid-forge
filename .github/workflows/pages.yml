@@ -19,31 +19,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Forge
         uses: actions/checkout@v5
+        with:
+          path: euclid-forge
+
+      - name: Checkout Core
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/euclid-core
+          path: euclid-core
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            euclid-forge/package-lock.json
+            euclid-core/package-lock.json
 
-      - name: Install
+      - name: Install Core
+        working-directory: euclid-core
+        run: npm ci
+
+      - name: Check Core
+        working-directory: euclid-core
+        run: npm run check
+
+      - name: Install Forge
+        working-directory: euclid-forge
         run: npm ci
 
       - name: Install Playwright browsers
+        working-directory: euclid-forge
         run: npx playwright install chromium --with-deps
 
-      - name: Check
+      - name: Check Forge
+        working-directory: euclid-forge
         run: npm run check
 
-      - name: Build
+      - name: Build Forge
+        working-directory: euclid-forge
         run: npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: euclid-forge/dist
 
   deploy:
     environment:
