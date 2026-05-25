@@ -23,6 +23,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("c")).toEqual({
       kind: "CIRCLE",
+        sourceKind: "CIRCLE",
       id: "c",
       center: vec2(0, 0),
       radius: 5,
@@ -39,6 +40,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("A")).toEqual({
       kind: "POINT",
+        sourceKind: "FREE_POINT",
       id: "A",
       point: vec2(-2, 0),
       label: "A",
@@ -47,6 +49,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("B")).toEqual({
       kind: "POINT",
+        sourceKind: "FREE_POINT",
       id: "B",
       point: vec2(2, 0),
       label: "B",
@@ -66,6 +69,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("M")).toEqual({
       kind: "POINT",
+        sourceKind: "MIDPOINT",
       id: "M",
       point: vec2(0, 0),
       label: "M",
@@ -86,6 +90,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("G")).toEqual({
       kind: "POINT",
+        sourceKind: "CENTROID",
       id: "G",
       point: vec2(0, 0),
       label: "G",
@@ -108,6 +113,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("ABC")).toEqual({
       kind: "TRIANGLE",
+        sourceKind: "TRIANGLE",
       id: "ABC",
       a: vec2(-2, 0),
       b: vec2(2, 0),
@@ -116,6 +122,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("M")).toEqual({
       kind: "POINT",
+        sourceKind: "MIDPOINT",
       id: "M",
       point: vec2(0, 0),
       label: "M",
@@ -124,6 +131,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("G")).toEqual({
       kind: "POINT",
+        sourceKind: "CENTROID",
       id: "G",
       point: vec2(0, 2 / 3),
       label: "G",
@@ -146,6 +154,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("ABC")).toEqual({
       kind: "TRIANGLE",
+        sourceKind: "TRIANGLE",
       id: "ABC",
       a: vec2(-2, -1),
       b: vec2(2, -1),
@@ -154,6 +163,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("M_AB")).toEqual({
       kind: "POINT",
+        sourceKind: "MIDPOINT",
       id: "M_AB",
       point: vec2(0, -1),
       label: "M",
@@ -162,6 +172,7 @@ describe("evaluation/evaluateGraph", () => {
 
     expect(evaluated.values.get("G")).toEqual({
       kind: "POINT",
+        sourceKind: "CENTROID",
       id: "G",
       point: vec2(0, 0),
       label: "G",

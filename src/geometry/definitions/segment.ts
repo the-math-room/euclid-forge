@@ -32,6 +32,7 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
 
       return {
         kind: "SEGMENT",
+        sourceKind: node.kind,
         id: node.id,
         a: a.point,
         b: b.point,

@@ -30,6 +30,7 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
         _context: EvaluationContext,
       ): EvaluatedPoint => ({
         kind: "POINT",
+        sourceKind: node.kind,
         id: node.id,
         point: vec2(node.x, node.y),
         label: node.label,

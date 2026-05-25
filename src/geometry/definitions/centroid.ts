@@ -39,6 +39,7 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
 
         return {
           kind: "POINT",
+        sourceKind: node.kind,
           id: node.id,
           point: centroid(triangle.a, triangle.b, triangle.c),
           label: node.label,

@@ -33,6 +33,7 @@ export const midpointDefinition: GeometryDefinition<"MIDPOINT"> =
 
         return {
           kind: "POINT",
+        sourceKind: node.kind,
           id: node.id,
           point: midpoint(segment.a, segment.b),
           label: node.label,

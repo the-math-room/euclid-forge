@@ -134,26 +134,5 @@ function requireAnyGeometryDefinition(kind: GeometryKind): AnyGeometryDefinition
 }
 
 function evaluatedValueToGeometryKind(value: EvaluatedGeometry): GeometryKind {
-  switch (value.kind) {
-    case "POINT":
-      switch (value.role) {
-        case "FREE":
-          return "FREE_POINT";
-
-        case "MIDPOINT":
-          return "MIDPOINT";
-
-        case "CENTROID":
-          return "CENTROID";
-      }
-
-    case "SEGMENT":
-      return "SEGMENT";
-
-    case "CIRCLE":
-      return "CIRCLE";
-
-    case "TRIANGLE":
-      return "TRIANGLE";
-  }
+  return value.sourceKind;
 }

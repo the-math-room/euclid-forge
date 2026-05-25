@@ -40,6 +40,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
 
         return {
           kind: "TRIANGLE",
+        sourceKind: node.kind,
           id: node.id,
           a: a.point,
           b: b.point,

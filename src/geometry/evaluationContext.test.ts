@@ -10,6 +10,7 @@ describe("geometry/evaluationContext", () => {
         "A",
         {
           kind: "POINT",
+        sourceKind: "FREE_POINT",
           id: "A",
           point: vec2(1, 2),
           label: "A",
@@ -20,6 +21,7 @@ describe("geometry/evaluationContext", () => {
 
     expect(createEvaluationContext(values).getPoint("A")).toEqual({
       kind: "POINT",
+        sourceKind: "FREE_POINT",
       id: "A",
       point: vec2(1, 2),
       label: "A",
@@ -41,6 +43,7 @@ describe("geometry/evaluationContext", () => {
         "AB",
         {
           kind: "SEGMENT",
+        sourceKind: "SEGMENT",
           id: "AB",
           a: vec2(0, 0),
           b: vec2(1, 0),

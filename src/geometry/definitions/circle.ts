@@ -42,6 +42,7 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
 
       return {
         kind: "CIRCLE",
+        sourceKind: node.kind,
         id: node.id,
         center: center.point,
         radius,
