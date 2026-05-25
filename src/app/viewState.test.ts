@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "../meaning/vec2";
+import { vec2 } from "@euclid-forge/core/meaning/vec2";
 import {
   clearSelection,
   emptyViewState,

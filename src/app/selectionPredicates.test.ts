@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createGraph } from "../representation/graph";
+import { createGraph } from "@euclid-forge/core/representation/graph";
 import {
   centroidNode,
   circleNode,
@@ -7,7 +7,7 @@ import {
   midpointNode,
   segmentNode,
   triangleNode,
-} from "../representation/node";
+} from "@euclid-forge/core/representation/node";
 import { appState } from "./appState";
 import {
   requireSelectedCirclePoints,

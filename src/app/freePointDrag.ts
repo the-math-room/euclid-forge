@@ -1,7 +1,7 @@
-import { vec2 } from "../meaning/vec2";
-import type { Vec2 } from "../meaning/vec2";
-import type { Graph } from "../representation/graph";
-import type { NodeId } from "../representation/node";
+import { vec2 } from "@euclid-forge/core/meaning/vec2";
+import type { Vec2 } from "@euclid-forge/core/meaning/vec2";
+import type { Graph } from "@euclid-forge/core/representation/graph";
+import type { NodeId } from "@euclid-forge/core/representation/node";
 
 export type FreePointPositionSnapshot = ReadonlyMap<NodeId, Vec2>;
 

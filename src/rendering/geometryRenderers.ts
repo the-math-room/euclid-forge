@@ -1,4 +1,4 @@
-import type { EvaluatedGeometry } from "../evaluation/evaluated";
+import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
 import { renderCircle } from "./circleRenderer";
 import { renderPoint } from "./pointRenderer";
 import { renderSegment } from "./segmentRenderer";

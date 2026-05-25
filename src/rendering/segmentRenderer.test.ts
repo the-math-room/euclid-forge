@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import type { EvaluatedSegment } from "../evaluation/evaluated";
-import { vec2 } from "../meaning/vec2";
+import type { EvaluatedSegment } from "@euclid-forge/core/evaluation/evaluated";
+import { vec2 } from "@euclid-forge/core/meaning/vec2";
 import { testViewport } from "./testHelpers";
 import { renderSegment } from "./segmentRenderer";
 import { RENDER_THEME } from "./theme";

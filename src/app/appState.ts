@@ -1,4 +1,4 @@
-import type { Graph } from "../representation/graph";
+import type { Graph } from "@euclid-forge/core/representation/graph";
 import type { DragState } from "./dragState";
 import { initialScene } from "./initialScene";
 import { emptyViewState } from "./viewState";

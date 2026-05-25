@@ -1,12 +1,12 @@
-import { createGraph } from "../representation/graph";
-import type { Graph } from "../representation/graph";
+import { createGraph } from "@euclid-forge/core/representation/graph";
+import type { Graph } from "@euclid-forge/core/representation/graph";
 import {
   centroidNode,
   freePoint,
   midpointNode,
   segmentNode,
   triangleNode,
-} from "../representation/node";
+} from "@euclid-forge/core/representation/node";
 
 export function initialScene(): Graph {
   return createGraph([

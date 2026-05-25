@@ -1,4 +1,4 @@
-import type { EvaluatedPointRole } from "../evaluation/evaluated";
+import type { EvaluatedPointRole } from "@euclid-forge/core/evaluation/evaluated";
 
 export type PointStyle = Readonly<{
   fill: string;

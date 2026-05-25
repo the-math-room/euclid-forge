@@ -1,5 +1,5 @@
-import type { NodeId } from "../representation/node";
-import type { ScreenPoint, Viewport } from "../view/viewport";
+import type { NodeId } from "@euclid-forge/core/representation/node";
+import type { ScreenPoint, Viewport } from "@euclid-forge/core/view/viewport";
 
 export type GeometryHitClass = "POINT" | "LINEAR" | "AREA";
 

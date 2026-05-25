@@ -1,5 +1,5 @@
-import type { Graph } from "../representation/graph";
-import type { GeometryNode, NodeId } from "../representation/node";
+import type { Graph } from "@euclid-forge/core/representation/graph";
+import type { GeometryNode, NodeId } from "@euclid-forge/core/representation/node";
 
 export type ZIndexUpdates = ReadonlyMap<NodeId, number>;
 

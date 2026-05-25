@@ -9,14 +9,10 @@
     "test:watch": "vitest src",
     "typecheck": "tsc --noEmit",
     "check:boundaries": "node scripts/check-boundaries.mjs",
-    "check:core-extractable": "node scripts/check-core-extractable.mjs",
-    "list:core-package-files": "node scripts/list-core-package-files.mjs",
-    "stage:core-package": "node scripts/stage-core-package.mjs",
-    "check:core-package": "node scripts/check-core-package.mjs",
     "smoke": "playwright test --config=playwright.config.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run check:core-extractable && npm run check:core-package && npm run smoke"
+    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run smoke"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
@@ -24,5 +20,8 @@
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "dependencies": {
+    "@euclid-forge/core": "file:../euclid-core"
   }
 }
