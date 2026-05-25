@@ -171,7 +171,15 @@ describe("app/toolSurface", () => {
       [...surface.root.querySelectorAll<HTMLButtonElement>("button")].map(
         (button) => button.textContent,
       ),
-    ).toEqual(["Move", "Point", "Segment", "Circle", "Triangle", "Delete"]);
+    ).toEqual([
+      "Move",
+      "Lasso",
+      "Point",
+      "Segment",
+      "Circle",
+      "Triangle",
+      "Delete",
+    ]);
 
     expect(
       surface.root.querySelector(".tool-surface__status")?.textContent,

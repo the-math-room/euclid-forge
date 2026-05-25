@@ -11,6 +11,7 @@ import {
   constructionTool,
   deleteTool,
   emptyActiveTool,
+  lassoTool,
   pointTool,
   resetActiveToolInputs,
 } from "./activeTool";
@@ -31,6 +32,16 @@ describe("app/activeTool", () => {
     expect(activeToolIsReadyToCommit(tool)).toBe(false);
     expect(activeToolStatusText(tool)).toBe(
       "Delete tool: click or tap geometry to delete it.",
+    );
+  });
+
+  test("lasso tool does not collect inputs", () => {
+    const tool = lassoTool();
+
+    expect(activeToolRequiredInputCount(tool)).toBe(0);
+    expect(activeToolIsReadyToCommit(tool)).toBe(false);
+    expect(activeToolStatusText(tool)).toBe(
+      "Lasso tool: drag around geometry to select fully contained objects.",
     );
   });
 

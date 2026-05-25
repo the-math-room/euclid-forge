@@ -3,6 +3,7 @@ import {
   constructionTool,
   deleteTool,
   emptyActiveTool,
+  lassoTool,
   pointTool,
   type ActiveTool,
   type ActiveToolKind,
@@ -30,6 +31,12 @@ const TOOL_BUTTONS: readonly ToolButtonSpec[] = [
     label: "Move",
     title: "Select and move geometry",
     tool: emptyActiveTool,
+  },
+  {
+    kind: "lasso",
+    label: "Lasso",
+    title: "Select fully contained geometry with a lasso",
+    tool: lassoTool,
   },
   {
     kind: "point",

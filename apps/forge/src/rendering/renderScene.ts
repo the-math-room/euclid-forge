@@ -8,6 +8,7 @@ import type {
   GeometryRenderLayer,
   GeometryRenderOptions,
 } from "./geometryRenderingContext";
+import { renderLassoOverlay } from "./lassoRenderer";
 import type { Viewport } from "@euclid-forge/core";
 
 export type RenderSceneOptions = GeometryRenderOptions;
@@ -34,6 +35,10 @@ export function renderScene(
       viewport,
       options,
     });
+  }
+
+  if (options.lassoPolygon) {
+    renderLassoOverlay(ctx, options.lassoPolygon);
   }
 }
 

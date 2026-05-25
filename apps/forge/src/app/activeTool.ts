@@ -2,6 +2,7 @@ import type { NodeId } from "@euclid-forge/core";
 
 export type ActiveToolKind =
   | "select"
+  | "lasso"
   | "point"
   | "segment"
   | "line"
@@ -23,6 +24,10 @@ export type PointInputToolKind = Exclude<ConstructionToolKind, "intersection">;
 
 export type SelectTool = Readonly<{
   kind: "select";
+}>;
+
+export type LassoTool = Readonly<{
+  kind: "lasso";
 }>;
 
 export type PointTool = Readonly<{
@@ -72,10 +77,19 @@ export type PointInputTool =
 
 export type ConstructionTool = PointInputTool | IntersectionTool;
 
-export type ActiveTool = SelectTool | PointTool | DeleteTool | ConstructionTool;
+export type ActiveTool =
+  | SelectTool
+  | LassoTool
+  | PointTool
+  | DeleteTool
+  | ConstructionTool;
 
 export function emptyActiveTool(): ActiveTool {
   return { kind: "select" };
+}
+
+export function lassoTool(): ActiveTool {
+  return { kind: "lasso" };
 }
 
 export function pointTool(): ActiveTool {
@@ -100,6 +114,7 @@ export function activeToolInputCount(tool: ActiveTool): number {
 export function activeToolRequiredInputCount(tool: ActiveTool): number {
   switch (tool.kind) {
     case "select":
+    case "lasso":
     case "point":
     case "delete":
       return 0;
@@ -126,6 +141,7 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
       return true;
 
     case "select":
+    case "lasso":
     case "point":
     case "delete":
     case "intersection":
@@ -188,6 +204,9 @@ export function activeToolStatusText(tool: ActiveTool): string {
   switch (tool.kind) {
     case "select":
       return "Select or drag geometry.";
+
+    case "lasso":
+      return "Lasso tool: drag around geometry to select fully contained objects.";
 
     case "point":
       return "Point tool: click or tap empty canvas to create a point.";

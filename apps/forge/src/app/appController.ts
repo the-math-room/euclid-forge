@@ -1,7 +1,8 @@
 import { deltaBetween } from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
-import type { NodeId } from "@euclid-forge/core";
-import type { ScreenPoint, Viewport } from "@euclid-forge/core";
+import type { NodeId, ScreenPoint } from "@euclid-forge/core";
+import type { Viewport } from "@euclid-forge/core";
+import { evaluateGraph, visibleEvaluatedScene } from "@euclid-forge/core";
 import { screenToWorld } from "@euclid-forge/core";
 import { appCommandDisabledReason, appCommandForKey } from "./commands";
 import { handleActiveToolPointerDown } from "./activeToolPointer";
@@ -11,6 +12,8 @@ import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
 import { viewportCenterForDrag } from "./viewportDrag";
+import { effectiveHiddenNodeIds } from "./effectiveVisibility";
+import { lassoSelectableNodeIds } from "./lassoSelection";
 
 import {
   clearSelection,
@@ -33,6 +36,10 @@ export type PointerInput = Readonly<{
   viewport: Viewport;
   shiftKey: boolean;
 }>;
+
+const MIN_LASSO_POINTS = 3;
+const MIN_LASSO_DISTANCE_PX = 6;
+const LASSO_POINT_SPACING_PX = 2;
 
 export function handleKeyDown(state: AppState, input: KeyInput): AppTransition {
   const command = appCommandForKey(input.key, {
@@ -145,6 +152,29 @@ export function handlePointerDown(
       });
 
     case "NONE":
+      if (input.shiftKey) {
+        return transition({
+          state: appState(
+            state.graph,
+            viewState,
+            {
+              kind: "LASSO",
+              points: [input.point],
+              viewport: input.viewport,
+            },
+            state.activeTool,
+          ),
+          shouldRender: false,
+          shouldPreventDefault: true,
+          effects: [
+            {
+              kind: "SET_POINTER_CAPTURE",
+              pointerId: input.pointerId,
+            },
+          ],
+        });
+      }
+
       return preventOnly(
         appState(state.graph, viewState, null, state.activeTool),
       );
@@ -178,6 +208,27 @@ export function handlePointerMove(
 
       return changed(
         appState(state.graph, nextViewState, state.dragState, state.activeTool),
+      );
+    }
+
+    case "LASSO": {
+      const points = appendLassoPoint(state.dragState.points, input.point);
+
+      if (points === state.dragState.points && viewState === state.viewState) {
+        return unchanged(state);
+      }
+
+      return changed(
+        appState(
+          state.graph,
+          viewState,
+          {
+            kind: "LASSO",
+            points,
+            viewport: state.dragState.viewport,
+          },
+          state.activeTool,
+        ),
       );
     }
 
@@ -236,6 +287,10 @@ export function handlePointerUp(
     return unchanged(state);
   }
 
+  if (state.dragState.kind === "LASSO") {
+    return completeLassoSelection(state, pointerId);
+  }
+
   return transition({
     state: appState(state.graph, state.viewState, null, state.activeTool),
     shouldRender: false,
@@ -254,7 +309,80 @@ export function handlePointerCancel(
   state: AppState,
   pointerId: number,
 ): AppTransition {
+  if (state.dragState?.kind === "LASSO") {
+    return transition({
+      state: appState(state.graph, state.viewState, null, state.activeTool),
+      shouldRender: true,
+      shouldPreventDefault: true,
+      effects: [
+        {
+          kind: "RELEASE_POINTER_CAPTURE",
+          pointerId,
+        },
+      ],
+    });
+  }
+
   return handlePointerUp(state, pointerId);
+}
+
+function completeLassoSelection(
+  state: AppState,
+  pointerId: number,
+): AppTransition {
+  if (state.dragState?.kind !== "LASSO") {
+    return unchanged(state);
+  }
+
+  const polygon = state.dragState.points;
+
+  if (!isUsableLasso(polygon)) {
+    return transition({
+      state: appState(state.graph, state.viewState, null, state.activeTool),
+      shouldRender: true,
+      shouldPreventDefault: true,
+      effects: [
+        {
+          kind: "RELEASE_POINTER_CAPTURE",
+          pointerId,
+        },
+      ],
+    });
+  }
+
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
+  const evaluated = visibleEvaluatedScene(
+    evaluateGraph(state.graph),
+    hiddenNodeIds.size > 0 ? { hiddenNodeIds } : {},
+  );
+  const selectedNodeIds = new Set(
+    lassoSelectableNodeIds({
+      evaluated,
+      viewport: state.dragState.viewport,
+      polygon,
+    }),
+  );
+
+  const nextViewState = {
+    ...state.viewState,
+    hoveredNodeId: null,
+    selectedNodeIds,
+  };
+
+  return transition({
+    state: appState(state.graph, nextViewState, null, state.activeTool),
+    shouldRender: true,
+    shouldPreventDefault: true,
+    history: selectedSetsEqual(state.viewState.selectedNodeIds, selectedNodeIds)
+      ? "ignore"
+      : "commit",
+    effects: [
+      {
+        kind: "RELEASE_POINTER_CAPTURE",
+        pointerId,
+      },
+    ],
+  });
 }
 
 function hitTestHoverTarget(
@@ -270,4 +398,53 @@ function hitTestHoverTarget(
     case "NONE":
       return null;
   }
+}
+
+function appendLassoPoint(
+  points: readonly ScreenPoint[],
+  point: ScreenPoint,
+): readonly ScreenPoint[] {
+  const last = points.at(-1);
+
+  if (last && distance(last, point) < LASSO_POINT_SPACING_PX) {
+    return points;
+  }
+
+  return Object.freeze([...points, point]);
+}
+
+function isUsableLasso(points: readonly ScreenPoint[]): boolean {
+  const first = points[0];
+  const last = points.at(-1);
+
+  return (
+    points.length >= MIN_LASSO_POINTS &&
+    !!first &&
+    !!last &&
+    distance(first, last) >= MIN_LASSO_DISTANCE_PX
+  );
+}
+
+function selectedSetsEqual(
+  a: ReadonlySet<NodeId>,
+  b: ReadonlySet<NodeId>,
+): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+
+  for (const id of a) {
+    if (!b.has(id)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function distance(
+  a: Readonly<{ x: number; y: number }>,
+  b: Readonly<{ x: number; y: number }>,
+): number {
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }

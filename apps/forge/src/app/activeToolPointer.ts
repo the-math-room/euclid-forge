@@ -20,7 +20,7 @@ import {
   resetActiveToolInputs,
 } from "./activeTool";
 import type { ActiveTool, PointInputTool } from "./activeTool";
-import { changed, preventOnly, unchanged } from "./appTransition";
+import { changed, preventOnly, transition, unchanged } from "./appTransition";
 import type { AppTransition } from "./appTransition";
 import type { PointerInput } from "./appController";
 import { clearSelection } from "./viewState";
@@ -32,6 +32,9 @@ export function handleActiveToolPointerDown(
   switch (state.activeTool.kind) {
     case "select":
       return unchanged(state);
+
+    case "lasso":
+      return handleLassoToolPointerDown(state, input);
 
     case "point":
       return handlePointToolPointerDown(state, input);
@@ -53,6 +56,32 @@ export function handleActiveToolPointerDown(
     case "delete":
       return handleDeleteToolPointerDown(state, input);
   }
+}
+
+function handleLassoToolPointerDown(
+  state: AppState,
+  input: PointerInput,
+): AppTransition {
+  return transition({
+    state: appState(
+      state.graph,
+      state.viewState,
+      {
+        kind: "LASSO",
+        points: [input.point],
+        viewport: input.viewport,
+      },
+      state.activeTool,
+    ),
+    shouldRender: false,
+    shouldPreventDefault: true,
+    effects: [
+      {
+        kind: "SET_POINTER_CAPTURE",
+        pointerId: input.pointerId,
+      },
+    ],
+  });
 }
 
 function handlePointToolPointerDown(
@@ -214,6 +243,7 @@ function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
       return true;
 
     case "select":
+    case "lasso":
     case "point":
     case "delete":
     case "intersection":

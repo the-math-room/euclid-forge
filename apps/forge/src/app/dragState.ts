@@ -1,4 +1,4 @@
-import type { NodeId, Vec2 } from "@euclid-forge/core";
+import type { NodeId, ScreenPoint, Vec2, Viewport } from "@euclid-forge/core";
 
 export type DragState =
   | Readonly<{
@@ -7,6 +7,11 @@ export type DragState =
       initialViewportCenter: Vec2;
       initialViewportZoom: number;
       initialViewportRotation: number;
+    }>
+  | Readonly<{
+      kind: "LASSO";
+      points: readonly ScreenPoint[];
+      viewport: Viewport;
     }>
   | Readonly<{
       kind: "FREE_POINT";

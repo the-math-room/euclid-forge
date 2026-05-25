@@ -39,11 +39,16 @@ function render(
   const evaluated = evaluateGraph(state.graph);
 
   ctx.clearRect(0, 0, rect.width, rect.height);
-  renderScene(ctx, viewport, evaluated, {
+  const renderOptions = {
     selectedNodeIds: state.viewState.selectedNodeIds,
     hoveredNodeId: state.viewState.hoveredNodeId,
     hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
-  });
+    ...(state.dragState?.kind === "LASSO"
+      ? { lassoPolygon: state.dragState.points }
+      : {}),
+  };
+
+  renderScene(ctx, viewport, evaluated, renderOptions);
 }
 
 function main(): void {
