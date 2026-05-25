@@ -46,6 +46,34 @@ describe("app curve intersection command", () => {
     ).toBe(true);
   });
 
+  test("skips curve intersection candidates that duplicate existing point positions", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      circleNode("circleA", "A", "B"),
+      circleNode("circleC", "C", "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "circleA"),
+      "circleC",
+    );
+
+    const result = appCommandForKey("i")?.run(appState(graph, viewState, null));
+
+    if (!result) {
+      throw new Error("Expected I command result");
+    }
+
+    const curveIntersections = result.state.graph.nodes.filter(
+      (node) => node.kind === "CURVE_INTERSECTION",
+    );
+
+    expect(result.history).toBe("commit");
+    expect(curveIntersections).toHaveLength(1);
+    expect(curveIntersections[0]?.label).toBe("D");
+  });
+
   test("reports a status message when selected curves have no candidates", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),

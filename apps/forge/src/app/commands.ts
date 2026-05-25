@@ -589,7 +589,7 @@ function curveIntersectionConstruction(
         node.branchKey === candidate.branchKey,
     );
 
-    if (existing) {
+    if (existing || existingEvaluatedPointAt(evaluated, candidate.point)) {
       continue;
     }
 
@@ -614,6 +614,17 @@ function curveIntersectionConstruction(
   }
 
   return Object.freeze(additions);
+}
+
+function existingEvaluatedPointAt(
+  evaluated: ReturnType<typeof evaluateGraph>,
+  point: Readonly<{ x: number; y: number }>,
+): boolean {
+  return evaluated.ordered.some(
+    (value) =>
+      value.kind === "POINT" &&
+      Math.hypot(value.point.x - point.x, value.point.y - point.y) < 1e-9,
+  );
 }
 
 function sameUnorderedPair(
