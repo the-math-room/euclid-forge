@@ -29,6 +29,19 @@ const GOLDEN_FIXTURES: readonly GoldenFixtureExpectation[] = [
     ],
     diagnosticCodes: [],
   },
+  {
+    name: "disjoint circles omit unavailable curve intersection",
+    workspaceFile: "../app/fixtures/disjoint-circles.workspace.json",
+    evaluatedIds: [
+      "A",
+      "AR",
+      "B",
+      "BR",
+      "C1",
+      "C2",
+    ],
+    diagnosticCodes: ["UNDEFINED_GEOMETRY"],
+  },
 ];
 
 function readFixtureText(relativePath: string): string {
