@@ -6,11 +6,7 @@ import { screenToWorld } from "@euclid-forge/core";
 import { appCommandDisabledReason, appCommandForKey } from "./commands";
 import { handleActiveToolPointerDown } from "./activeToolPointer";
 import { changed, preventOnly, transition, unchanged } from "./appTransition";
-import type {
-  AppEffect,
-  AppTransition,
-  AppTransitionHistoryPolicy,
-} from "./appTransition";
+import type { AppTransition } from "./appTransition";
 import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
@@ -24,28 +20,6 @@ import {
   initialFreePointPositions,
   translatedFreePointPositions,
 } from "./freePointDrag";
-
-export type PointerCaptureEffect = Readonly<
-  | {
-      kind: "SET_POINTER_CAPTURE";
-      pointerId: number;
-    }
-  | {
-      kind: "RELEASE_POINTER_CAPTURE";
-      pointerId: number;
-    }
->;
-
-export type StatusEffect = Readonly<{
-  kind: "SHOW_STATUS";
-  message: string;
-}>;
-
-type AppTransitionInit = Omit<AppTransition, "history" | "effects"> &
-  Readonly<{
-    history?: AppTransitionHistoryPolicy;
-    effects?: readonly AppEffect[];
-  }>;
 
 export type KeyInput = Readonly<{
   key: string;

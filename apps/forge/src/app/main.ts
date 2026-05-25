@@ -60,7 +60,6 @@ function main(): void {
           activeTool,
         ),
       );
-      toolSurface.update(activeTool);
       toolSurface.update(runtime.getState().activeTool);
       runtime.requestRender();
     },

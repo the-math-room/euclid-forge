@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+
+source scripts/dumps/dump-common.sh
+
+target="${1:-help}"
+
+case "$target" in
+  help|--help|-h)
+    cat <<'EOF_HELP'
+Usage:
+  scripts/dumps/dump-target <target> > /tmp/<target>.txt
+
+Targets:
+  review                  Full story-ordered code review dump, excluding tests/data
+  docs                    Project docs and architecture notes
+  guardrails              Boundary checker, import audit, checks, CI, package scripts
+  core-api                Core public facade, engine, workspace, diagnostics
+  core-meaning            Core meaning/math primitives, excluding tests
+  core-representation     Core graph, nodes, edits, dependency, construction semantics, excluding tests
+  core-evaluation         Core evaluation, diagnostics, visible scene, curve candidates, excluding tests
+  core-geometry           Core meaning + representation + evaluation + geometry registry, excluding tests
+  app-shell               Forge entrypoint, runtime, state, transitions, status/build surfaces, excluding tests
+  app-commands            Forge commands, history, workspace, initial scene, excluding tests
+  app-tools               Active tools, modal pointer behavior, toolbar, pointer intent, excluding tests
+  interaction-rendering   Hit testing, interaction adapters, renderers, theme, styles, excluding tests
+  scripts-ci              Scripts, dump tools, checks, CI/deploy
+  recent                  Check/audit output only
+  tests-core              Core test files only
+  tests-forge             Forge unit test files only
+  smoke                   Playwright smoke tests and helpers
+  lockfiles               Lockfiles/dependency metadata
+EOF_HELP
+    ;;
+
+  review)
+    scripts/dumps/dump-review.sh
+    ;;
+
+  docs)
+    dump_title "Euclid Forge docs dump"
+    dump_files "DOCS" \
+      README.md \
+      docs/core-import-audit.md \
+      packages/core/README.md \
+      packages/core/docs/public-api.md \
+      packages/core/docs/boundaries.md \
+      packages/core/docs/architecture.md \
+      packages/core/docs/denotational-model.md \
+      packages/core/docs/feature-workflow.md \
+      apps/forge/README.md \
+      apps/forge/docs/architecture.md \
+      apps/forge/docs/denotational-geometry-direction.md \
+      apps/forge/docs/feature-workflow.md \
+      apps/forge/docs/monorepo-boundary-checklist.md
+    ;;
+
+  guardrails)
+    dump_title "Euclid Forge guardrails dump"
+    dump_files "GUARDRAIL SOURCES" \
+      package.json \
+      packages/core/package.json \
+      apps/forge/package.json \
+      scripts/check-boundaries.mjs \
+      scripts/audit-core-imports.mjs \
+      scripts/checks.sh \
+      .github/workflows/pages.yml
+    ;;
+
+  core-api)
+    dump_title "Euclid Core public API dump"
+    dump_files "CORE PUBLIC API" \
+      packages/core/package.json \
+      packages/core/README.md \
+      packages/core/docs/public-api.md \
+      packages/core/src/core/index.ts \
+      packages/core/src/core/engine.ts \
+      packages/core/src/core/workspace.ts \
+      packages/core/src/core/viewState.ts \
+      packages/core/src/core/viewport.ts \
+      packages/core/src/core/diagnostics.ts
+    ;;
+
+  core-meaning)
+    dump_title "Euclid Core meaning/math dump"
+    dump_find_files "MEANING" packages/core/src/meaning
+    ;;
+
+  core-representation)
+    dump_title "Euclid Core representation/edit dump"
+    dump_find_files "REPRESENTATION" packages/core/src/representation
+    ;;
+
+  core-evaluation)
+    dump_title "Euclid Core evaluation dump"
+    dump_find_files "EVALUATION AND GEOMETRY REGISTRY" \
+      packages/core/src/evaluation \
+      packages/core/src/geometry
+    ;;
+
+  core-geometry)
+    dump_title "Euclid Core geometry system dump"
+    dump_files "CORE PUBLIC API CONTEXT" \
+      packages/core/src/core/index.ts \
+      packages/core/docs/public-api.md
+    dump_find_files "MEANING" packages/core/src/meaning
+    dump_find_files "REPRESENTATION" packages/core/src/representation
+    dump_find_files "EVALUATION AND GEOMETRY" \
+      packages/core/src/evaluation \
+      packages/core/src/geometry
+    ;;
+
+  app-shell)
+    dump_title "Forge app shell dump"
+    dump_files "APP SHELL" \
+      apps/forge/src/app/main.ts \
+      apps/forge/src/app/appState.ts \
+      apps/forge/src/app/appRuntime.ts \
+      apps/forge/src/app/appTransition.ts \
+      apps/forge/src/app/transitionEffects.ts \
+      apps/forge/src/app/canvasSurface.ts \
+      apps/forge/src/app/buildInfo.ts \
+      apps/forge/src/app/statusSurface.ts \
+      apps/forge/src/app/domEvents.ts
+    ;;
+
+  app-commands)
+    dump_title "Forge commands/history/workspace dump"
+    dump_files "COMMANDS AND APP WORKFLOW" \
+      apps/forge/src/app/commands.ts \
+      apps/forge/src/app/history.ts \
+      apps/forge/src/app/workspace.ts \
+      apps/forge/src/app/workspaceActions.ts \
+      apps/forge/src/app/workspaceFiles.ts \
+      apps/forge/src/app/initialScene.ts
+    ;;
+
+  app-tools)
+    dump_title "Forge modal tools dump"
+    dump_files "MODAL TOOL SOURCES" \
+      apps/forge/src/app/appController.ts \
+      apps/forge/src/app/activeTool.ts \
+      apps/forge/src/app/activeToolPointer.ts \
+      apps/forge/src/app/toolSurface.ts \
+      apps/forge/src/app/pointerIntent.ts \
+      apps/forge/src/app/dragState.ts \
+      apps/forge/src/app/freePointDrag.ts \
+      apps/forge/src/app/selectionPredicates.ts \
+      apps/forge/src/app/effectiveVisibility.ts \
+      apps/forge/src/app/zOrder.ts \
+      apps/forge/src/app/keyboardShortcuts.ts \
+      apps/forge/src/app/viewportMotion.ts
+    ;;
+
+  interaction-rendering)
+    dump_title "Forge interaction/rendering dump"
+    dump_find_files "INTERACTION" apps/forge/src/interaction
+    dump_find_files "RENDERING AND STYLES" \
+      apps/forge/src/rendering \
+      apps/forge/src/styles
+    ;;
+
+  scripts-ci)
+    dump_title "Scripts and CI dump"
+    dump_files "SCRIPTS AND CI" \
+      package.json \
+      scripts/check-boundaries.mjs \
+      scripts/audit-core-imports.mjs \
+      scripts/checks.sh \
+      scripts/push.sh \
+      scripts/dump-source.sh \
+      .github/workflows/pages.yml
+    dump_find_files "DUMP SCRIPTS" scripts/dumps
+    ;;
+
+  recent)
+    dump_title "Recent check/guardrail output"
+    dump_command "CONCISE CHECK OUTPUT" scripts/checks.sh concise
+    dump_command "VERBOSE CORE IMPORT AUDIT" npm run audit:core-imports
+    dump_command "BOUNDARY CHECK" npm run check:boundaries
+    ;;
+
+  tests-core)
+    dump_title "Core tests dump"
+    find packages/core/src -type f -name "*.test.ts" | sort | while read -r file; do
+      dump_file "$file"
+    done
+    ;;
+
+  tests-forge)
+    dump_title "Forge tests dump"
+    find apps/forge/src -type f -name "*.test.ts" | sort | while read -r file; do
+      dump_file "$file"
+    done
+    ;;
+
+  smoke)
+    dump_title "Forge browser smoke dump"
+    dump_find_all_files "SMOKE TESTS" apps/forge/smoke
+    dump_files "PLAYWRIGHT CONFIG" apps/forge/playwright.config.ts
+    ;;
+
+  lockfiles)
+    dump_title "Lockfiles and dependency metadata dump"
+    dump_files "LOCKFILES" \
+      package-lock.json \
+      packages/core/package-lock.json
+    ;;
+
+  *)
+    echo "Unknown dump target: $target" >&2
+    echo "Run: scripts/dumps/dump-target help" >&2
+    exit 1
+    ;;
+esac

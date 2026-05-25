@@ -19,10 +19,6 @@ export type ShowStatusEffect = Readonly<{
   message: string;
 }>;
 
-export type ClearStatusEffect = Readonly<{
-  kind: "CLEAR_STATUS";
-}>;
-
 export type AppEffect = Readonly<
   | {
       kind: "SET_POINTER_CAPTURE";
@@ -35,9 +31,6 @@ export type AppEffect = Readonly<
   | {
       kind: "SHOW_STATUS";
       message: string;
-    }
-  | {
-      kind: "CLEAR_STATUS";
     }
 >;
 
