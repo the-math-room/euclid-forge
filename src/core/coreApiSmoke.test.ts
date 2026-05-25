@@ -106,3 +106,74 @@ describe("core public API smoke", () => {
     });
   });
 });
+
+import {
+  applyGraphEdit as publicApplyGraphEdit,
+  circleConstruction as publicCircleConstruction,
+  createGeometryEngine as publicCreateGeometryEngine,
+  createGraph as publicCreateGraph,
+  diagnosticsWithCode as publicDiagnosticsWithCode,
+  emptyViewState as publicEmptyViewState,
+  evaluateGraph as publicEvaluateGraph,
+  freePoint as publicFreePoint,
+  geometryWorkspaceFromJsonText as publicGeometryWorkspaceFromJsonText,
+  screenToWorld as publicScreenToWorld,
+  segmentConstruction as publicSegmentConstruction,
+  serializeWorkspace as publicSerializeWorkspace,
+  toggleSelectedNode as publicToggleSelectedNode,
+  worldToScreen as publicWorldToScreen,
+  type GeometryNode as PublicGeometryNode,
+  type Viewport as PublicViewport,
+} from "./index";
+
+test("core index exposes the extraction-facing public API", () => {
+  const graph = publicCreateGraph([
+    publicFreePoint("A", 0, 0, "A"),
+    publicFreePoint("B", 1, 0, "B"),
+  ]);
+
+  const withSegment = publicApplyGraphEdit(graph, {
+    kind: "ADD_NODES",
+    nodes: publicSegmentConstruction(graph, "A", "B"),
+  });
+
+  const withCircle = publicApplyGraphEdit(withSegment, {
+    kind: "ADD_NODES",
+    nodes: publicCircleConstruction(withSegment, "A", "B"),
+  });
+
+  const evaluated = publicEvaluateGraph(withCircle);
+
+  expect(evaluated.values.has("A")).toBe(true);
+  expect(evaluated.values.has("S_A_B")).toBe(true);
+  expect(
+    publicDiagnosticsWithCode(evaluated.issues, "MISSING_DEPENDENCY"),
+  ).toEqual([]);
+
+  const viewport: PublicViewport = {
+    width: 800,
+    height: 600,
+    center: { x: 0, y: 0 },
+    zoom: 100,
+    rotation: 0,
+  };
+
+  const screen = publicWorldToScreen(viewport, { x: 1, y: 0 });
+
+  expect(publicScreenToWorld(viewport, screen).x).toBeCloseTo(1);
+  expect(publicScreenToWorld(viewport, screen).y).toBeCloseTo(0);
+
+  const viewState = publicToggleSelectedNode(publicEmptyViewState(), "A");
+  const engine = publicCreateGeometryEngine({ graph: withCircle, viewState });
+
+  expect(engine.evaluate().ordered.map((value) => value.id)).toContain("C1");
+
+  const serialized = publicSerializeWorkspace({
+    graph: withCircle,
+    viewState,
+  });
+  const parsed = publicGeometryWorkspaceFromJsonText(JSON.stringify(serialized));
+
+  expect(parsed.nodes.map((node: PublicGeometryNode) => node.id)).toContain("C1");
+  expect(parsed.view.selectedNodeIds).toEqual(["A"]);
+});
