@@ -1,4 +1,4 @@
-import type { ScreenPoint, Viewport } from "@euclid-forge/core/core/viewport";
+import type { ScreenPoint, Viewport } from "@euclid-forge/core/view/viewport";
 import type { ViewState } from "./viewState";
 
 export function getCanvas(): HTMLCanvasElement {

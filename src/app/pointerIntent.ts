@@ -10,7 +10,7 @@ import type { NodeId } from "@euclid-forge/core/representation/node";
 import type { PointerInput } from "./appController";
 import type { AppState } from "./appState";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
-import { screenToWorld } from "@euclid-forge/core/core/viewport";
+import { screenToWorld } from "@euclid-forge/core/view/viewport";
 
 export type PointerDownIntent =
   | Readonly<{

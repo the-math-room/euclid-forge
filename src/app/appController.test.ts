@@ -10,7 +10,7 @@ import {
   segmentNode,
   triangleNode,
 } from "@euclid-forge/core/representation/node";
-import { worldToScreen } from "@euclid-forge/core/core/viewport";
+import { worldToScreen } from "@euclid-forge/core/view/viewport";
 import { testViewport } from "../rendering/testHelpers";
 import { testViewState } from "./testHelpers";
 import { appState } from "./appState";
