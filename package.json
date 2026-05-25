@@ -20,7 +20,13 @@
     "check": "npm run check:boundaries && npm run audit:core-imports && npm run check:core && npm run check:forge",
     "format": "npm run format -w @euclid-forge/core && npm run format -w euclid-forge",
     "format:check": "npm run format:check -w @euclid-forge/core && npm run format:check -w euclid-forge",
-    "audit:core-imports": "node scripts/audit-core-imports.mjs"
+    "audit:core-imports": "node scripts/audit-core-imports.mjs",
+    "check:profile": "scripts/checks.sh",
+    "check:active-tool": "scripts/checks.sh active-tool",
+    "check:core-delete": "scripts/checks.sh core-delete",
+    "check:standard": "scripts/checks.sh standard",
+    "audit:core-imports:quiet": "node scripts/audit-core-imports.mjs --quiet",
+    "check:concise": "scripts/checks.sh concise"
   },
   "devDependencies": {}
 }

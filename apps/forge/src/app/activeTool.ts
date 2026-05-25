@@ -11,23 +11,68 @@ export type ActiveToolKind =
   | "intersection"
   | "delete";
 
-export type ConstructionToolKind = Exclude<ActiveToolKind, "select" | "point">;
+export type ConstructionToolKind =
+  | "segment"
+  | "line"
+  | "circle"
+  | "triangle"
+  | "midpoint"
+  | "intersection";
 
-export type ActiveTool = Readonly<
-  | {
-      kind: "select";
-    }
-  | {
-      kind: "point";
-    }
-  | {
-      kind: "delete";
-    }
-  | {
-      kind: ConstructionToolKind;
-      inputs: readonly NodeId[];
-    }
->;
+export type PointInputToolKind = Exclude<ConstructionToolKind, "intersection">;
+
+export type SelectTool = Readonly<{
+  kind: "select";
+}>;
+
+export type PointTool = Readonly<{
+  kind: "point";
+}>;
+
+export type DeleteTool = Readonly<{
+  kind: "delete";
+}>;
+
+export type SegmentTool = Readonly<{
+  kind: "segment";
+  inputs: readonly NodeId[];
+}>;
+
+export type LineTool = Readonly<{
+  kind: "line";
+  inputs: readonly NodeId[];
+}>;
+
+export type CircleTool = Readonly<{
+  kind: "circle";
+  inputs: readonly NodeId[];
+}>;
+
+export type TriangleTool = Readonly<{
+  kind: "triangle";
+  inputs: readonly NodeId[];
+}>;
+
+export type MidpointTool = Readonly<{
+  kind: "midpoint";
+  inputs: readonly NodeId[];
+}>;
+
+export type IntersectionTool = Readonly<{
+  kind: "intersection";
+  inputs: readonly NodeId[];
+}>;
+
+export type PointInputTool =
+  | SegmentTool
+  | LineTool
+  | CircleTool
+  | TriangleTool
+  | MidpointTool;
+
+export type ConstructionTool = PointInputTool | IntersectionTool;
+
+export type ActiveTool = SelectTool | PointTool | DeleteTool | ConstructionTool;
 
 export function emptyActiveTool(): ActiveTool {
   return { kind: "select" };
@@ -41,7 +86,7 @@ export function deleteTool(): ActiveTool {
   return { kind: "delete" };
 }
 
-export function constructionTool(kind: ConstructionToolKind): ActiveTool {
+export function constructionTool(kind: ConstructionToolKind): ConstructionTool {
   return {
     kind,
     inputs: [],
@@ -49,7 +94,7 @@ export function constructionTool(kind: ConstructionToolKind): ActiveTool {
 }
 
 export function activeToolInputCount(tool: ActiveTool): number {
-  return "inputs" in tool ? tool.inputs.length : 0;
+  return hasToolInputs(tool) ? tool.inputs.length : 0;
 }
 
 export function activeToolRequiredInputCount(tool: ActiveTool): number {
@@ -98,11 +143,19 @@ export function activeToolIsReadyToCommit(tool: ActiveTool): boolean {
   return required > 0 && activeToolInputCount(tool) >= required;
 }
 
+export function appendActiveToolInput<T extends ConstructionTool>(
+  tool: T,
+  input: NodeId,
+): T;
+export function appendActiveToolInput(
+  tool: ActiveTool,
+  input: NodeId,
+): ActiveTool;
 export function appendActiveToolInput(
   tool: ActiveTool,
   input: NodeId,
 ): ActiveTool {
-  if (!("inputs" in tool)) {
+  if (!hasToolInputs(tool)) {
     return tool;
   }
 
@@ -118,8 +171,10 @@ export function appendActiveToolInput(
   };
 }
 
+export function resetActiveToolInputs<T extends ConstructionTool>(tool: T): T;
+export function resetActiveToolInputs(tool: ActiveTool): ActiveTool;
 export function resetActiveToolInputs(tool: ActiveTool): ActiveTool {
-  if (!("inputs" in tool)) {
+  if (!hasToolInputs(tool)) {
     return tool;
   }
 
@@ -164,8 +219,12 @@ export function activeToolStatusText(tool: ActiveTool): string {
   }
 }
 
+export function hasToolInputs(tool: ActiveTool): tool is ConstructionTool {
+  return "inputs" in tool;
+}
+
 function constructionStatus(
-  tool: Extract<ActiveTool, { inputs: readonly NodeId[] }>,
+  tool: ConstructionTool,
   label: string,
   inputName: string,
 ): string {

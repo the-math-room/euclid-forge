@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
+const quiet = process.argv.includes("--quiet");
 const forgeSrc = path.join(root, "apps/forge/src");
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -82,10 +83,12 @@ function printReport() {
   console.log("=================");
   console.log();
 
-  printGroup("Root facade imports", results.root);
-  printGroup("Blessed family subpath imports", results.approved);
-  printGroup("Discouraged/internal imports", results.discouraged);
-  printGroup("Unknown core imports", results.unknown);
+  if (!quiet || results.discouraged.length > 0 || results.unknown.length > 0) {
+    printGroup("Root facade imports", results.root);
+    printGroup("Blessed family subpath imports", results.approved);
+    printGroup("Discouraged/internal imports", results.discouraged);
+    printGroup("Unknown core imports", results.unknown);
+  }
 
   console.log("Summary");
   console.log("-------");

@@ -18,7 +18,7 @@ import {
   appendActiveToolInput,
   resetActiveToolInputs,
 } from "./activeTool";
-import type { ActiveTool } from "./activeTool";
+import type { ActiveTool, PointInputTool } from "./activeTool";
 import type {
   AppEffect,
   AppTransition,
@@ -123,6 +123,10 @@ function handlePointInputToolPointerDown(
     );
   }
 
+  if (!isPointInputTool(activeTool)) {
+    return changed(stateWithPoint, "ignore", "Choose a point for this tool.");
+  }
+
   const nodes = constructionNodesForPointTool(stateWithPoint, activeTool);
 
   return changed(
@@ -168,12 +172,8 @@ function nextModalPointId(graph: Graph): NodeId {
 
 function constructionNodesForPointTool(
   state: AppState,
-  activeTool: ActiveTool,
+  activeTool: PointInputTool,
 ): readonly GeometryNode[] {
-  if (!("inputs" in activeTool)) {
-    return [];
-  }
-
   switch (activeTool.kind) {
     case "segment": {
       const [a, b] = requiredInputs(activeTool, 2);
@@ -197,23 +197,37 @@ function constructionNodesForPointTool(
       return triangleConstruction(state.graph, requiredInputs(activeTool, 3));
 
     case "midpoint":
-    case "intersection":
       return [];
   }
+}
 
-  return [];
+function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
+  switch (tool.kind) {
+    case "segment":
+    case "line":
+    case "circle":
+    case "triangle":
+    case "midpoint":
+      return true;
+
+    case "select":
+    case "point":
+    case "delete":
+    case "intersection":
+      return false;
+  }
 }
 
 function requiredInputs(
-  activeTool: Extract<ActiveTool, { inputs: readonly NodeId[] }>,
+  activeTool: PointInputTool,
   count: 2,
 ): readonly [NodeId, NodeId];
 function requiredInputs(
-  activeTool: Extract<ActiveTool, { inputs: readonly NodeId[] }>,
+  activeTool: PointInputTool,
   count: 3,
 ): readonly [NodeId, NodeId, NodeId];
 function requiredInputs(
-  activeTool: Extract<ActiveTool, { inputs: readonly NodeId[] }>,
+  activeTool: PointInputTool,
   count: 2 | 3,
 ): readonly NodeId[] {
   if (activeTool.inputs.length !== count) {
