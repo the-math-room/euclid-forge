@@ -20,6 +20,12 @@ export function deltaBetween(a: Vec2, b: Vec2): Vec2 {
 }
 
 
+import {
+  DEFAULT_INTERSECTION_POLICY,
+  intersectCurves,
+  linearCurveFromSegment,
+} from "./curve";
+
 export type IntersectionMultiplicity = "SIMPLE" | "TANGENT";
 
 export type IntersectionCandidate = Readonly<{
@@ -44,7 +50,7 @@ export function lineIntersection(
   a2: Vec2,
   b1: Vec2,
   b2: Vec2,
-  epsilon = 1e-9,
+  epsilon = DEFAULT_INTERSECTION_POLICY.epsilon,
 ): Vec2 | null {
   return lineIntersectionWithParameters(a1, a2, b1, b2, epsilon)?.point ?? null;
 }
@@ -54,7 +60,7 @@ export function segmentIntersection(
   a2: Vec2,
   b1: Vec2,
   b2: Vec2,
-  epsilon = 1e-9,
+  epsilon = DEFAULT_INTERSECTION_POLICY.epsilon,
 ): Vec2 | null {
   return segmentSegmentIntersections(a1, a2, b1, b2, epsilon).candidates[0]
     ?.point ?? null;
@@ -65,32 +71,48 @@ export function segmentSegmentIntersections(
   a2: Vec2,
   b1: Vec2,
   b2: Vec2,
-  epsilon = 1e-9,
+  epsilon = DEFAULT_INTERSECTION_POLICY.epsilon,
 ): IntersectionResult {
-  const result = lineIntersectionWithParameters(a1, a2, b1, b2, epsilon);
+  const result = intersectCurves(
+    linearCurveFromSegment(a1, a2),
+    linearCurveFromSegment(b1, b2),
+    Object.freeze({ epsilon }),
+  );
 
-  if (!result) {
-    return intersectionIssue(
-      "Segments are parallel or coincident; no unique intersection point",
-    );
+  if (result.issue === "Curves are parallel or coincident; no unique intersection point") {
+    return Object.freeze({
+      candidates: Object.freeze([]),
+      issue: "Segments are parallel or coincident; no unique intersection point",
+    });
   }
 
-  if (!isUnitIntervalParameter(result.t, epsilon)) {
-    return intersectionIssue(
-      "Supporting lines intersect outside the first segment",
-    );
+  if (result.issue === "Intersection lies outside a bounded curve domain") {
+    const parameters = lineIntersectionWithParameters(a1, a2, b1, b2, epsilon);
+
+    if (parameters && (parameters.t < -epsilon || parameters.t > 1 + epsilon)) {
+      return Object.freeze({
+        candidates: Object.freeze([]),
+        issue: "Supporting lines intersect outside the first segment",
+      });
+    }
+
+    return Object.freeze({
+      candidates: Object.freeze([]),
+      issue: "Supporting lines intersect outside the second segment",
+    });
   }
 
-  if (!isUnitIntervalParameter(result.u, epsilon)) {
-    return intersectionIssue(
-      "Supporting lines intersect outside the second segment",
-    );
+  if (!result.candidates[0]) {
+    return result;
   }
 
-  return oneIntersectionCandidate({
-    point: result.point,
-    multiplicity: "SIMPLE",
-    branchKey: "segment-segment",
+  return Object.freeze({
+    candidates: Object.freeze([
+      Object.freeze({
+        ...result.candidates[0],
+        branchKey: "segment-segment",
+      }),
+    ]),
   });
 }
 
@@ -99,7 +121,7 @@ export function lineIntersectionWithParameters(
   a2: Vec2,
   b1: Vec2,
   b2: Vec2,
-  epsilon = 1e-9,
+  epsilon = DEFAULT_INTERSECTION_POLICY.epsilon,
 ): LineIntersectionResult | null {
   const ax = a2.x - a1.x;
   const ay = a2.y - a1.y;
@@ -126,25 +148,6 @@ export function lineIntersectionWithParameters(
     t,
     u,
   });
-}
-
-function oneIntersectionCandidate(
-  candidate: IntersectionCandidate,
-): IntersectionResult {
-  return Object.freeze({
-    candidates: Object.freeze([candidate]),
-  });
-}
-
-function intersectionIssue(message: string): IntersectionResult {
-  return Object.freeze({
-    candidates: Object.freeze([]),
-    issue: message,
-  });
-}
-
-function isUnitIntervalParameter(value: number, epsilon: number): boolean {
-  return value >= -epsilon && value <= 1 + epsilon;
 }
 
 function cross(ax: number, ay: number, bx: number, by: number): number {
