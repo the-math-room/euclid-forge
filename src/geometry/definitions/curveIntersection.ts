@@ -7,7 +7,6 @@ import {
   curveIntersectionNode,
   type NodeId,
 } from "../../representation/node";
-import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
   GeometryDefinition,
@@ -18,7 +17,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 import { curveIntersectionCandidatesForValues } from "../curveIntersectionCandidates";
 
 export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION"> =
@@ -94,21 +92,6 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
       },
     }),
 
-    rendering: Object.freeze({
-      layer: "POINT",
-      render: (
-        value: EvaluatedGeometry,
-        context: GeometryRenderContext,
-      ): void => {
-        if (value.kind !== "POINT") {
-          throw new Error(
-            `Expected POINT evaluated value for CURVE_INTERSECTION, got ${value.kind}`,
-          );
-        }
-
-        renderPoint(context.ctx, context.viewport, value, context.options);
-      },
-    }),
   });
 
 export function curveIntersectionConstructionNode(

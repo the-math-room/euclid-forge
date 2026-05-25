@@ -3,7 +3,6 @@ import type {
   EvaluatedPoint,
 } from "../../evaluation/evaluated";
 import { vec2 } from "../../meaning/vec2";
-import { renderPoint } from "../../rendering/pointRenderer";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
   GeometryDefinition,
@@ -14,7 +13,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 
 export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
   Object.freeze({
@@ -60,19 +58,4 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
       },
     }),
 
-    rendering: Object.freeze({
-      layer: "POINT",
-      render: (
-        value: EvaluatedGeometry,
-        context: GeometryRenderContext,
-      ): void => {
-        if (value.kind !== "POINT") {
-          throw new Error(
-            `Expected POINT evaluated value for FREE_POINT, got ${value.kind}`,
-          );
-        }
-
-        renderPoint(context.ctx, context.viewport, value, context.options);
-      },
-    }),
   });

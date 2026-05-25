@@ -8,7 +8,6 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
-import { renderPoint } from "../../rendering/pointRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
@@ -20,7 +19,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 
 export const centroidDefinition: GeometryDefinition<"CENTROID"> =
   Object.freeze({
@@ -70,21 +68,6 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
       },
     }),
 
-    rendering: Object.freeze({
-      layer: "POINT",
-      render: (
-        value: EvaluatedGeometry,
-        context: GeometryRenderContext,
-      ): void => {
-        if (value.kind !== "POINT") {
-          throw new Error(
-            `Expected POINT evaluated value for CENTROID, got ${value.kind}`,
-          );
-        }
-
-        renderPoint(context.ctx, context.viewport, value, context.options);
-      },
-    }),
 
     construction: Object.freeze({
       factories: Object.freeze({

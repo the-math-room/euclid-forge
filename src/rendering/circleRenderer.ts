@@ -1,6 +1,6 @@
 import type { EvaluatedCircle } from "../evaluation/evaluated";
-import type { Viewport } from "./viewport";
-import { worldToScreen } from "./viewport";
+import type { Viewport } from "../meaning/viewport";
+import { worldToScreen } from "../meaning/viewport";
 
 export type CircleRenderOptions = Readonly<{
   hoveredNodeId?: string | null;

@@ -1,4 +1,4 @@
-import type { ScreenPoint, Viewport } from "../rendering/viewport";
+import type { ScreenPoint, Viewport } from "../core/viewport";
 import type { ViewState } from "./viewState";
 
 export function getCanvas(): HTMLCanvasElement {

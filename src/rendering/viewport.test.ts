@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { vec2 } from "../meaning/vec2";
-import { screenToWorld, worldToScreen } from "./viewport";
+import { screenToWorld, worldToScreen } from "../meaning/viewport";
 import { testViewport } from "./testHelpers";
-import type { Viewport } from "./viewport";
+import type { Viewport } from "../meaning/viewport";
 
 describe("rendering/viewport", () => {
   test("maps world origin to the center of the screen", () => {

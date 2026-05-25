@@ -1,14 +1,14 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
 import {
-  renderGeometryValue,
-  renderLayerForGeometryValue,
-} from "../geometry/geometryRegistry";
+  renderEvaluatedGeometry as renderGeometryValue,
+  renderLayerForGeometry as renderLayerForGeometryValue,
+} from "./geometryRenderers";
 import type {
   GeometryRenderLayer,
   GeometryRenderOptions,
-} from "../geometry/renderingContext";
-import type { Viewport } from "./viewport";
+} from "./geometryRenderingContext";
+import type { Viewport } from "../meaning/viewport";
 
 export type RenderSceneOptions = GeometryRenderOptions;
 

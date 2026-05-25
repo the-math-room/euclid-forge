@@ -15,7 +15,7 @@ import type {
 } from "../geometry/interactionContext";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
-import type { ScreenPoint, Viewport } from "../rendering/viewport";
+import type { ScreenPoint, Viewport } from "../meaning/viewport";
 
 export type {
   CircleHit,

@@ -8,7 +8,7 @@ import {
   segmentNode,
   triangleNode,
 } from "../representation/node";
-import { worldToScreen } from "../rendering/viewport";
+import { worldToScreen } from "../core/viewport";
 import { testViewport } from "../rendering/testHelpers";
 import { appState } from "./appState";
 import {

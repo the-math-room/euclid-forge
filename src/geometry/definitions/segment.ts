@@ -8,7 +8,6 @@ import {
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
-import { renderSegment } from "../../rendering/segmentRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
@@ -20,7 +19,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 
 export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
   kind: "SEGMENT",
@@ -66,22 +64,6 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
             target,
           }
         : null;
-    },
-  }),
-
-  rendering: Object.freeze({
-    layer: "LINEAR",
-    render: (
-      value: EvaluatedGeometry,
-      context: GeometryRenderContext,
-    ): void => {
-      if (value.kind !== "SEGMENT") {
-        throw new Error(
-          `Expected SEGMENT evaluated value for SEGMENT, got ${value.kind}`,
-        );
-      }
-
-      renderSegment(context.ctx, context.viewport, value, context.options);
     },
   }),
 

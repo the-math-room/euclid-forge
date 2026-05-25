@@ -10,7 +10,7 @@ import type { NodeId } from "../representation/node";
 import type { PointerInput } from "./appController";
 import type { AppState } from "./appState";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
-import { screenToWorld } from "../rendering/viewport";
+import { screenToWorld } from "../core/viewport";
 
 export type PointerDownIntent =
   | Readonly<{

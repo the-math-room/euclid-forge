@@ -1,8 +1,8 @@
 import { deltaBetween } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
-import type { ScreenPoint, Viewport } from "../rendering/viewport";
-import { screenToWorld } from "../rendering/viewport";
+import type { ScreenPoint, Viewport } from "../core/viewport";
+import { screenToWorld } from "../core/viewport";
 import {
   appCommandDisabledReason,
   appCommandForKey,

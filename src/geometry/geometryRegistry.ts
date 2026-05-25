@@ -1,31 +1,29 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { Graph } from "../representation/graph";
 import type { GeometryNode, NodeId } from "../representation/node";
-import type { ConstructionFactory } from "./constructionContext";
+import type {
+  ConstructionFactory,
+  GeometryConstructionFactories,
+} from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
 import { centroidDefinition } from "./definitions/centroid";
 import { circleDefinition } from "./definitions/circle";
 import { curveIntersectionDefinition } from "./definitions/curveIntersection";
 import { freePointDefinition } from "./definitions/freePoint";
-import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { midpointDefinition } from "./definitions/midpoint";
 import { segmentDefinition } from "./definitions/segment";
+import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { triangleDefinition } from "./definitions/triangle";
-import type {
-  AnyGeometryDefinition,
-  GeometryDefinition,
-  GeometryKind,
+import {
+  eraseGeometryDefinition,
+  type AnyGeometryDefinition,
+  type GeometryKind,
 } from "./geometryDefinition";
-import { eraseGeometryDefinition } from "./geometryDefinition";
 import type {
   GeometryBodyDrag,
   GeometryHitCandidate,
   GeometryHitContext,
 } from "./interactionContext";
-import type {
-  GeometryRenderContext,
-  GeometryRenderLayer,
-} from "./renderingContext";
 
 const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(freePointDefinition),
@@ -38,23 +36,31 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(curveIntersectionDefinition),
 ] satisfies readonly AnyGeometryDefinition[]);
 
-const geometryDefinitionsByKind: ReadonlyMap<
-  GeometryKind,
-  AnyGeometryDefinition
-> = new Map(
-  geometryDefinitions.map((definition) => [definition.kind, definition]),
-);
+const definitionsByKind: ReadonlyMap<GeometryKind, AnyGeometryDefinition> =
+  new Map(
+    geometryDefinitions.map((definition) => [definition.kind, definition]),
+  );
 
-export function geometryDefinitionForKind<K extends GeometryKind>(
-  kind: K,
-): GeometryDefinition<K> {
-  const definition = geometryDefinitionsByKind.get(kind);
+export function allGeometryDefinitions(): readonly AnyGeometryDefinition[] {
+  return geometryDefinitions;
+}
 
-  if (!definition) {
-    throw new Error(`Missing geometry definition for kind: ${kind}`);
-  }
+export function geometryDefinitionForKind(
+  kind: GeometryKind,
+): AnyGeometryDefinition {
+  return requireAnyGeometryDefinition(kind);
+}
 
-  return definition as unknown as GeometryDefinition<K>;
+export function definitionForGeometryNode(
+  node: GeometryNode,
+): AnyGeometryDefinition {
+  return requireAnyGeometryDefinition(node.kind);
+}
+
+export function definitionForEvaluatedGeometry(
+  value: EvaluatedGeometry,
+): AnyGeometryDefinition {
+  return requireAnyGeometryDefinition(value.sourceKind);
 }
 
 export function dependenciesForGeometryNode(
@@ -75,104 +81,81 @@ export function evaluateGeometryNode(
   );
 }
 
-export function renderGeometryValue(
-  value: EvaluatedGeometry,
-  context: GeometryRenderContext,
-): void {
-  const definition = requireAnyGeometryDefinition(
-    evaluatedValueToGeometryKind(value),
-  );
-
-  if (!definition.rendering) {
-    throw new Error(`Missing renderer for evaluated kind: ${value.kind}`);
-  }
-
-  definition.rendering.render(value, context);
-}
-
-export function renderLayerForGeometryValue(
-  value: EvaluatedGeometry,
-): GeometryRenderLayer {
-  const definition = requireAnyGeometryDefinition(
-    evaluatedValueToGeometryKind(value),
-  );
-
-  if (!definition.rendering) {
-    throw new Error(`Missing renderer for evaluated kind: ${value.kind}`);
-  }
-
-  return definition.rendering.layer;
-}
-
 export function hitGeometryValue(
   value: EvaluatedGeometry,
   context: GeometryHitContext,
 ): GeometryHitCandidate | null {
-  const definition = requireAnyGeometryDefinition(
-    evaluatedValueToGeometryKind(value),
-  );
+  const interaction = requireAnyGeometryDefinition(value.sourceKind).interaction;
 
-  return definition.interaction?.hitTest(value, context) ?? null;
+  if (!interaction) {
+    return null;
+  }
+
+  return interaction.hitTest(value, context);
 }
 
 export function bodyDragForGeometryNode(
   graph: Graph,
-  id: NodeId,
+  nodeId: NodeId,
 ): GeometryBodyDrag | null {
-  const node = graph.byId.get(id);
+  const node = graph.byId.get(nodeId);
 
   if (!node) {
     return null;
   }
 
-  const definition = requireAnyGeometryDefinition(node.kind);
-  const sourcePointIds = definition.interaction?.bodyDrag?.sourcePointIds(
-    node,
-    {
-      areFreePoints: (ids) =>
-        ids.every((sourceId) => graph.byId.get(sourceId)?.kind === "FREE_POINT"),
-    },
-  );
+  const bodyDrag = requireAnyGeometryDefinition(node.kind).interaction?.bodyDrag;
 
-  if (!sourcePointIds || sourcePointIds.length === 0) {
+  if (!bodyDrag) {
     return null;
   }
 
-  if (!sourcePointIds.every((sourceId) => graph.byId.get(sourceId)?.kind === "FREE_POINT")) {
-    throw new Error(
-      `Body drag source points for ${id} must all be free points`,
-    );
+  const sourcePointIds = bodyDrag.sourcePointIds(
+    node,
+    Object.freeze({
+      areFreePoints: (ids: readonly NodeId[]): boolean =>
+        ids.every((id) => graph.byId.get(id)?.kind === "FREE_POINT"),
+    }),
+  );
+
+  if (!sourcePointIds) {
+    return null;
   }
 
-  return Object.freeze({
-    sourcePointIds: Object.freeze([...sourcePointIds]),
-  });
+  return Object.freeze({ sourcePointIds });
+}
+
+export function constructionFactoriesForGeometryKind(
+  kind: GeometryKind,
+): GeometryConstructionFactories | null {
+  return requireAnyGeometryDefinition(kind).construction?.factories ?? null;
 }
 
 export function constructionFactoryForGeometryKind(
   kind: GeometryKind,
-  name: string,
+  factory: string,
 ): ConstructionFactory {
-  const definition = requireAnyGeometryDefinition(kind);
-  const factory = definition.construction?.factories[name];
+  const constructionFactory = constructionFactoriesForGeometryKind(kind)?.[
+    factory
+  ];
 
-  if (!factory) {
-    throw new Error(`Missing ${name} construction factory for kind: ${kind}`);
+  if (!constructionFactory) {
+    throw new Error(
+      `No construction factory registered for ${kind}.${factory}`,
+    );
   }
 
-  return factory;
+  return constructionFactory;
 }
 
-function requireAnyGeometryDefinition(kind: GeometryKind): AnyGeometryDefinition {
-  const definition = geometryDefinitionsByKind.get(kind);
+function requireAnyGeometryDefinition(
+  kind: GeometryKind,
+): AnyGeometryDefinition {
+  const definition = definitionsByKind.get(kind);
 
   if (!definition) {
     throw new Error(`Missing geometry definition for kind: ${kind}`);
   }
 
   return definition;
-}
-
-function evaluatedValueToGeometryKind(value: EvaluatedGeometry): GeometryKind {
-  return value.sourceKind;
 }

@@ -9,6 +9,7 @@ const EXTRACTABLE_LAYERS = new Set([
   "meaning",
   "representation",
   "evaluation",
+  "geometry",
 ]);
 
 const FORBIDDEN_LAYERS = new Set([

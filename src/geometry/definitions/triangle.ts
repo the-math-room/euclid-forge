@@ -8,7 +8,6 @@ import {
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
-import { renderTriangle } from "../../rendering/triangleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
@@ -21,7 +20,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 
 export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
   Object.freeze({
@@ -84,21 +82,6 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
       }),
     }),
 
-    rendering: Object.freeze({
-      layer: "AREA",
-      render: (
-        value: EvaluatedGeometry,
-        context: GeometryRenderContext,
-      ): void => {
-        if (value.kind !== "TRIANGLE") {
-          throw new Error(
-            `Expected TRIANGLE evaluated value for TRIANGLE, got ${value.kind}`,
-          );
-        }
-
-        renderTriangle(context.ctx, context.viewport, value, context.options);
-      },
-    }),
 
     construction: Object.freeze({
       factories: Object.freeze({

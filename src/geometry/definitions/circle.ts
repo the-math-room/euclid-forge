@@ -8,7 +8,6 @@ import {
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
-import { renderCircle } from "../../rendering/circleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
@@ -21,7 +20,6 @@ import type {
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
-import type { GeometryRenderContext } from "../renderingContext";
 
 export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
   kind: "CIRCLE",
@@ -83,22 +81,6 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
         return context.areFreePoints(sourcePointIds) ? sourcePointIds : null;
       },
     }),
-  }),
-
-  rendering: Object.freeze({
-    layer: "AREA",
-    render: (
-      value: EvaluatedGeometry,
-      context: GeometryRenderContext,
-    ): void => {
-      if (value.kind !== "CIRCLE") {
-        throw new Error(
-          `Expected CIRCLE evaluated value for CIRCLE, got ${value.kind}`,
-        );
-      }
-
-      renderCircle(context.ctx, context.viewport, value, context.options);
-    },
   }),
 
   construction: Object.freeze({
