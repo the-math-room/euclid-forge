@@ -7,6 +7,7 @@ import {
 } from "./history";
 import type { HistoryState } from "./history";
 import { applyTransition } from "./transitionEffects";
+import type { ActiveTool } from "./activeTool";
 import type { AppState } from "./appState";
 import type { StatusSurface } from "./statusSurface";
 
@@ -90,4 +91,14 @@ export function createAppRuntime(input: AppRuntimeInput): AppRuntime {
 
     requestRender: input.requestRender,
   });
+}
+
+export function setActiveTool(
+  state: AppState,
+  activeTool: ActiveTool,
+): AppState {
+  return {
+    ...state,
+    activeTool,
+  };
 }

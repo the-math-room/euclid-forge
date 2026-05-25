@@ -130,3 +130,74 @@ body {
     font-size: 11px;
   }
 }
+
+#tool-surface {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid rgb(148 163 184 / 0.25);
+  border-radius: 14px;
+  background: rgb(15 23 42 / 0.78);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.tool-surface__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-surface__button {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid rgb(148 163 184 / 0.35);
+  border-radius: 10px;
+  background: rgb(30 41 59 / 0.76);
+  color: #e2e8f0;
+  font:
+    13px system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+
+.tool-surface__button:hover {
+  background: rgb(51 65 85 / 0.82);
+}
+
+.tool-surface__button--active {
+  border-color: rgb(250 204 21 / 0.8);
+  background: rgb(113 63 18 / 0.72);
+  color: #fef3c7;
+}
+
+.tool-surface__status {
+  color: #cbd5e1;
+  font:
+    12px system-ui,
+    sans-serif;
+  line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+  #tool-surface {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    max-width: none;
+  }
+
+  .tool-surface__buttons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tool-surface__button {
+    width: 100%;
+  }
+}

@@ -1,6 +1,8 @@
 import "../styles/app.css";
 
 import { installBuildInfoSurface } from "./buildInfo";
+import { appState } from "./appState";
+import { installToolSurface } from "./toolSurface";
 
 import { evaluateGraph } from "@euclid-forge/core";
 import { createAppRuntime } from "./appRuntime";
@@ -48,6 +50,21 @@ function main(): void {
   const canvas = getCanvas();
   const ctx = get2DContext(canvas);
   const statusSurface = statusSurfaceForDocument(document);
+  const toolSurface = installToolSurface(document, {
+    onToolChange(activeTool) {
+      runtime.setState(
+        appState(
+          runtime.getState().graph,
+          runtime.getState().viewState,
+          runtime.getState().dragState,
+          activeTool,
+        ),
+      );
+      toolSurface.update(activeTool);
+      toolSurface.update(runtime.getState().activeTool);
+      runtime.requestRender();
+    },
+  });
   installBuildInfoSurface(document);
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
