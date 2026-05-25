@@ -71,6 +71,7 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
   }),
 
   rendering: Object.freeze({
+    layer: "AREA",
     render: (
       value: EvaluatedGeometry,
       context: GeometryRenderContext,

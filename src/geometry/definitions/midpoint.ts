@@ -63,6 +63,7 @@ export const midpointDefinition: GeometryDefinition<"MIDPOINT"> =
     }),
 
     rendering: Object.freeze({
+      layer: "POINT",
       render: (
         value: EvaluatedGeometry,
         context: GeometryRenderContext,

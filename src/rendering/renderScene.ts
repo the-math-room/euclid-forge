@@ -1,16 +1,23 @@
-import type {
-  EvaluatedCircle,
-  EvaluatedGeometry,
-  EvaluatedPoint,
-  EvaluatedSegment,
-  EvaluatedTriangle,
-} from "../evaluation/evaluated";
+import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import { renderGeometryValue } from "../geometry/geometryRegistry";
-import type { GeometryRenderOptions } from "../geometry/renderingContext";
+import {
+  renderGeometryValue,
+  renderLayerForGeometryValue,
+} from "../geometry/geometryRegistry";
+import type {
+  GeometryRenderLayer,
+  GeometryRenderOptions,
+} from "../geometry/renderingContext";
 import type { Viewport } from "./viewport";
 
 export type RenderSceneOptions = GeometryRenderOptions;
+
+const RENDER_LAYER_ORDER: Readonly<Record<GeometryRenderLayer, number>> =
+  Object.freeze({
+    AREA: 0,
+    LINEAR: 1,
+    POINT: 2,
+  });
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -21,48 +28,21 @@ export function renderScene(
   const hidden = options.hiddenNodeIds ?? new Set<string>();
   const visible = scene.ordered.filter((value) => !hidden.has(value.id));
 
-  const triangles = visible.filter(
-    (value): value is EvaluatedTriangle => value.kind === "TRIANGLE",
-  );
-
-  const circles = visible.filter(
-    (value): value is EvaluatedCircle => value.kind === "CIRCLE",
-  );
-
-  const segments = visible.filter(
-    (value): value is EvaluatedSegment => value.kind === "SEGMENT",
-  );
-
-  const points = visible.filter(
-    (value): value is EvaluatedPoint => value.kind === "POINT",
-  );
-
-  for (const value of triangles) {
-    renderSceneValue(ctx, viewport, value, options);
-  }
-
-  for (const value of circles) {
-    renderSceneValue(ctx, viewport, value, options);
-  }
-
-  for (const value of segments) {
-    renderSceneValue(ctx, viewport, value, options);
-  }
-
-  for (const value of points) {
-    renderSceneValue(ctx, viewport, value, options);
+  for (const value of renderOrderedValues(visible)) {
+    renderGeometryValue(value, {
+      ctx,
+      viewport,
+      options,
+    });
   }
 }
 
-function renderSceneValue(
-  ctx: CanvasRenderingContext2D,
-  viewport: Viewport,
-  value: EvaluatedGeometry,
-  options: RenderSceneOptions,
-): void {
-  renderGeometryValue(value, {
-    ctx,
-    viewport,
-    options,
-  });
+function renderOrderedValues(
+  values: readonly EvaluatedGeometry[],
+): readonly EvaluatedGeometry[] {
+  return [...values].sort(
+    (a, b) =>
+      RENDER_LAYER_ORDER[renderLayerForGeometryValue(a)] -
+      RENDER_LAYER_ORDER[renderLayerForGeometryValue(b)],
+  );
 }

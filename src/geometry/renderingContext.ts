@@ -1,5 +1,7 @@
 import type { Viewport } from "../rendering/viewport";
 
+export type GeometryRenderLayer = "AREA" | "LINEAR" | "POINT";
+
 export type GeometryRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;

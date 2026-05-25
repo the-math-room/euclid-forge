@@ -70,6 +70,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
     }),
 
     rendering: Object.freeze({
+      layer: "AREA",
       render: (
         value: EvaluatedGeometry,
         context: GeometryRenderContext,

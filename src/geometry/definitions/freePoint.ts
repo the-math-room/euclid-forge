@@ -59,6 +59,7 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
     }),
 
     rendering: Object.freeze({
+      layer: "POINT",
       render: (
         value: EvaluatedGeometry,
         context: GeometryRenderContext,

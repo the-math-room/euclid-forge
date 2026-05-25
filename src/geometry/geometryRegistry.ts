@@ -8,10 +8,20 @@ import { freePointDefinition } from "./definitions/freePoint";
 import { midpointDefinition } from "./definitions/midpoint";
 import { segmentDefinition } from "./definitions/segment";
 import { triangleDefinition } from "./definitions/triangle";
-import type { AnyGeometryDefinition, GeometryDefinition, GeometryKind } from "./geometryDefinition";
+import type {
+  AnyGeometryDefinition,
+  GeometryDefinition,
+  GeometryKind,
+} from "./geometryDefinition";
 import { eraseGeometryDefinition } from "./geometryDefinition";
-import type { GeometryHitCandidate, GeometryHitContext } from "./interactionContext";
-import type { GeometryRenderContext } from "./renderingContext";
+import type {
+  GeometryHitCandidate,
+  GeometryHitContext,
+} from "./interactionContext";
+import type {
+  GeometryRenderContext,
+  GeometryRenderLayer,
+} from "./renderingContext";
 
 const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(freePointDefinition),
@@ -72,6 +82,20 @@ export function renderGeometryValue(
   }
 
   definition.rendering.render(value, context);
+}
+
+export function renderLayerForGeometryValue(
+  value: EvaluatedGeometry,
+): GeometryRenderLayer {
+  const definition = requireAnyGeometryDefinition(
+    evaluatedValueToGeometryKind(value),
+  );
+
+  if (!definition.rendering) {
+    throw new Error(`Missing renderer for evaluated kind: ${value.kind}`);
+  }
+
+  return definition.rendering.layer;
 }
 
 export function hitGeometryValue(

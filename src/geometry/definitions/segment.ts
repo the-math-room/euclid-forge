@@ -61,6 +61,7 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
   }),
 
   rendering: Object.freeze({
+    layer: "LINEAR",
     render: (
       value: EvaluatedGeometry,
       context: GeometryRenderContext,

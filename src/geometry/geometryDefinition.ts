@@ -7,7 +7,10 @@ import type {
   GeometryHitClass,
   GeometryHitContext,
 } from "./interactionContext";
-import type { GeometryRenderContext } from "./renderingContext";
+import type {
+  GeometryRenderContext,
+  GeometryRenderLayer,
+} from "./renderingContext";
 
 export type GeometryKind = GeometryNode["kind"];
 
@@ -31,6 +34,7 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
   }>;
 
   rendering?: Readonly<{
+    layer: GeometryRenderLayer;
     render: (
       value: EvaluatedGeometry,
       context: GeometryRenderContext,
@@ -65,6 +69,7 @@ export type AnyGeometryDefinition = Readonly<{
   }>;
 
   rendering?: Readonly<{
+    layer: GeometryRenderLayer;
     render: (
       value: EvaluatedGeometry,
       context: GeometryRenderContext,

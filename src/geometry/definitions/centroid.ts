@@ -69,6 +69,7 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
     }),
 
     rendering: Object.freeze({
+      layer: "POINT",
       render: (
         value: EvaluatedGeometry,
         context: GeometryRenderContext,
