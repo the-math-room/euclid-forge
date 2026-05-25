@@ -1,4 +1,4 @@
-import { deltaBetween, vec2 } from "@euclid-forge/core";
+import { deltaBetween } from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
 import type { NodeId } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
@@ -10,10 +10,10 @@ import type { AppTransition } from "./appTransition";
 import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
+import { viewportCenterForDrag } from "./viewportDrag";
 
 import {
   clearSelection,
-  panViewport,
   setHoveredNode,
   toggleSelectedNode,
 } from "./viewState";
@@ -68,6 +68,7 @@ export function handlePointerDown(
       input,
     );
   }
+
   const intent = pointerDownIntent(
     appState(state.graph, viewState, state.dragState, state.activeTool),
     input,
@@ -126,8 +127,10 @@ export function handlePointerDown(
           clearSelection(viewState),
           {
             kind: "VIEWPORT",
-            initialPointerWorld: screenToWorld(input.viewport, input.point),
+            initialPointerScreen: input.point,
             initialViewportCenter: viewState.viewportCenter,
+            initialViewportZoom: viewState.viewportZoom,
+            initialViewportRotation: viewState.viewportRotation,
           },
           state.activeTool,
         ),
@@ -168,18 +171,14 @@ export function handlePointerMove(
 
   switch (state.dragState.kind) {
     case "VIEWPORT": {
-      const currentWorld = screenToWorld(input.viewport, input.point);
-      const delta = deltaBetween(
-        currentWorld,
-        state.dragState.initialPointerWorld,
-      );
-      const baseViewState = {
+      const nextViewState = {
         ...viewState,
-        viewportCenter: state.dragState.initialViewportCenter,
+        viewportCenter: viewportCenterForDrag(state.dragState, input.point),
       };
-      const nextViewState = panViewport(baseViewState, delta);
 
-      return changed(appState(state.graph, nextViewState, state.dragState));
+      return changed(
+        appState(state.graph, nextViewState, state.dragState, state.activeTool),
+      );
     }
 
     case "FREE_POINT":
@@ -192,6 +191,7 @@ export function handlePointerMove(
           }),
           viewState,
           state.dragState,
+          state.activeTool,
         ),
       );
 
@@ -209,6 +209,7 @@ export function handlePointerMove(
           }),
           viewState,
           state.dragState,
+          state.activeTool,
         ),
       );
     }

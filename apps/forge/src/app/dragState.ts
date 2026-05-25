@@ -1,12 +1,12 @@
-import type { Vec2 } from "@euclid-forge/core";
-import type { NodeId } from "@euclid-forge/core";
-import type { FreePointPositionSnapshot } from "./freePointDrag";
+import type { NodeId, Vec2 } from "@euclid-forge/core";
 
 export type DragState =
   | Readonly<{
       kind: "VIEWPORT";
-      initialPointerWorld: Vec2;
+      initialPointerScreen: Vec2;
       initialViewportCenter: Vec2;
+      initialViewportZoom: number;
+      initialViewportRotation: number;
     }>
   | Readonly<{
       kind: "FREE_POINT";
@@ -17,5 +17,5 @@ export type DragState =
       nodeId: NodeId;
       sourcePointIds: readonly NodeId[];
       initialPointerWorld: Vec2;
-      initialSourcePointPositions: FreePointPositionSnapshot;
+      initialSourcePointPositions: ReadonlyMap<NodeId, Vec2>;
     }>;

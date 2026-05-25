@@ -24,8 +24,10 @@ Targets:
   core-evaluation         Core evaluation, diagnostics, visible scene, curve candidates, excluding tests
   core-geometry           Core meaning + representation + evaluation + geometry registry, excluding tests
   app-shell               Forge entrypoint, runtime, state, transitions, status/build surfaces, excluding tests
+  app-runtime             Forge runtime, event loop, transitions, render scheduling, excluding tests
   app-commands            Forge commands, history, workspace, initial scene, excluding tests
   app-tools               Active tools, modal pointer behavior, toolbar, pointer intent, excluding tests
+  app-rendering           Forge rendering, hit testing, canvas render context, excluding tests
   interaction-rendering   Hit testing, interaction adapters, renderers, theme, styles, excluding tests
   scripts-ci              Scripts, dump tools, checks, CI/deploy
   recent                  Check/audit output only
@@ -127,6 +129,20 @@ EOF_HELP
       apps/forge/src/app/domEvents.ts
     ;;
 
+  app-runtime)
+    dump_title "Forge runtime/event loop dump"
+    dump_files "RUNTIME AND EVENT SOURCES" \
+      apps/forge/src/app/main.ts \
+      apps/forge/src/app/appRuntime.ts \
+      apps/forge/src/app/appState.ts \
+      apps/forge/src/app/appTransition.ts \
+      apps/forge/src/app/transitionEffects.ts \
+      apps/forge/src/app/domEvents.ts \
+      apps/forge/src/app/canvasSurface.ts \
+      apps/forge/src/app/renderScheduler.ts \
+      apps/forge/src/app/viewportMotion.ts
+    ;;
+
   app-commands)
     dump_title "Forge commands/history/workspace dump"
     dump_files "COMMANDS AND APP WORKFLOW" \
@@ -153,6 +169,17 @@ EOF_HELP
       apps/forge/src/app/zOrder.ts \
       apps/forge/src/app/keyboardShortcuts.ts \
       apps/forge/src/app/viewportMotion.ts
+    ;;
+
+  app-rendering)
+    dump_title "Forge rendering and hit-test dump"
+    dump_find_files "RENDERING" apps/forge/src/rendering
+    dump_find_files "INTERACTION" apps/forge/src/interaction
+    dump_files "RENDERING ENTRYPOINT CONTEXT" \
+      apps/forge/src/app/canvasSurface.ts \
+      apps/forge/src/app/renderScheduler.ts \
+      apps/forge/src/app/pointerIntent.ts \
+      apps/forge/src/app/effectiveVisibility.ts
     ;;
 
   interaction-rendering)

@@ -1,3 +1,4 @@
+import type { ScreenPoint } from "@euclid-forge/core";
 import {
   handleKeyDown,
   handlePointerCancel,
@@ -31,7 +32,54 @@ export type DomEventBindingsInput = Readonly<{
   requestViewportMotionFrame: () => void;
 }>;
 
+type PendingPointerMove = Readonly<{
+  event: PointerEvent;
+  pointerId: number;
+  point: ScreenPoint;
+  shiftKey: boolean;
+}>;
+
 export function connectDomEvents(input: DomEventBindingsInput): void {
+  let pendingPointerMove: PendingPointerMove | null = null;
+  let pointerMoveFrame: number | null = null;
+
+  const flushPendingPointerMove = (cancelScheduledFrame: boolean): void => {
+    if (cancelScheduledFrame && pointerMoveFrame !== null) {
+      cancelAnimationFrame(pointerMoveFrame);
+    }
+
+    pointerMoveFrame = null;
+
+    const pending = pendingPointerMove;
+    pendingPointerMove = null;
+
+    if (!pending) {
+      return;
+    }
+
+    const state = input.runtime.getState();
+
+    input.runtime.applyTransition(
+      pending.event,
+      handlePointerMove(state, {
+        pointerId: pending.pointerId,
+        point: pending.point,
+        viewport: viewportForCanvas(input.canvas, state.viewState),
+        shiftKey: pending.shiftKey,
+      }),
+    );
+  };
+
+  const requestPointerMoveFrame = (): void => {
+    if (pointerMoveFrame !== null) {
+      return;
+    }
+
+    pointerMoveFrame = requestAnimationFrame(() => {
+      flushPendingPointerMove(false);
+    });
+  };
+
   input.windowTarget.addEventListener("resize", () => {
     input.runtime.requestRender();
   });
@@ -102,6 +150,8 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.canvas.addEventListener("pointerdown", (event) => {
+    flushPendingPointerMove(true);
+
     const state = input.runtime.getState();
 
     input.runtime.applyTransition(
@@ -116,20 +166,20 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.canvas.addEventListener("pointermove", (event) => {
-    const state = input.runtime.getState();
-
-    input.runtime.applyTransition(
+    pendingPointerMove = {
       event,
-      handlePointerMove(state, {
-        pointerId: event.pointerId,
-        point: eventPoint(input.canvas, event),
-        viewport: viewportForCanvas(input.canvas, state.viewState),
-        shiftKey: event.shiftKey,
-      }),
-    );
+      pointerId: event.pointerId,
+      point: eventPoint(input.canvas, event),
+      shiftKey: event.shiftKey,
+    };
+
+    event.preventDefault();
+    requestPointerMoveFrame();
   });
 
   input.canvas.addEventListener("pointerup", (event) => {
+    flushPendingPointerMove(true);
+
     input.runtime.applyTransition(
       event,
       handlePointerUp(input.runtime.getState(), event.pointerId),
@@ -137,6 +187,8 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.canvas.addEventListener("pointercancel", (event) => {
+    flushPendingPointerMove(true);
+
     input.runtime.applyTransition(
       event,
       handlePointerCancel(input.runtime.getState(), event.pointerId),
@@ -144,6 +196,8 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.canvas.addEventListener("pointerleave", (event) => {
+    flushPendingPointerMove(true);
+
     input.runtime.applyTransition(
       event,
       handlePointerLeave(input.runtime.getState()),

@@ -412,8 +412,10 @@ describe("app/appController", () => {
 
     expect(transition.state.dragState).toEqual({
       kind: "VIEWPORT",
-      initialPointerWorld: { x: -2, y: -1 },
+      initialPointerScreen: { x: 240, y: 380 },
       initialViewportCenter: { x: 0, y: 0 },
+      initialViewportZoom: 80,
+      initialViewportRotation: 0,
     });
     expect(transition.effects).toContainEqual({
       kind: "SET_POINTER_CAPTURE",
@@ -525,8 +527,10 @@ describe("app/appController", () => {
 
     expect(transition.state.dragState).toEqual({
       kind: "VIEWPORT",
-      initialPointerWorld: { x: 0, y: 0 },
+      initialPointerScreen: { x: 400, y: 300 },
       initialViewportCenter: { x: 0, y: 0 },
+      initialViewportZoom: 80,
+      initialViewportRotation: 0,
     });
     expect(transition.effects).toContainEqual({
       kind: "SET_POINTER_CAPTURE",
@@ -589,8 +593,10 @@ describe("app/appController", () => {
 
     expect(transition.state.dragState).toEqual({
       kind: "VIEWPORT",
-      initialPointerWorld: { x: 0, y: 0 },
+      initialPointerScreen: { x: 400, y: 300 },
       initialViewportCenter: { x: 0, y: 0 },
+      initialViewportZoom: 80,
+      initialViewportRotation: 0,
     });
     expect(transition.effects).toContainEqual({
       kind: "SET_POINTER_CAPTURE",
