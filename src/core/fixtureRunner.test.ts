@@ -15,7 +15,7 @@ type GoldenFixtureExpectation = Readonly<{
 const GOLDEN_FIXTURES: readonly GoldenFixtureExpectation[] = [
   {
     name: "Euclid I.1 equilateral triangle",
-    workspaceFile: "../app/fixtures/euclid-i-1-equilateral.workspace.json",
+    workspaceFile: "./fixtures/euclid-i-1-equilateral.workspace.json",
     evaluatedIds: [
       "P1",
       "P2",
@@ -31,7 +31,7 @@ const GOLDEN_FIXTURES: readonly GoldenFixtureExpectation[] = [
   },
   {
     name: "disjoint circles omit unavailable curve intersection",
-    workspaceFile: "../app/fixtures/disjoint-circles.workspace.json",
+    workspaceFile: "./fixtures/disjoint-circles.workspace.json",
     evaluatedIds: [
       "A",
       "AR",

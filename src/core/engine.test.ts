@@ -11,7 +11,7 @@ import {
 
 function readFixture(name: string): unknown {
   return JSON.parse(
-    readFileSync(new URL(`../app/fixtures/${name}`, import.meta.url), "utf-8"),
+    readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf-8"),
   );
 }
 
