@@ -95,6 +95,10 @@ export function intersectCurves(
     return intersectLinearCircle(second, first, policy);
   }
 
+  if (first.kind === "CIRCLE" && second.kind === "CIRCLE") {
+    return intersectCircles(first, second, policy);
+  }
+
   return intersectionIssue("Unsupported curve intersection");
 }
 
@@ -146,6 +150,113 @@ function intersectLinearImplicitCurves(
   });
 }
 
+
+
+function intersectCircles(
+  first: CircleCurve,
+  second: CircleCurve,
+  policy: IntersectionPolicy,
+): IntersectionResult {
+  if (first.radius < 0 || second.radius < 0) {
+    return intersectionIssue("Circle radius cannot be negative");
+  }
+
+  const dx = second.center.x - first.center.x;
+  const dy = second.center.y - first.center.y;
+  const distanceSquared = dx * dx + dy * dy;
+  const distance = Math.sqrt(distanceSquared);
+  const scale = Math.max(
+    1,
+    first.radius,
+    second.radius,
+    distance,
+  );
+  const tolerance = policy.epsilon * scale;
+
+  if (distance <= tolerance) {
+    if (Math.abs(first.radius - second.radius) <= tolerance) {
+      return intersectionIssue(
+        "Circles are coincident; no unique intersection points",
+      );
+    }
+
+    return intersectionIssue("Concentric circles do not intersect");
+  }
+
+  if (distance > first.radius + second.radius + tolerance) {
+    return intersectionIssue("Circles do not intersect");
+  }
+
+  if (distance < Math.abs(first.radius - second.radius) - tolerance) {
+    return intersectionIssue("One circle is contained within the other");
+  }
+
+  const a =
+    (first.radius * first.radius -
+      second.radius * second.radius +
+      distanceSquared) /
+    (2 * distance);
+  const heightSquared = first.radius * first.radius - a * a;
+  const heightScale = Math.max(1, first.radius * first.radius, second.radius * second.radius);
+  const heightTolerance = policy.epsilon * heightScale;
+  const base = vec2(
+    first.center.x + (a * dx) / distance,
+    first.center.y + (a * dy) / distance,
+  );
+
+  if (heightSquared < -heightTolerance) {
+    return intersectionIssue("Circles do not intersect");
+  }
+
+  if (Math.abs(heightSquared) <= heightTolerance) {
+    return oneIntersectionCandidate({
+      point: base,
+      multiplicity: "TANGENT",
+      branchKey: "circle-circle:tangent",
+    });
+  }
+
+  const height = Math.sqrt(heightSquared);
+  const offsetX = (-dy / distance) * height;
+  const offsetY = (dx / distance) * height;
+  const firstPoint = vec2(base.x + offsetX, base.y + offsetY);
+  const secondPoint = vec2(base.x - offsetX, base.y - offsetY);
+  const candidates = sortCircleCircleCandidates([
+    Object.freeze({
+      point: firstPoint,
+      multiplicity: "SIMPLE" as const,
+      branchKey: "circle-circle:0",
+    }),
+    Object.freeze({
+      point: secondPoint,
+      multiplicity: "SIMPLE" as const,
+      branchKey: "circle-circle:1",
+    }),
+  ]);
+
+  return Object.freeze({
+    candidates: Object.freeze(candidates),
+  });
+}
+
+function sortCircleCircleCandidates(
+  candidates: readonly IntersectionCandidate[],
+): readonly IntersectionCandidate[] {
+  return [...candidates]
+    .sort((left, right) => {
+      if (left.point.y !== right.point.y) {
+        return left.point.y - right.point.y;
+      }
+
+      return left.point.x - right.point.x;
+    })
+    .map((candidate, index) =>
+      Object.freeze({
+        ...candidate,
+        branchKey: `circle-circle:${index}`,
+      }),
+    );
+}
 
 function intersectLinearCircle(
   line: LinearImplicitCurve,
