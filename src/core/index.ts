@@ -13,29 +13,100 @@ export {
   serializeWorkspace,
   type GeometryWorkspace,
   type SerializedWorkspace,
+  type SerializedWorkspaceView,
   type WorkspaceState,
 } from "./workspace";
 
-export type {
-  EvaluatedScene,
-  EvaluationIssue,
-} from "../evaluation/evaluateGraph";
+export {
+  clearSelection,
+  emptyViewState,
+  hideSelectedNodes,
+  panViewport,
+  resetViewport,
+  resetViewportRotation,
+  rotateViewport,
+  rotateViewportClockwise,
+  rotateViewportCounterclockwise,
+  setHoveredNode,
+  setViewportCenter,
+  setViewportRotation,
+  setViewportZoom,
+  toggleSelectedNode,
+  unhideAllNodes,
+  zoomViewport,
+  type ViewState,
+} from "./viewState";
 
-export type {
-  GraphEdit,
-} from "../representation/edit";
-
-export type {
-  Graph,
-} from "../representation/graph";
-
-export type {
-  GeometryNode,
-  NodeId,
-} from "../representation/node";
+export {
+  screenToWorld,
+  worldToScreen,
+  type ScreenPoint,
+  type Viewport,
+} from "./viewport";
 
 export {
   diagnosticsForNode,
   diagnosticsWithCode,
   diagnosticsWithSeverity,
 } from "./diagnostics";
+
+export {
+  evaluateGraph,
+  type EvaluatedScene,
+  type EvaluationIssue,
+  type EvaluationIssueSeverity,
+} from "../evaluation/evaluateGraph";
+
+export type {
+  EvaluatedCircle,
+  EvaluatedGeometry,
+  EvaluatedPoint,
+  EvaluatedPointRole,
+  EvaluatedSegment,
+  EvaluatedTriangle,
+} from "../evaluation/evaluated";
+
+export type {
+  EvaluationIssueCode,
+} from "../evaluation/evaluationIssue";
+
+export {
+  segmentIntersectionConstruction,
+  segmentConstruction,
+  circleConstruction,
+  triangleConstruction,
+  centroidConstruction,
+  triangleSideMidpointConstruction,
+} from "../representation/constructions";
+
+export {
+  applyGraphEdit,
+  type GraphEdit,
+} from "../representation/edit";
+
+export {
+  createGraph,
+  type Graph,
+  type SceneDraft,
+} from "../representation/graph";
+
+export {
+  centroidNode,
+  circleNode,
+  curveIntersectionNode,
+  freePoint,
+  midpointNode,
+  segmentIntersectionNode,
+  segmentNode,
+  triangleNode,
+  type CentroidNode,
+  type CircleNode,
+  type CurveIntersectionNode,
+  type FreePointNode,
+  type GeometryNode,
+  type MidpointNode,
+  type NodeId,
+  type SegmentIntersectionNode,
+  type SegmentNode,
+  type TriangleNode,
+} from "../representation/node";
