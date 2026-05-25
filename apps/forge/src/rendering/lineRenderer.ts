@@ -2,6 +2,8 @@ import type { EvaluatedLine } from "@euclid-forge/core/evaluation/evaluated";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
+import { RENDER_THEME } from "./theme";
+
 export type LineRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;

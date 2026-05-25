@@ -49,6 +49,24 @@ export const RENDER_THEME = Object.freeze({
     selectedLineWidthPx: 6,
   }),
 
+  circle: {
+    strokeStyle: "#38bdf8",
+    lineWidth: 2,
+    selectedStrokeStyle: "#facc15",
+    selectedLineWidth: 3,
+    hoverStrokeStyle: "#fde68a",
+    hoverLineWidth: 3,
+  },
+
+  line: {
+    strokeStyle: "#94a3b8",
+    lineWidth: 1.5,
+    selectedStrokeStyle: "#facc15",
+    selectedLineWidth: 3,
+    hoverStrokeStyle: "#fde68a",
+    hoverLineWidth: 3,
+  },
+
   triangle: Object.freeze({
     stroke: "#e5e7eb",
     lineWidthPx: 2,

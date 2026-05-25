@@ -2,6 +2,8 @@ import type { EvaluatedCircle } from "@euclid-forge/core/evaluation/evaluated";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
+import { RENDER_THEME } from "./theme";
+
 export type CircleRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
@@ -34,7 +36,7 @@ export function renderCircle(
   }
 
   ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = RENDER_THEME.circle.lineWidth;
 
   ctx.beginPath();
   ctx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
