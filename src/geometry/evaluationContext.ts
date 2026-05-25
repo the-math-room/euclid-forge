@@ -7,6 +7,7 @@ import type {
 import type { NodeId } from "../representation/node";
 
 export type EvaluationContext = Readonly<{
+  getGeometry: (id: NodeId) => EvaluatedGeometry;
   getPoint: (id: NodeId) => EvaluatedPoint;
   getSegment: (id: NodeId) => EvaluatedSegment;
   getTriangle: (id: NodeId) => EvaluatedTriangle;
@@ -16,6 +17,16 @@ export function createEvaluationContext(
   values: ReadonlyMap<NodeId, EvaluatedGeometry>,
 ): EvaluationContext {
   return Object.freeze({
+    getGeometry(id: NodeId): EvaluatedGeometry {
+      const value = values.get(id);
+
+      if (!value) {
+        throw new Error(`Missing evaluated dependency: ${id}`);
+      }
+
+      return value;
+    },
+
     getPoint(id: NodeId): EvaluatedPoint {
       return requireEvaluated(values, id, "POINT");
     },

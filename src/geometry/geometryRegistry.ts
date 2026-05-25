@@ -5,6 +5,7 @@ import type { ConstructionFactory } from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
 import { centroidDefinition } from "./definitions/centroid";
 import { circleDefinition } from "./definitions/circle";
+import { curveIntersectionDefinition } from "./definitions/curveIntersection";
 import { freePointDefinition } from "./definitions/freePoint";
 import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { midpointDefinition } from "./definitions/midpoint";
@@ -34,6 +35,7 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(midpointDefinition),
   eraseGeometryDefinition(centroidDefinition),
   eraseGeometryDefinition(segmentIntersectionDefinition),
+  eraseGeometryDefinition(curveIntersectionDefinition),
 ] satisfies readonly AnyGeometryDefinition[]);
 
 const geometryDefinitionsByKind: ReadonlyMap<
