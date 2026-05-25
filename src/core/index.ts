@@ -27,3 +27,9 @@ export type {
   GeometryNode,
   NodeId,
 } from "../representation/node";
+
+export {
+  diagnosticsForNode,
+  diagnosticsWithCode,
+  diagnosticsWithSeverity,
+} from "./diagnostics";
