@@ -11,8 +11,10 @@ interaction project that meaning into a canvas UI.
 - Add free points by clicking empty canvas.
 - Drag free points directly.
 - Shift-click to select points, segments, circles, and triangles.
-- Construct triangles from three selected free points.
-- Construct circles from two selected free points.
+- Join selected free points:
+  - two selected free points create an undirected segment
+  - three selected free points create a triangle
+- Construct circles from two selected free points interpreted as center and through point.
 - Construct a centroid from a selected triangle.
 - Construct side midpoints from a selected triangle.
 - Drag area bodies when their definitions expose free source points:
@@ -33,8 +35,8 @@ interaction project that meaning into a canvas UI.
 | Move free point | Drag point |
 | Move draggable area body | Drag triangle/circle body |
 | Select / toggle selection | Shift-click geometry |
-| Triangle from selected free points | `T` |
-| Circle from selected free points | `C` |
+| Join selected free points | `J` |
+| Circle from center/through points | `C` |
 | Centroid of selected triangle | `G` |
 | Side midpoints of selected triangle | `M` |
 | Delete selected nodes | `Delete` / `Backspace` |
@@ -53,6 +55,11 @@ interaction project that meaning into a canvas UI.
 | Open workspace | `Ctrl/Cmd+O` |
 | Undo | `Ctrl/Cmd+Z` |
 | Redo | `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` |
+
+`J` is the boundary-construction command. With two selected free points it creates
+a segment; with three selected free points it creates a triangle. `C` stays
+separate because its two selected points mean center and through point rather
+than unordered endpoints.
 
 ## Architecture at a glance
 

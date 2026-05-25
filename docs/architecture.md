@@ -26,7 +26,6 @@ rendering/        evaluated geometry → canvas pixels
 interaction/      pure hit testing
 geometry/         per-kind geometry definitions and registry dispatch
 app/              browser shell, user intent, state/history/effects
-styles/           CSS
 ```
 
 ## `meaning/`
@@ -179,6 +178,27 @@ EvaluatedGeometry
 The registry is not a plugin system. It is a central dispatch table with strong
 TypeScript coverage.
 
+### Construction semantics
+
+Shape definitions can expose construction factories for single-shape
+constructions.
+
+Boundary constructions and metric constructions are intentionally distinct:
+
+```txt
+J with two selected free points   → segment endpoint construction
+J with three selected free points → triangle vertex/boundary construction
+C with two selected free points   → circle center-through construction
+```
+
+Segment and triangle construction share selected-free-point tuple mechanics, but
+circle remains separate because its two points are interpreted asymmetrically as
+center and through point.
+
+Polygon construction is intentionally deferred. Four or more selected points need
+an ordering semantic: click order, explicit construction mode, or a geometric
+ordering rule. A plain selected set is not enough.
+
 ### Body dragging
 
 Body dragging is opt-in registry metadata, not a generic boolean.
@@ -274,6 +294,16 @@ are exactly two free points selected?
 are exactly three free points selected?
 is exactly one triangle selected?
 ```
+
+The join command uses the shared selected-free-point tuple helper:
+
+```txt
+2 selected free points → segment
+3 selected free points → triangle
+```
+
+Circle construction also consumes two selected free points, but it keeps a
+separate semantic wrapper because those IDs mean center and through point.
 
 ## Visibility
 

@@ -119,10 +119,15 @@ reuse multiple kinds of nodes.
 Examples:
 
 ```txt
+segment from two free points → segment definition factory
 circle from two free points → circle definition factory
 triangle from three free points → triangle definition factory
 side midpoints of triangle → compound construction wrapper
 ```
+
+Do not assume every same-arity construction belongs to the same command family.
+Segment and triangle are boundary constructions; circle is a center-through
+metric construction.
 
 ## Adding a command
 
@@ -140,6 +145,27 @@ logic.
 
 Durable graph/view changes should return `history: "commit"`. Pure viewport
 navigation and hover-like changes usually ignore history.
+
+### Boundary construction command
+
+`J` joins selected free points:
+
+```txt
+2 selected free points → segment
+3 selected free points → triangle
+```
+
+This is intentionally limited to two and three points for now. Four or more
+points require an ordering story before polygon construction should be added.
+
+Circle construction remains on `C`:
+
+```txt
+2 selected free points → circle from center and through point
+```
+
+Even though circle also consumes two selected free points, it should keep a
+semantic wrapper separate from segment endpoints.
 
 ## Adding pointer behavior
 
