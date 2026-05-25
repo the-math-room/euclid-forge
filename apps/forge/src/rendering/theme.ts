@@ -36,6 +36,16 @@ export const RENDER_THEME = Object.freeze({
     labelFont: "14px system-ui, sans-serif",
     labelOffsetX: 10,
     labelOffsetY: -10,
+    labelPill: Object.freeze({
+      fill: "rgb(15 23 42 / 0.72)",
+      stroke: "rgb(248 250 252 / 0.22)",
+      strokeWidthPx: 1,
+      paddingXPx: 4,
+      paddingYPx: 2,
+      radiusPx: 5,
+      fallbackAscentPx: 11,
+      fallbackDescentPx: 3,
+    }),
   }),
 
   segment: Object.freeze({

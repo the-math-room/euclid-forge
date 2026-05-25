@@ -57,13 +57,7 @@ export function renderPoint(
   ctx.arc(screen.x, screen.y, style.radiusPx, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = RENDER_THEME.point.labelFill;
-  ctx.font = RENDER_THEME.point.labelFont;
-  ctx.fillText(
-    point.label,
-    screen.x + RENDER_THEME.point.labelOffsetX,
-    screen.y + RENDER_THEME.point.labelOffsetY,
-  );
+  renderPointLabel(ctx, screen.x, screen.y, point.label);
 
   ctx.restore();
 }
@@ -77,4 +71,66 @@ export function renderPoints(
   for (const point of points) {
     renderPoint(ctx, viewport, point, options);
   }
+}
+
+function renderPointLabel(
+  ctx: CanvasRenderingContext2D,
+  pointX: number,
+  pointY: number,
+  label: string,
+): void {
+  const theme = RENDER_THEME.point;
+  const pill = theme.labelPill;
+  const textX = pointX + theme.labelOffsetX;
+  const textY = pointY + theme.labelOffsetY;
+
+  ctx.font = theme.labelFont;
+  ctx.textBaseline = "alphabetic";
+
+  const metrics = ctx.measureText(label);
+  const actualLeft = metrics.actualBoundingBoxLeft || 0;
+  const actualRight = metrics.actualBoundingBoxRight || metrics.width;
+  const actualAscent = metrics.actualBoundingBoxAscent || pill.fallbackAscentPx;
+  const actualDescent =
+    metrics.actualBoundingBoxDescent || pill.fallbackDescentPx;
+
+  const x = textX - actualLeft - pill.paddingXPx;
+  const y = textY - actualAscent - pill.paddingYPx;
+  const width = actualLeft + actualRight + pill.paddingXPx * 2;
+  const height = actualAscent + actualDescent + pill.paddingYPx * 2;
+
+  ctx.fillStyle = pill.fill;
+  roundedRect(ctx, x, y, width, height, pill.radiusPx);
+  ctx.fill();
+
+  ctx.strokeStyle = pill.stroke;
+  ctx.lineWidth = pill.strokeWidthPx;
+  roundedRect(ctx, x, y, width, height, pill.radiusPx);
+  ctx.stroke();
+
+  ctx.fillStyle = theme.labelFill;
+  ctx.fillText(label, textX, textY);
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+): void {
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
