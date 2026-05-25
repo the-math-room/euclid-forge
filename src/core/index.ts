@@ -2,6 +2,7 @@ export {
   createGeometryEngine,
   type GeometryEngine,
   type GeometryEngineInput,
+  type GeometryEngineState,
 } from "./engine";
 
 export {

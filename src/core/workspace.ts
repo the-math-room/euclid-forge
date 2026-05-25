@@ -1,16 +1,19 @@
-import { createGraph } from "../representation/graph";
+import type { ViewState } from "../app/viewState";
 import type { Graph } from "../representation/graph";
+import { createGraph } from "../representation/graph";
 import type { GeometryNode, NodeId } from "../representation/node";
 import { vec2 } from "../meaning/vec2";
 import type { Vec2 } from "../meaning/vec2";
-import { appState } from "../app/appState";
-import type { AppState } from "../app/appState";
-import type { ViewState } from "../app/viewState";
 
 export type SerializedWorkspace = Readonly<{
   version: 1;
   nodes: readonly GeometryNode[];
   view: SerializedWorkspaceView;
+}>;
+
+export type WorkspaceState = Readonly<{
+  graph: Graph;
+  viewState: ViewState;
 }>;
 
 export type GeometryWorkspace = SerializedWorkspace;
@@ -23,7 +26,7 @@ export type SerializedWorkspaceView = Readonly<{
   viewportRotation: number;
 }>;
 
-export function serializeWorkspace(state: AppState): SerializedWorkspace {
+export function serializeWorkspace(state: WorkspaceState): SerializedWorkspace {
   return Object.freeze({
     version: 1,
     nodes: Object.freeze([...state.graph.nodes]),
@@ -33,7 +36,7 @@ export function serializeWorkspace(state: AppState): SerializedWorkspace {
 
 export function deserializeWorkspace(
   workspace: SerializedWorkspace,
-): AppState {
+): WorkspaceState {
   if (workspace.version !== 1) {
     throw new Error(`Unsupported workspace version: ${workspace.version}`);
   }
@@ -41,7 +44,10 @@ export function deserializeWorkspace(
   const graph = createGraph(workspace.nodes);
   const viewState = deserializeWorkspaceView(workspace.view);
 
-  return appState(graph, viewState, null);
+  return Object.freeze({
+    graph: graph,
+    viewState: viewState,
+  });
 }
 
 function serializeWorkspaceView(

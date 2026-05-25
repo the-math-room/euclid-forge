@@ -12,8 +12,7 @@ import { applyGraphEdit } from "../representation/edit";
 import type { GraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
-import type { AppState } from "../app/appState";
-import { appState } from "../app/appState";
+import type { ViewState } from "../app/viewState";
 import { emptyViewState } from "../app/viewState";
 import type { GeometryWorkspace } from "./workspace";
 import {
@@ -21,7 +20,12 @@ import {
   serializeWorkspace,
 } from "../app/workspace";
 
-export type GeometryEngineInput = Graph | AppState | GeometryWorkspace;
+export type GeometryEngineState = Readonly<{
+  graph: Graph;
+  viewState: ViewState;
+}>;
+
+export type GeometryEngineInput = Graph | GeometryEngineState | GeometryWorkspace;
 
 export type GeometryEngine = Readonly<{
   graph: () => Graph;
@@ -38,7 +42,7 @@ export function createGeometryEngine(input: GeometryEngineInput): GeometryEngine
   return engineFromState(stateFromInput(input));
 }
 
-function engineFromState(state: AppState): GeometryEngine {
+function engineFromState(state: GeometryEngineState): GeometryEngine {
   return Object.freeze({
     graph: () => state.graph,
 
@@ -63,26 +67,29 @@ function engineFromState(state: AppState): GeometryEngine {
       transitiveDependentsOf(state.graph, ids),
 
     applyEdit: (edit: GraphEdit): GeometryEngine =>
-      engineFromState(
-        appState(
-          applyGraphEdit(state.graph, edit),
-          state.viewState,
-          null,
-        ),
-      ),
+      engineFromState({
+        graph: applyGraphEdit(state.graph, edit),
+        viewState: state.viewState,
+      }),
 
     serialize: () => serializeWorkspace(state),
   });
 }
 
-function stateFromInput(input: GeometryEngineInput): AppState {
+function stateFromInput(input: GeometryEngineInput): GeometryEngineState {
   if ("version" in input && "nodes" in input && "view" in input) {
     return deserializeWorkspace(input);
   }
 
-  if ("graph" in input && "viewState" in input && "dragState" in input) {
-    return input;
+  if ("graph" in input && "viewState" in input) {
+    return {
+      graph: input.graph,
+      viewState: input.viewState,
+    };
   }
 
-  return appState(input, emptyViewState(), null);
+  return {
+    graph: input,
+    viewState: emptyViewState(),
+  };
 }
