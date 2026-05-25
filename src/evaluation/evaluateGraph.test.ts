@@ -179,4 +179,12 @@ describe("evaluation/evaluateGraph", () => {
       role: "CENTROID",
     });
   });
+  test("returns an empty issue list for fully defined geometry", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.issues).toEqual([]);
+  });
+
 });

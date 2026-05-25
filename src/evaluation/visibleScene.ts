@@ -31,5 +31,6 @@ export function visibleEvaluatedScene(
   return Object.freeze({
     values,
     ordered: Object.freeze(ordered),
+    issues: scene.issues,
   });
 }

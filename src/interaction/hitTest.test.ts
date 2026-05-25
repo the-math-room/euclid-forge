@@ -32,6 +32,7 @@ function evaluatedScene(values: readonly EvaluatedGeometry[]) {
   return Object.freeze({
     values: new Map(values.map((value) => [value.id, value])),
     ordered: Object.freeze([...values]),
+    issues: Object.freeze([]),
   });
 }
 
@@ -293,7 +294,8 @@ describe("interaction/hitTestTriangleSelection", () => {
     const constrainedOnly = {
       values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
       ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
-    };
+    
+  issues: [],};
 
     expect(
       hitTestTriangleSelection(
@@ -425,7 +427,8 @@ describe("interaction/hitTestTriangleInterior", () => {
     const constrainedOnly = {
       values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
       ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
-    };
+    
+  issues: [],};
 
     expect(
       hitTestTriangleInterior(graph, constrainedOnly, viewport, screen),

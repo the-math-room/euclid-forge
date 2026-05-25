@@ -4,9 +4,15 @@ import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type { EvaluatedGeometry } from "./evaluated";
 
+export type EvaluationIssue = Readonly<{
+  nodeId: NodeId;
+  message: string;
+}>;
+
 export type EvaluatedScene = Readonly<{
   values: ReadonlyMap<NodeId, EvaluatedGeometry>;
   ordered: readonly EvaluatedGeometry[];
+  issues: readonly EvaluationIssue[];
 }>;
 
 export function evaluateGraph(graph: Graph): EvaluatedScene {
@@ -26,5 +32,6 @@ export function evaluateGraph(graph: Graph): EvaluatedScene {
   return Object.freeze({
     values,
     ordered: Object.freeze(ordered),
+    issues: Object.freeze([]),
   });
 }
