@@ -16,7 +16,7 @@
     "smoke": "playwright test --config=playwright.config.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run check:core-extractable && npm run smoke"
+    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run check:core-extractable && npm run check:core-package && npm run smoke"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
