@@ -3,7 +3,7 @@ import type {
   AppEffect,
   AppTransition,
   PointerCaptureEffect,
-} from "./appController";
+} from "./appTransition";
 
 export type ApplyTransitionInput = Readonly<{
   canvas: HTMLCanvasElement;

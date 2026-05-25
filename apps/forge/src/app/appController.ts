@@ -3,9 +3,14 @@ import { applyGraphEdit } from "@euclid-forge/core";
 import type { NodeId } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
 import { screenToWorld } from "@euclid-forge/core";
-import {} from "@euclid-forge/core";
 import { appCommandDisabledReason, appCommandForKey } from "./commands";
 import { handleActiveToolPointerDown } from "./activeToolPointer";
+import { changed, preventOnly, transition, unchanged } from "./appTransition";
+import type {
+  AppEffect,
+  AppTransition,
+  AppTransitionHistoryPolicy,
+} from "./appTransition";
 import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
@@ -34,18 +39,6 @@ export type PointerCaptureEffect = Readonly<
 export type StatusEffect = Readonly<{
   kind: "SHOW_STATUS";
   message: string;
-}>;
-
-export type AppEffect = PointerCaptureEffect | StatusEffect;
-
-export type AppTransitionHistoryPolicy = "commit" | "ignore";
-
-export type AppTransition = Readonly<{
-  state: AppState;
-  shouldRender: boolean;
-  shouldPreventDefault: boolean;
-  history: AppTransitionHistoryPolicy;
-  effects: readonly AppEffect[];
 }>;
 
 type AppTransitionInit = Omit<AppTransition, "history" | "effects"> &
@@ -278,51 +271,4 @@ function hitTestHoverTarget(
     case "NONE":
       return null;
   }
-}
-
-function unchanged(state: AppState): AppTransition {
-  return transition({
-    state,
-    shouldRender: false,
-    shouldPreventDefault: false,
-  });
-}
-
-function preventOnly(state: AppState): AppTransition {
-  return transition({
-    state,
-    shouldRender: false,
-    shouldPreventDefault: true,
-  });
-}
-
-function changed(
-  state: AppState,
-  history: AppTransitionHistoryPolicy = "ignore",
-  statusMessage?: string,
-): AppTransition {
-  const effects: readonly AppEffect[] | undefined = statusMessage
-    ? [
-        {
-          kind: "SHOW_STATUS",
-          message: statusMessage,
-        },
-      ]
-    : undefined;
-
-  return transition({
-    state,
-    shouldRender: true,
-    shouldPreventDefault: true,
-    history,
-    ...(effects ? { effects } : {}),
-  });
-}
-
-function transition(value: AppTransitionInit): AppTransition {
-  return Object.freeze({
-    history: "ignore",
-    ...value,
-    effects: Object.freeze([...(value.effects ?? [])]),
-  });
 }

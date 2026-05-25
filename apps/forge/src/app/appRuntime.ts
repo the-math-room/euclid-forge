@@ -1,4 +1,4 @@
-import type { AppTransition } from "./appController";
+import type { AppTransition } from "./appTransition";
 import {
   appStateFromHistory,
   commitHistory,

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { createGraph } from "@euclid-forge/core";
 import { freePoint } from "@euclid-forge/core";
 import { appState } from "./appState";
-import type { AppTransition } from "./appController";
+import type { AppTransition } from "./appTransition";
 import { createAppRuntime } from "./appRuntime";
 import { initialHistory } from "./history";
 import type { StatusSurface } from "./statusSurface";

@@ -19,12 +19,9 @@ import {
   resetActiveToolInputs,
 } from "./activeTool";
 import type { ActiveTool, PointInputTool } from "./activeTool";
-import type {
-  AppEffect,
-  AppTransition,
-  AppTransitionHistoryPolicy,
-  PointerInput,
-} from "./appController";
+import { changed, preventOnly, unchanged } from "./appTransition";
+import type { AppTransition } from "./appTransition";
+import type { PointerInput } from "./appController";
 import { clearSelection } from "./viewState";
 
 export function handleActiveToolPointerDown(
@@ -280,57 +277,4 @@ function selectablePointerHit(
   );
 
   return intent.kind === "SELECT_NODE" ? intent.id : null;
-}
-
-function unchanged(state: AppState): AppTransition {
-  return transition({
-    state,
-    shouldRender: false,
-    shouldPreventDefault: false,
-  });
-}
-
-function preventOnly(state: AppState): AppTransition {
-  return transition({
-    state,
-    shouldRender: false,
-    shouldPreventDefault: true,
-  });
-}
-
-function changed(
-  state: AppState,
-  history: AppTransitionHistoryPolicy = "ignore",
-  statusMessage?: string,
-): AppTransition {
-  const effects: readonly AppEffect[] | undefined = statusMessage
-    ? [
-        {
-          kind: "SHOW_STATUS",
-          message: statusMessage,
-        },
-      ]
-    : undefined;
-
-  return transition({
-    state,
-    shouldRender: true,
-    shouldPreventDefault: true,
-    history,
-    ...(effects ? { effects } : {}),
-  });
-}
-
-type AppTransitionInit = Omit<AppTransition, "history" | "effects"> &
-  Readonly<{
-    history?: AppTransitionHistoryPolicy;
-    effects?: readonly AppEffect[];
-  }>;
-
-function transition(value: AppTransitionInit): AppTransition {
-  return Object.freeze({
-    history: "ignore",
-    ...value,
-    effects: Object.freeze([...(value.effects ?? [])]),
-  });
 }
