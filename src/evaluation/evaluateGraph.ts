@@ -3,6 +3,7 @@ import { evaluateGeometryNode } from "../geometry/geometryRegistry";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type { EvaluatedGeometry } from "./evaluated";
+import { GeometryEvaluationIssueError } from "./evaluationIssue";
 
 export type EvaluationIssue = Readonly<{
   nodeId: NodeId;
@@ -18,20 +19,55 @@ export type EvaluatedScene = Readonly<{
 export function evaluateGraph(graph: Graph): EvaluatedScene {
   const values = new Map<NodeId, EvaluatedGeometry>();
   const ordered: EvaluatedGeometry[] = [];
+  const issues: EvaluationIssue[] = [];
 
   for (const node of graph.nodes) {
-    const evaluated = evaluateGeometryNode(
-      node,
-      createEvaluationContext(values),
-    );
+    try {
+      const evaluated = evaluateGeometryNode(
+        node,
+        createEvaluationContext(values),
+      );
 
-    values.set(node.id, evaluated);
-    ordered.push(evaluated);
+      values.set(node.id, evaluated);
+      ordered.push(evaluated);
+    } catch (error) {
+      const issue = evaluationIssueForError(node.id, error);
+
+      if (!issue) {
+        throw error;
+      }
+
+      issues.push(issue);
+    }
   }
 
   return Object.freeze({
     values,
     ordered: Object.freeze(ordered),
-    issues: Object.freeze([]),
+    issues: Object.freeze(issues),
   });
+}
+
+function evaluationIssueForError(
+  nodeId: NodeId,
+  error: unknown,
+): EvaluationIssue | null {
+  if (error instanceof GeometryEvaluationIssueError) {
+    return Object.freeze({
+      nodeId: error.nodeId,
+      message: error.message,
+    });
+  }
+
+  if (
+    error instanceof Error &&
+    error.message.startsWith("Missing evaluated dependency: ")
+  ) {
+    return Object.freeze({
+      nodeId,
+      message: `Cannot evaluate ${nodeId}; ${error.message}`,
+    });
+  }
+
+  return null;
 }
