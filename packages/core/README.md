@@ -2,78 +2,27 @@
 
 This workspace contains the headless geometry engine for Euclid Forge.
 
-It owns:
+It owns geometric meaning, graph representation, construction helpers, graph edits, constrained construction nodes, free-point planning, cascading delete policy, evaluation, diagnostics, dependency inspection, workspace serialization/deserialization, headless viewport and view-state math, and the public core API.
 
-- geometric meaning
-- graph representation
-- construction factories
-- graph edits
-- free-point planning
-- cascading delete policy
-- evaluation
-- diagnostics
-- dependency inspection
-- workspace serialization/deserialization
-- headless viewport and view-state math
-- public core API
-
-It must not depend on the forge app, DOM, canvas, browser APIs, CSS, app commands, or editor gestures.
+It must not depend on the forge app, DOM, canvas, browser APIs, CSS, app commands, rendering notation, print surfaces, or editor gestures.
 
 ## Package name
-
-The package name is:
 
 ```text
 @euclid-forge/core
 ```
 
-Forge should import Core through package paths, not through relative paths into this workspace.
+Forge should import Core through package paths, not relative paths into this workspace.
 
 ## Commands
 
-From the repository root:
-
 ```bash
 npm run check -w @euclid-forge/core
-```
-
-Or through the root alias:
-
-```bash
 npm run check:core
+scripts/checks.sh concise
 ```
-
-The normal monorepo patch-loop check is:
-
-```bash
-npm run check:concise
-```
-
-## Public API
-
-The root facade is:
-
-```ts
-import { createGeometryEngine, applyGraphEdit } from "@euclid-forge/core";
-```
-
-The root facade currently exports the app-facing engine, graph, construction, evaluation, edit, dependency, delete-policy, workspace, diagnostic, viewport, and meaning helpers.
-
-Approved public family subpaths remain available during the facade tuning period:
-
-```text
-@euclid-forge/core/core/*
-@euclid-forge/core/view/*
-@euclid-forge/core/meaning/*
-@euclid-forge/core/representation/*
-@euclid-forge/core/evaluation/*
-```
-
-Geometry internals are exported for package mechanics, but Forge should avoid importing `@euclid-forge/core/geometry/*` unless the dependency is deliberate and documented.
 
 ## Current app-facing invariants
-
-Core owns several invariants that Forge relies on:
 
 - graph nodes are topologically ordered by `createGraph`
 - graph edits are immutable
@@ -82,18 +31,36 @@ Core owns several invariants that Forge relies on:
 - evaluation is deterministic from graph state
 - undefined geometry is reported through diagnostics rather than browser state
 - viewport math is pure coordinate-system math, not rendering
+- constrained endpoints such as `PARALLEL_POINT` store semantic offsets, not screen positions
+- moving a constrained point updates its constraint parameter through a graph edit
 
-## Source review dumps
+## Current graph model highlights
 
-For Core-focused review from the monorepo root:
-
-```bash
-scripts/dumps/dump-target core-geometry > /tmp/core-geometry.txt
-scripts/dumps/dump-target core-api > /tmp/core-api.txt
+```text
+FREE_POINT
+SEGMENT
+LINE
+CIRCLE
+TRIANGLE
+MIDPOINT
+CENTROID
+SEGMENT_INTERSECTION
+CURVE_INTERSECTION
+PARALLEL_POINT
 ```
 
-The legacy package-local dump script now delegates to the root target:
+A finite parallel segment is represented as a normal `SEGMENT` from an anchor point to a constrained `PARALLEL_POINT` endpoint.
 
-```bash
-packages/core/scripts/dump-source.sh
-```
+## Recent project state
+
+Recent decisions that should be treated as current context:
+
+- Lasso selection is app-side interaction. It selects fully contained visible selectable geometry; infinite lines are excluded from lasso containment.
+- Labels render with translucent label pills for readability over geometry.
+- The canvas has dark and high-contrast display modes plus incremental display scale for line/point/label size.
+- Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
+- Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
+- Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
+- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
+- Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
+- Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.

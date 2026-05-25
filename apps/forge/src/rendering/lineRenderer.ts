@@ -3,12 +3,14 @@ import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 import { RENDER_THEME } from "./theme";
+import { renderParallelMarks } from "./parallelMarkRenderer";
 import type { RenderTheme } from "./theme";
 
 export type LineRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
   theme?: RenderTheme;
+  parallelMarkCounts?: ReadonlyMap<string, 1 | 2 | 3>;
 }>;
 
 export function renderLine(
@@ -57,6 +59,20 @@ export function renderLine(
   ctx.lineTo(endpoints.end.x, endpoints.end.y);
   ctx.stroke();
 
+  const parallelMarkCount = options.parallelMarkCounts?.get(line.id);
+
+  if (parallelMarkCount) {
+    renderParallelMarks(
+      ctx,
+      {
+        a: markStartPoint(endpoints.start, endpoints.end, viewport),
+        b: markEndPoint(endpoints.start, endpoints.end, viewport),
+      },
+      parallelMarkCount,
+      theme,
+    );
+  }
+
   ctx.restore();
 }
 
@@ -91,4 +107,59 @@ function viewportLineEndpoints(
       y: a.y + unitY * extension,
     }),
   });
+}
+
+function markStartPoint(
+  start: Readonly<{ x: number; y: number }>,
+  end: Readonly<{ x: number; y: number }>,
+  viewport: Viewport,
+): Readonly<{ x: number; y: number }> {
+  const center = {
+    x: viewport.width / 2,
+    y: viewport.height / 2,
+  };
+  const direction = unitDirection(start, end);
+
+  return {
+    x: center.x - direction.x * 48,
+    y: center.y - direction.y * 48,
+  };
+}
+
+function markEndPoint(
+  start: Readonly<{ x: number; y: number }>,
+  end: Readonly<{ x: number; y: number }>,
+  viewport: Viewport,
+): Readonly<{ x: number; y: number }> {
+  const center = {
+    x: viewport.width / 2,
+    y: viewport.height / 2,
+  };
+  const direction = unitDirection(start, end);
+
+  return {
+    x: center.x + direction.x * 48,
+    y: center.y + direction.y * 48,
+  };
+}
+
+function unitDirection(
+  start: Readonly<{ x: number; y: number }>,
+  end: Readonly<{ x: number; y: number }>,
+): Readonly<{ x: number; y: number }> {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
+
+  if (length < 1e-9) {
+    return {
+      x: 1,
+      y: 0,
+    };
+  }
+
+  return {
+    x: dx / length,
+    y: dy / length,
+  };
 }

@@ -1,5 +1,6 @@
 import type { EvaluatedSegment } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
+import { renderParallelMarks } from "./parallelMarkRenderer";
 import type { RenderTheme } from "./theme";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
@@ -8,6 +9,7 @@ export type SegmentRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
   theme?: RenderTheme;
+  parallelMarkCounts?: ReadonlyMap<string, 1 | 2 | 3>;
 }>;
 
 export function renderSegment(
@@ -52,6 +54,12 @@ export function renderSegment(
   ctx.moveTo(a.x, a.y);
   ctx.lineTo(b.x, b.y);
   ctx.stroke();
+
+  const parallelMarkCount = options.parallelMarkCounts?.get(segment.id);
+
+  if (parallelMarkCount) {
+    renderParallelMarks(ctx, { a, b }, parallelMarkCount, theme);
+  }
 
   ctx.restore();
 }

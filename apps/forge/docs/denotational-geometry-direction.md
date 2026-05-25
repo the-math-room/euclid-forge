@@ -1,46 +1,16 @@
 # Denotational Geometry Direction
 
-This note records the intended direction for Euclid Forge's curve and intersection architecture.
-
-## Core principle
-
 Geometry nodes should denote mathematical objects.
 
 ```txt
 graph syntax → mathematical denotation → numeric evaluation
 ```
 
-The graph is not a cache of rendered coordinates. It is construction syntax. Evaluation is an interpretation of that syntax into numeric geometry for the canvas or for headless inspection.
-
-## Headless core
-
-Euclid Forge uses the package facade:
-
-```txt
-@euclid-forge/core
-```
-
-The headless core owns workspace parsing, evaluation access, diagnostics, dependency inspection, immutable graph edits, construction helpers, cascading deletes, free-point planning, serialization, and golden fixtures.
-
-A typical consumer path:
-
-```ts
-const workspace = geometryWorkspaceFromJsonText(jsonText);
-const engine = createGeometryEngine(workspace);
-
-const evaluated = engine.evaluate();
-const diagnostics = engine.diagnostics();
-
-const next = engine.applyEdit({
-  kind: "MOVE_FREE_POINT",
-  id: "P1",
-  point: { x: 1, y: 2 },
-});
-```
+The graph is not a cache of rendered coordinates. It is construction syntax. Evaluation interprets that syntax into numeric geometry for the canvas or for headless inspection.
 
 ## Current model
 
-Euclid Forge currently supports concrete construction nodes such as:
+Current construction nodes include:
 
 ```txt
 FREE_POINT
@@ -52,157 +22,48 @@ MIDPOINT
 CENTROID
 SEGMENT_INTERSECTION
 CURVE_INTERSECTION
+PARALLEL_POINT
 ```
 
-`SEGMENT_INTERSECTION` is currently a bounded finite-segment intersection. It is defined only when two selected segment nodes have a unique intersection point on both finite segments.
+`SEGMENT_INTERSECTION` is a bounded finite-segment intersection. `CURVE_INTERSECTION` is the general persisted curve-intersection node over curve-valued source nodes and a `branchKey`.
 
-`CURVE_INTERSECTION` is the general persisted curve-intersection node. It records two curve-valued source nodes and one `branchKey`.
-
-## Dynamic construction, not constraint solving
-
-A construction node says how to compute something when defined. It does not force its dependencies to remain in a configuration where it is defined.
-
-For example:
+`PARALLEL_POINT` is a constrained visible endpoint. It records a linear reference, an anchor point, and a signed offset. A finite parallel segment is represented compositionally:
 
 ```txt
-X = intersection(AB, CD)
-Y = segment(X, E)
+PARALLEL_POINT(reference, anchor, offset)
+SEGMENT(anchor, parallelPoint)
 ```
 
-If `AB` and `CD` stop intersecting as finite segments:
+## Dynamic construction, not general constraint solving
 
-```txt
-X is undefined
-Y is undefined because X is unavailable
-the graph still contains X and Y
-both can reappear if AB and CD intersect again
-```
+A construction node says how to compute something when defined. It does not force dependencies to remain in a configuration where it is defined. Refusing a drag, clamping motion, or moving other points to preserve arbitrary relationships would be constraint solving.
 
-Refusing a drag, clamping motion, or moving other points to preserve an intersection would be constraint solving. That may be a future mode, but it is not the current evaluator.
-
-## Diagnostics
-
-Undefined or unavailable geometry is reported through structured diagnostics.
-
-Current shape:
-
-```ts
-{
-  nodeId: string;
-  severity: "warning";
-  code:
-    | "MISSING_DEPENDENCY"
-    | "NO_REAL_INTERSECTION"
-    | "NO_UNIQUE_INTERSECTION"
-    | "STALE_INTERSECTION_BRANCH"
-    | "UNDEFINED_GEOMETRY";
-  message: string;
-}
-```
-
-The code is the stable machine-facing part. The message is the human-facing explanation and may evolve.
+Constrained endpoints are narrower. Dragging a `PARALLEL_POINT` updates its scalar offset along its declared constraint axis. It does not solve arbitrary constraints between existing geometry.
 
 ## Persisted curve intersections
 
-Euclid Forge has a general persisted `CURVE_INTERSECTION` node:
+`CURVE_INTERSECTION(curveA, curveB, branchKey)` denotes one selected branch of the intersection of two curve-valued source nodes. Branch keys must be geometrically stable; circle-circle branches should be stable relative to the directed center-to-center axis rather than sorted by world coordinates.
 
-```txt
-CURVE_INTERSECTION(curveA, curveB, branchKey)
-```
+Construction-time duplicate prevention may skip a new curve-intersection node if its evaluated candidate already coincides with an existing evaluated point.
 
-The node denotes one selected branch of the intersection of two curve-valued source nodes. Evaluation computes the current curve candidates and selects the candidate matching `branchKey`.
+## Display notation is not denotation
 
-This keeps the representation denotational:
+Parallel chevrons, label pills, display scale, high-contrast canvas, print theme, and lasso overlay are adapter/rendering concerns. Do not store them in the graph unless explicit user-authored style annotations become a product feature.
 
-```txt
-source nodes denote curves
-intersection computes candidate points
-branchKey selects one candidate
-the resulting node denotes a point
-```
+## Future direction
 
-The representation does not introduce one graph kind per shape pair. Segment + circle and circle + circle intersections share the same graph node kind. The legacy `SEGMENT_INTERSECTION` node remains for bounded segment intersections until that path is migrated or intentionally preserved.
+Avoid a combinatorial family of intersection graph kinds. Prefer denotational curves with domains and candidate-generating intersection operations. The next likely constrained construction is perpendicular, following the same pattern as `PARALLEL_POINT`.
 
-Generated IDs are descriptive and branch-stable. Display labels should remain human-scale:
+## Recent project state
 
-```txt
-id:    X_C2_C1_circle_circle_1
-label: X2
-```
+Recent decisions that should be treated as current context:
 
-## Tangent snapping
-
-Tangent snapping is primarily an interaction/construction-time policy.
-
-A future UX policy may say:
-
-```txt
-near tangent within hit radius → snap to one tangent candidate
-```
-
-But that should not make runtime graph evaluation depend on viewport state.
-
-Keep the distinction:
-
-```txt
-construction-time policy:
-  may use viewport/hit-radius tolerance and pointer context
-
-evaluation-time policy:
-  deterministic from graph state and numeric geometry
-```
-
-## Modal tools and denotation
-
-Modal tools should not change the denotational model. They are only a more direct way to create the same graph syntax.
-
-For example:
-
-```txt
-Segment mode click A, click B
-```
-
-and:
-
-```txt
-Shift-select A and B, press J
-```
-
-should produce equivalent graph semantics.
-
-## Future curve/intersection direction
-
-Avoid designing future curve intersections as a combinatorial family of graph concepts:
-
-```txt
-SEGMENT_CIRCLE_INTERSECTION
-CIRCLE_CIRCLE_INTERSECTION
-CIRCLE_PARABOLA_INTERSECTION
-PARABOLA_PARABOLA_INTERSECTION
-```
-
-The intended direction is a denotational curve abstraction:
-
-```txt
-curve denotation
-  → point set
-  → optional implicit equation
-  → optional parameterization
-  → domain restriction
-
-intersection
-  → operation over two curve denotations
-  → classified numeric candidates
-```
-
-## Near-term feature pressure
-
-The next strong geometry primitive is still likely deeper `LINE` work, because it stresses the right abstractions:
-
-```txt
-segment: bounded linear curve
-line: unbounded linear curve
-ray: half-bounded linear curve
-```
-
-That will test whether curve domains, hit testing, rendering, modal tools, and intersection candidate generation are sufficiently denotational.
+- Lasso selection is app-side interaction. It selects fully contained visible selectable geometry; infinite lines are excluded from lasso containment.
+- Labels render with translucent label pills for readability over geometry.
+- The canvas has dark and high-contrast display modes plus incremental display scale for line/point/label size.
+- Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
+- Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
+- Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
+- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
+- Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
+- Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.

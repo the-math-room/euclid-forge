@@ -4,8 +4,6 @@ Euclid Core is a headless geometry package. It describes geometry in terms of me
 
 ## Pipeline
 
-The core pipeline is:
-
 ```text
 meaning → representation → geometry registry → evaluation → core API
 ```
@@ -14,74 +12,49 @@ meaning → representation → geometry registry → evaluation → core API
 
 ### `meaning`
 
-Mathematical primitives and denotations live here. This layer contains objects like vectors, lines, curves, and intersection logic. Code in this layer should be pure mathematical logic.
+Pure mathematical primitives and denotations such as vectors, lines, curves, and intersections.
 
 ### `view`
 
-Viewport math lives here. This includes screen/world transforms and viewport state that can be expressed without DOM or Canvas dependencies.
-
-Viewport math is coordinate-system meaning. It is not rendering.
+Pure viewport coordinate-system math. This is not rendering.
 
 ### `representation`
 
-The representation layer defines the authored graph: node shapes, edits, graph invariants, dependencies, constructions, delete policy, and free-point planning.
-
-This layer should answer questions like:
-
-- What nodes exist?
-- What does each node depend on?
-- Which graph edits are valid?
-- Which construction helpers create stable graph additions?
-- Which dependents should be deleted with a node?
-- What is the next valid free-point id for this graph?
+Authored graph structure, node shapes, edits, graph invariants, dependencies, constructions, delete policy, constrained-point movement, and free-point planning.
 
 ### `geometry`
 
-The geometry layer registers geometry kinds and connects representation to evaluation and construction metadata.
-
-Geometry definitions should remain headless. They should not contain rendering, hit testing, pointer behavior, DOM APIs, toolbar state, or editor commands.
+Per-kind geometry definitions connecting representation to evaluation and construction metadata. Geometry definitions must remain headless.
 
 ### `evaluation`
 
-The evaluation layer interprets the graph into evaluated geometry and diagnostics.
-
-It should answer questions like:
-
-- What geometric value does this node denote?
-- Which nodes failed to evaluate?
-- What ordered scene does the graph produce?
-- Which hidden nodes should be excluded from a visible evaluated scene?
+Graph interpretation into evaluated geometry and diagnostics.
 
 ### `core`
 
-The core layer is the package facade. It owns public entrypoints, workspace serialization/deserialization, diagnostics helpers, fixture running, and API smoke tests.
+Public package facade, workspace serialization/deserialization, diagnostics helpers, fixture running, and API smoke tests.
 
-This layer can compose lower core layers, but it still cannot know about the browser app.
-
-## App-facing semantics now owned by Core
-
-The browser app depends on Core for several editor-relevant but still headless invariants:
+## Current constrained construction pattern
 
 ```text
-free-point planning
-cascading delete ids
-graph edit validation
-constructible point and curve eligibility
-evaluation diagnostics
-workspace parsing and serialization
-viewport coordinate transforms
+PARALLEL_POINT(reference, anchor, offset)
+SEGMENT(anchor, parallelPoint)
 ```
 
-These are not browser concepts. They remain valid in tests, scripts, or future non-browser consumers.
+Dragging the constrained endpoint updates the stored scalar offset. It is not a general constraint solver.
 
-## Adapter boundary
+Perpendicular constrained endpoints should follow the same architecture if added.
 
-Rendering and pointer interaction are adapter concerns. They live in Euclid Forge, not in Euclid Core.
+## Recent project state
 
-Forge may ask the core package for evaluated geometry, graph edits, constructions, viewport transforms, and workspace serialization. Forge is then responsible for drawing, hit testing, commands, browser files, status messages, modal tools, and UI state.
+Recent decisions that should be treated as current context:
 
-## Design rule
-
-Geometry definitions may describe representation, evaluation, and construction. They should not describe rendering or interaction.
-
-When adding a feature, prove the denotation first. Add editor behavior only after the headless meaning is stable.
+- Lasso selection is app-side interaction. It selects fully contained visible selectable geometry; infinite lines are excluded from lasso containment.
+- Labels render with translucent label pills for readability over geometry.
+- The canvas has dark and high-contrast display modes plus incremental display scale for line/point/label size.
+- Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
+- Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
+- Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
+- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
+- Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
+- Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.

@@ -4,8 +4,6 @@
 
 Audit how `apps/forge` imports from `@euclid-forge/core` and keep the app dependency on Core intentional.
 
-The monorepo keeps Core and Forge in one repository, but it does not make Core internals fair game. Forge should depend on stable Core entrypoints rather than on Core's incidental file layout.
-
 ## What to look for
 
 For every import from `@euclid-forge/core` in Forge, classify it as one of:
@@ -42,54 +40,20 @@ Discouraged for Forge unless explicitly justified:
 @euclid-forge/core/geometry/*
 ```
 
-Geometry definitions and the registry are closer to Core internals than ordinary app API. Forge should avoid depending on them directly.
+## Root facade expectations
 
-## Why not immediately ban deep imports?
+The root facade should expose ordinary app-facing capabilities, including graph creation/editing, node factories/types, construction helpers, free-point planning, dependency inspection, delete policy, evaluation/diagnostics, workspace parsing/serialization, viewport/view-state helpers, and stable meaning helpers used by Forge.
 
-A hard ban before the audit would create churn without improving design. The better sequence is:
-
-1. Audit current imports.
-2. Decide which import families are intentionally public.
-3. Expand the root facade where useful.
-4. Migrate noisy app imports.
-5. Tighten the boundary checker.
+Recent app-facing core additions such as `PARALLEL_POINT`, `parallelPointNode`, `parallelSegmentConstruction`, and `MOVE_CONSTRAINED_POINT` should be available through the root facade if Forge needs them.
 
 ## Useful commands
 
-Verbose audit:
-
 ```bash
 npm run audit:core-imports
-```
-
-Quiet audit for routine checks:
-
-```bash
 npm run audit:core-imports:quiet
+scripts/checks.sh concise
 ```
-
-Normal patch-loop check:
-
-```bash
-npm run check:concise
-```
-
-## Success criteria
-
-- `npm run audit:core-imports` gives a useful report.
-- `npm run audit:core-imports:quiet` is readable in routine check output.
-- No Forge imports use discouraged Core internals.
-- Public API docs match actual package exports.
-- Boundary checks remain green.
-- App behavior is unchanged.
 
 ## Design target
 
-The target is not necessarily "all imports from the root." The target is:
-
-```text
 Every Forge import from Core should be intentional, documented, and stable.
-```
-
-A good final state may still have a few family subpaths, such as `@euclid-forge/core/view/viewport`, if they make the app clearer without exposing implementation details.
-

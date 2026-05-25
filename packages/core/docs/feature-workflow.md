@@ -2,8 +2,6 @@
 
 Core geometry features should be developed headless-first.
 
-The goal is to make the mathematical and graph semantics correct before adding editor commands, rendering, pointer interaction, or toolbar affordances in Euclid Forge.
-
 ## Recommended sequence
 
 1. Add or extend meaning-level tests.
@@ -17,84 +15,33 @@ The goal is to make the mathematical and graph semantics correct before adding e
 9. Run `npm run check -w @euclid-forge/core`.
 10. Adapt Euclid Forge rendering, interaction, modal tools, commands, and smoke coverage after the headless API is stable.
 
-## Example: adding `LINE`
+## Example: constrained endpoint
 
-A good `LINE` implementation should start with meaning, not UI.
-
-Suggested patches:
-
-### Patch 1: meaning only
-
-- Add an unbounded linear curve denotation.
-- Use the existing curve/intersection model where possible.
-- Test line-line intersections.
-- Test line-circle intersections.
-- Include cases where segment-bounded behavior would be wrong.
-
-### Patch 2: representation and evaluation
-
-- Add a `LINE` node shape.
-- Add construction helpers.
-- Add dependency behavior.
-- Add evaluation from line node to evaluated curve/geometry.
-- Add geometry registry coverage.
-
-### Patch 3: core API and workspace
-
-- Add serialization/deserialization coverage.
-- Add fixture coverage if useful.
-- Ensure public imports are intentional.
-
-### Patch 4: Forge adapters
-
-In `apps/forge`, add rendering, hit testing, commands, shortcuts, modal tool support, status text, and smoke coverage.
-
-## Example: app ergonomics over core invariants
-
-For modal construction tools, Core should own only the headless invariant:
+Headless patch:
 
 ```text
-Graph + Vec2 → planned free-point node/id
+add PARALLEL_POINT or PERPENDICULAR_POINT node
+evaluate it from reference + anchor + signed offset
+add a construction helper that creates constrained point + SEGMENT
+add MOVE_CONSTRAINED_POINT graph edit or equivalent
+export app-facing helpers through the core facade
+test evaluation, construction, edit behavior, and public API
 ```
 
-Forge should own the browser interpretation:
+Forge patch:
 
 ```text
-An empty click in Segment mode creates a point and uses it as the first segment input.
+add command/tool behavior
+hit test and drag the constrained endpoint
+call the constrained movement edit during drag
+render ordinary evaluated points/segments
+add visual notation if useful
 ```
-
-That split keeps Core mathy and lets the app evolve its UX without weakening the engine boundary.
-
-## Commit style
-
-Prefer small commits that preserve a green check:
-
-```text
-Add unbounded line denotation
-Add line graph representation
-Evaluate line geometry nodes
-Adapt Forge to render lines
-Add line modal tool coverage
-```
-
-Avoid combining math, graph representation, rendering, and UI commands into one large patch unless the change is purely mechanical.
 
 ## Validation
 
-Routine patch-loop gate:
-
 ```bash
-npm run check:concise
-```
-
-Core-focused gate:
-
-```bash
+scripts/checks.sh concise
 npm run check:core
-```
-
-Full gate:
-
-```bash
 npm run check
 ```

@@ -24,6 +24,7 @@ import {
 import { createRenderScheduler } from "./renderScheduler";
 import { statusSurfaceForDocument } from "./statusSurface";
 import { renderScene } from "../rendering/renderScene";
+import { parallelMarkCountsForGraph } from "../rendering/parallelMarks";
 import {
   HIGH_CONTRAST_RENDER_THEME,
   RENDER_THEME,
@@ -53,11 +54,16 @@ function render(
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, rect.width, rect.height);
 
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
   const renderOptions = {
     theme,
     selectedNodeIds: state.viewState.selectedNodeIds,
     hoveredNodeId: state.viewState.hoveredNodeId,
-    hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
+    hiddenNodeIds,
+    parallelMarkCounts: parallelMarkCountsForGraph({
+      graph: state.graph,
+      hiddenNodeIds,
+    }),
     ...(state.dragState?.kind === "LASSO"
       ? { lassoPolygon: state.dragState.points }
       : {}),

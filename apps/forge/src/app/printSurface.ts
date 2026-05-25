@@ -2,6 +2,7 @@ import { evaluateGraph } from "@euclid-forge/core";
 import type { AppState } from "./appState";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
 import { renderScene } from "../rendering/renderScene";
+import { parallelMarkCountsForGraph } from "../rendering/parallelMarks";
 import { PRINT_RENDER_THEME } from "../rendering/theme";
 
 export type PrintSurfaceInput = Readonly<{
@@ -69,10 +70,16 @@ function renderPrintDataUrl(state: AppState): string {
   ctx.fillStyle = PRINT_RENDER_THEME.background;
   ctx.fillRect(0, 0, PRINT_WIDTH_PX, PRINT_HEIGHT_PX);
 
+  const hiddenNodeIds = effectiveHiddenNodeIds(state.graph, state.viewState);
+
   renderScene(ctx, viewport, evaluateGraph(state.graph), {
     selectedNodeIds: state.viewState.selectedNodeIds,
     hoveredNodeId: null,
-    hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
+    hiddenNodeIds,
+    parallelMarkCounts: parallelMarkCountsForGraph({
+      graph: state.graph,
+      hiddenNodeIds,
+    }),
     theme: PRINT_RENDER_THEME,
   });
 
