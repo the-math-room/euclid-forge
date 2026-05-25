@@ -29,7 +29,14 @@ export type LinearImplicitCurve = Readonly<{
   domain: CurveDomain;
 }>;
 
-export type Curve2 = LinearImplicitCurve;
+export type CircleCurve = Readonly<{
+  kind: "CIRCLE";
+  center: Vec2;
+  radius: number;
+  domain: CurveDomain;
+}>;
+
+export type Curve2 = LinearImplicitCurve | CircleCurve;
 
 export type IntersectionPolicy = Readonly<{
   epsilon: number;
@@ -59,6 +66,15 @@ export function linearCurveFromSegment(
   });
 }
 
+export function circleCurve(center: Vec2, radius: number): CircleCurve {
+  return Object.freeze({
+    kind: "CIRCLE",
+    center,
+    radius,
+    domain: Object.freeze({ kind: "ALL" }),
+  });
+}
+
 export function intersectCurves(
   first: Curve2,
   second: Curve2,
@@ -69,6 +85,14 @@ export function intersectCurves(
     second.kind === "LINEAR_IMPLICIT"
   ) {
     return intersectLinearImplicitCurves(first, second, policy);
+  }
+
+  if (first.kind === "LINEAR_IMPLICIT" && second.kind === "CIRCLE") {
+    return intersectLinearCircle(first, second, policy);
+  }
+
+  if (first.kind === "CIRCLE" && second.kind === "LINEAR_IMPLICIT") {
+    return intersectLinearCircle(second, first, policy);
   }
 
   return intersectionIssue("Unsupported curve intersection");
@@ -120,6 +144,141 @@ function intersectLinearImplicitCurves(
     multiplicity: "SIMPLE",
     branchKey: "linear-linear",
   });
+}
+
+
+function intersectLinearCircle(
+  line: LinearImplicitCurve,
+  circle: CircleCurve,
+  policy: IntersectionPolicy,
+): IntersectionResult {
+  if (circle.radius < 0) {
+    return intersectionIssue("Circle radius cannot be negative");
+  }
+
+  const endpoints = lineEndpointsForLinearImplicit(line);
+  const dx = endpoints.end.x - endpoints.start.x;
+  const dy = endpoints.end.y - endpoints.start.y;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared <= policy.epsilon * policy.epsilon) {
+    return intersectionIssue("Degenerate linear curve");
+  }
+
+  const fx = endpoints.start.x - circle.center.x;
+  const fy = endpoints.start.y - circle.center.y;
+
+  const quadraticA = lengthSquared;
+  const quadraticB = 2 * (fx * dx + fy * dy);
+  const quadraticC = fx * fx + fy * fy - circle.radius * circle.radius;
+  const discriminant =
+    quadraticB * quadraticB - 4 * quadraticA * quadraticC;
+  const scale = Math.max(
+    1,
+    quadraticB * quadraticB,
+    Math.abs(4 * quadraticA * quadraticC),
+    circle.radius * circle.radius,
+    lengthSquared,
+  );
+  const tolerance = policy.epsilon * scale;
+
+  if (discriminant < -tolerance) {
+    return intersectionIssue("Curves do not intersect");
+  }
+
+  if (Math.abs(discriminant) <= tolerance) {
+    const t = -quadraticB / (2 * quadraticA);
+    const point = vec2(endpoints.start.x + t * dx, endpoints.start.y + t * dy);
+
+    return candidateIfInDomains(
+      line,
+      circle,
+      point,
+      Object.freeze({
+        point,
+        multiplicity: "TANGENT",
+        branchKey: "linear-circle:tangent",
+      }),
+      policy,
+    );
+  }
+
+  const sqrtDiscriminant = Math.sqrt(discriminant);
+  const firstT = (-quadraticB - sqrtDiscriminant) / (2 * quadraticA);
+  const secondT = (-quadraticB + sqrtDiscriminant) / (2 * quadraticA);
+  const sorted = [firstT, secondT].sort((a, b) => a - b);
+  const candidates: IntersectionCandidate[] = [];
+
+  for (const [index, t] of sorted.entries()) {
+    const point = vec2(endpoints.start.x + t * dx, endpoints.start.y + t * dy);
+    const filtered = filterCandidateByDomains(
+      line,
+      circle,
+      Object.freeze({
+        point,
+        multiplicity: "SIMPLE",
+        branchKey: `linear-circle:${index}`,
+      }),
+      policy,
+    );
+
+    if (filtered) {
+      candidates.push(filtered);
+    }
+  }
+
+  if (candidates.length === 0) {
+    return intersectionIssue("Curves intersect outside bounded curve domains");
+  }
+
+  return Object.freeze({
+    candidates: Object.freeze(candidates),
+  });
+}
+
+function candidateIfInDomains(
+  first: Curve2,
+  second: Curve2,
+  point: Vec2,
+  candidate: IntersectionCandidate,
+  policy: IntersectionPolicy,
+): IntersectionResult {
+  const filtered = filterCandidateByDomains(first, second, candidate, policy);
+
+  if (!filtered) {
+    return intersectionIssue("Curves intersect outside bounded curve domains");
+  }
+
+  return oneIntersectionCandidate(filtered);
+}
+
+function filterCandidateByDomains(
+  first: Curve2,
+  second: Curve2,
+  candidate: IntersectionCandidate,
+  policy: IntersectionPolicy,
+): IntersectionCandidate | null {
+  const firstDomain = domainContainsPoint(
+    first.domain,
+    candidate.point,
+    policy.epsilon,
+  );
+
+  if (!firstDomain.contains) {
+    return null;
+  }
+
+  const secondDomain = domainContainsPoint(
+    second.domain,
+    candidate.point,
+    policy.epsilon,
+  );
+
+  if (!secondDomain.contains) {
+    return null;
+  }
+
+  return candidate;
 }
 
 function lineEndpointsForLinearImplicit(
