@@ -1,6 +1,7 @@
 # Architecture
 
-Euclid Forge is a layered geometry editor with one intentional cross-sectional seam.
+Euclid Forge is a layered geometry editor with one intentional cross-sectional
+seam.
 
 ```txt
 meaning
@@ -11,7 +12,9 @@ meaning
 → app
 ```
 
-The boundary checker enforces import direction. The `geometry/` directory is the exception-by-design: it gathers per-geometry behavior while keeping the rest of the pipeline layered.
+The boundary checker enforces import direction. The `geometry/` directory is the
+exception-by-design: it gathers per-geometry behavior while keeping the rest of
+the pipeline layered.
 
 ## Layer map
 
@@ -28,7 +31,7 @@ styles/           CSS
 
 ## `meaning/`
 
-Pure math. No graph, rendering, DOM, or app state.
+Pure math. No graph, rendering, DOM, state, or app policy.
 
 Examples:
 
@@ -56,7 +59,13 @@ delete policy
 thin construction wrappers
 ```
 
-The graph is the mathematical construction document. It is not view state. Derived geometry is not stored as coordinates in the graph.
+The graph is the mathematical construction document. It is not view state.
+Derived geometry is not stored as independent coordinates in the graph.
+
+Graph edits are the mutation vocabulary. Durable geometry/view operations should
+flow through explicit edits rather than ad hoc object mutation. Current edit
+families include adding nodes, moving free points, setting batches of free-point
+positions, deleting nodes, and updating node z-index values.
 
 Delete policy is conservative:
 
@@ -64,24 +73,8 @@ Delete policy is conservative:
 delete selected nodes only when no unselected node depends on them
 ```
 
-Blocked deletes produce a reason. The app layer may show that reason, but representation owns the dependency rule.
-
-### Graph edits
-
-Graph edits are the mutation language for durable construction state.
-
-Important current edits:
-
-```txt
-ADD_FREE_POINT
-ADD_NODES
-MOVE_FREE_POINT
-TRANSLATE_FREE_POINTS
-SET_FREE_POINT_POSITIONS
-DELETE_NODES
-```
-
-Body dragging ultimately resolves to moving free source points, usually through `SET_FREE_POINT_POSITIONS`.
+Blocked deletes produce a reason. The app layer may show that reason, but
+representation owns the dependency rule.
 
 ## `evaluation/`
 
@@ -91,13 +84,24 @@ Gives meaning to a validated graph.
 Graph → EvaluatedScene
 ```
 
-Evaluation derives geometry and does not mutate the graph. Evaluation is dispatched through the geometry registry:
+Evaluation derives geometry and does not mutate the graph. Evaluation is
+dispatched through the geometry registry:
 
 ```txt
 evaluateGraph
 → evaluateGeometryNode
 → geometry definition evaluation section
 ```
+
+Evaluated geometry carries two identities:
+
+```txt
+kind        evaluated shape class: POINT / SEGMENT / CIRCLE / TRIANGLE
+sourceKind  source graph node kind: FREE_POINT / MIDPOINT / CENTROID / ...
+```
+
+`sourceKind` lets the registry dispatch rendering and interaction behavior
+without reverse-inferring graph kind from evaluated shape and point role.
 
 The evaluation context exposes safe dependency accessors:
 
@@ -107,80 +111,6 @@ getSegment(id)
 getTriangle(id)
 ```
 
-Evaluated geometry carries two related but distinct ideas:
-
-```txt
-kind        evaluated shape category: POINT / SEGMENT / CIRCLE / TRIANGLE
-sourceKind  source node kind: FREE_POINT / MIDPOINT / CENTROID / SEGMENT / CIRCLE / TRIANGLE
-```
-
-`sourceKind` lets registry dispatch remain explicit without reverse-inferring node kind from evaluated point role.
-
-## `geometry/`
-
-The `geometry/` directory is the controlled cross-layer seam for shape-specific behavior.
-
-A geometry definition may own:
-
-```txt
-representation.dependencies
-evaluation.evaluate
-rendering.layer
-rendering.render
-interaction.hitClass
-interaction.hitTest
-interaction.bodyDrag
-construction.factories
-```
-
-This keeps shape-specific behavior close together while preserving the closed core unions for now.
-
-### Registry responsibilities
-
-The registry provides dispatch for:
-
-```txt
-dependenciesForGeometryNode
-evaluateGeometryNode
-renderGeometryValue
-renderLayerForGeometryValue
-hitGeometryValue
-bodyDragForGeometryNode
-constructionFactoryForGeometryKind
-```
-
-Layer code should use these registry seams rather than open-coding shape switches.
-
-### Body-drag metadata
-
-Body dragging is opt-in per geometry definition.
-
-The registry concept is:
-
-```txt
-interaction.bodyDrag.sourcePointIds(node, context) → readonly NodeId[] | null
-```
-
-A shape is body-draggable only when its definition can name a finite set of free source points whose translation preserves the represented geometry.
-
-Examples:
-
-```txt
-TRIANGLE
-  source points: a, b, c
-  draggable when all three are FREE_POINT nodes
-
-CIRCLE
-  source points: center, through
-  draggable when both are FREE_POINT nodes
-
-MIDPOINT / CENTROID
-  no bodyDrag metadata
-  not directly draggable because inverse semantics are ambiguous
-```
-
-The app layer does not know triangle or circle internals. It asks the registry for body-drag sources and translates those free points.
-
 ## `rendering/`
 
 Draws evaluated geometry.
@@ -189,216 +119,216 @@ Draws evaluated geometry.
 EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
-Global painter order is layer-based:
+Rendering is registry-dispatched through `renderGeometryValue`.
+
+Render layer order is centralized and deliberate:
 
 ```txt
 AREA → LINEAR → POINT
 ```
 
-Within each render layer, `zIndex` orders overlapping geometry. This keeps points visually above areas while allowing same-layer shapes such as circles and triangles to stack predictably.
-
-Actual drawing dispatches through the geometry registry:
-
-```txt
-renderScene
-→ renderGeometryValue
-→ geometry definition rendering section
-```
-
-Shape-specific renderer files remain in `rendering/` for canvas drawing mechanics.
+`zIndex` breaks ties within a render layer. It does not move points below areas
+or areas above points; it only orders geometry that shares the same layer.
 
 ## `interaction/`
 
-Pure hit testing. No DOM and no app state mutation.
+Pure hit testing. It does not mutate app state and does not know browser event
+effects.
 
-Hit testing uses broad class priority:
+Hit priority is deliberately different from render order:
 
 ```txt
 POINT → LINEAR → AREA
 ```
 
-Within a hit class, `zIndex` decides overlapping winners, with distance as a tie-breaker where applicable.
+That means a point remains easy to grab even when it sits inside a high-z area.
 
-Generic selection uses:
+Within a hit class, `zIndex` decides which candidate wins. Distance remains a
+tie-breaker for distance-bearing hits such as points and segments.
 
-```txt
-hitTestSelectionTarget
-```
+Generic selection hit testing uses the registry. A geometry definition that
+declares an interaction hit test participates automatically in selection.
 
-Generic body dragging uses:
+## `geometry/`
 
-```txt
-hitTestDraggableAreaBody
-```
+The controlled cross-layer seam for shape-specific behavior.
 
-That function chooses a draggable area body through registry body-drag metadata rather than hardcoding triangle or circle behavior.
-
-## `app/`
-
-Browser shell and user intent.
-
-Owns:
+A geometry definition may provide:
 
 ```txt
-AppState
-ViewState
-DragState
-AppTransition
-AppRuntime
-commands
-pointer intent
-DOM event wiring
-history
-workspace save/open
-status effects
+representation.dependencies
+evaluation.evaluate
+rendering.layer
+rendering.render
+interaction.hitClass
+interaction.hitTest
+interaction.bodyDrag.sourcePointIds
+construction.factories
 ```
 
-The app layer interprets user input into transitions. Transitions may update graph state, view state, drag state, history, render scheduling, pointer capture, and status messages.
+This is the place for per-shape behavior. Avoid reintroducing scattered switches
+for shape logic when the behavior belongs in a definition.
 
-### Pointer intent
-
-Pointer intent separates user gesture interpretation from mutation.
-
-Current shape:
-
-```txt
-shift pointer down
-  → generic selection hit testing
-
-ordinary pointer down
-  → free point drag if a free point is hit
-  → draggable area body if registry exposes body-drag source points
-  → add free point otherwise
-```
-
-Free-point drag priority is preserved so points remain easy to grab even inside area geometry.
-
-Area body drag uses topmost draggable area by z-index.
-
-### Drag state
-
-There are two main drag modes:
-
-```txt
-FREE_POINT
-  directly moves one free point
-
-BODY
-  translates a captured set of free source points
-```
-
-`BODY` drag stores:
-
-```txt
-nodeId
-sourcePointIds
-initialPointerWorld
-initialSourcePointPositions
-```
-
-The reusable free-point drag helpers capture initial positions and translate them by pointer delta.
-
-## Selection predicates
-
-Command eligibility lives in focused selection predicate helpers rather than directly in the command table.
-
-Examples:
-
-```txt
-selectedCirclePoints
-selectedFreePointVertices
-selectedTriangle
-requireSelectedCirclePoints
-requireSelectedFreePointVertices
-requireSelectedTriangle
-```
-
-This keeps `commands.ts` focused on command registration and execution.
-
-## Visibility
-
-View state stores explicitly hidden nodes.
-
-Effective visibility is derived by including transitive dependents:
-
-```txt
-hidden node → dependent geometry also effectively hidden
-```
-
-Rendering and interaction consume the effective hidden set so hidden or dependent-hidden objects are not drawn or hit.
-
-## History
-
-History stores durable snapshots.
-
-A snapshot contains:
-
-```txt
-graph
-viewState with hover cleared
-```
-
-A snapshot does not contain:
-
-```txt
-drag state
-pointer capture
-viewport motion
-history
-status messages
-```
-
-## Workspace serialization
-
-A workspace stores durable project state:
-
-```txt
-version
-graph nodes
-selected node IDs
-hidden node IDs
-viewport center
-viewport zoom
-viewport rotation
-```
-
-It does not store hover, drag state, history, pointer capture, smooth viewport motion, or status messages.
-
-## Boundary checker
-
-The boundary checker treats `geometry/` as an explicit seam.
-
-Allowed direction is intentionally narrow:
-
-```txt
-geometry → meaning
-geometry → representation
-geometry → evaluation
-geometry → rendering
-```
-
-Layer code may depend on `geometry/` only at dispatch seams:
-
-```txt
-representation → geometry
-evaluation → geometry
-rendering → geometry
-interaction → geometry
-```
-
-`app/` should not depend on `geometry/` directly. It should go through the normal layer APIs.
-
-## Current architectural stance
-
-Keep the core unions closed for now:
+The core unions remain closed for now:
 
 ```txt
 GeometryNode
 EvaluatedGeometry
 ```
 
-Put per-shape behavior in `src/geometry/definitions/*` where possible.
+The registry is not a plugin system. It is a central dispatch table with strong
+TypeScript coverage.
 
-Keep compound constructions outside a single shape definition when they coordinate multiple node kinds.
+### Body dragging
 
-Avoid adding a generalized tool system until user-facing interaction pressure requires it.
+Body dragging is opt-in registry metadata, not a generic boolean.
+
+A definition may declare:
+
+```txt
+interaction.bodyDrag.sourcePointIds(node, context)
+```
+
+The returned IDs are the free source points that can be translated to preserve
+the represented shape under body dragging.
+
+Examples:
+
+```txt
+triangle → [a, b, c] when all vertices are free points
+circle   → [center, through] when both defining points are free
+```
+
+If a shape cannot provide a principled free-source translation, it should omit
+body drag metadata. Midpoints and centroids should not accidentally become
+draggable, because dragging them would require inverse constraint semantics.
+
+## `app/`
+
+Owns browser/user concerns:
+
+```txt
+state
+view state
+history
+commands
+pointer intent
+DOM bindings
+workspace save/open
+status effects
+pointer capture effects
+```
+
+The app layer turns input into explicit transitions:
+
+```txt
+input + AppState → AppTransition
+```
+
+App transitions describe:
+
+```txt
+next state
+render request
+preventDefault
+history policy
+effects
+```
+
+Effects stay explicit so controller logic remains testable.
+
+## Pointer intent model
+
+Pointer interpretation is intentionally small:
+
+```txt
+shift-click → generic selection hit testing
+free point hit → direct free-point drag
+draggable area body hit → BODY drag
+empty canvas → add free point
+```
+
+Free-point drag has priority over area body drag. Area body drag uses the
+topmost draggable area candidate according to `zIndex` within the `AREA` hit
+class.
+
+The app controller does not need to know whether a body drag is a triangle or a
+circle. It receives source point IDs and applies the generic free-point position
+translation path.
+
+## Selection and command predicates
+
+Command eligibility helpers live outside the command table. The command table
+should stay easy to scan:
+
+```txt
+key(s)
+disabled reason
+run behavior
+```
+
+Selection predicates answer questions such as:
+
+```txt
+are exactly two free points selected?
+are exactly three free points selected?
+is exactly one triangle selected?
+```
+
+## Visibility
+
+View state stores explicit hidden node IDs.
+
+Effective visibility includes transitive dependents:
+
+```txt
+hidden source → dependent constructions are effectively hidden
+```
+
+Rendering and interaction should use effective hidden IDs so invisible dependent
+geometry is not accidentally interactive.
+
+## Z-order
+
+Nodes may carry `zIndex`.
+
+`zIndex` is user-editable through commands:
+
+```txt
+PageUp              bring selected forward
+PageDown            send selected backward
+Shift+PageUp        bring selected to front
+Shift+PageDown      send selected to back
+```
+
+Z-order is scoped by existing layer/class priority:
+
+```txt
+render: AREA → LINEAR → POINT, then zIndex within each layer
+hit:    POINT → LINEAR → AREA, then zIndex within each class
+```
+
+This keeps direct point interaction reliable while making overlapping areas and
+same-class geometry deterministic and user-controllable.
+
+## History
+
+History stores graph and view snapshots. Hover and drag state are transient and
+should not be persisted in snapshots.
+
+Durable user changes commit history. Viewport motion and hover usually ignore
+history. Completed drags commit history.
+
+## Workspace files
+
+Workspace serialization stores graph nodes and view state. Since nodes carry
+metadata such as `zIndex`, workspace save/open naturally preserves that metadata
+when present.
+
+Workspace parsing is intentionally shallow. Graph validity remains delegated to
+`createGraph`.
+
+## Boundary rule
+
+Follow the direction of the layer map. Use `geometry/` only for per-kind shape
+behavior. It is the respectful blur, not a license for arbitrary imports.
