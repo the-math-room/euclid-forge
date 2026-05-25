@@ -219,4 +219,27 @@ describe("app/domEvents", () => {
 
     expect(runtime.applyTransition).toHaveBeenCalledOnce();
   });
+  test("passes shift key state to key transitions", () => {
+    const windowTarget = windowTargetStub();
+    const runtime = runtimeStub();
+
+    connectDomEvents({
+      windowTarget,
+      canvas: canvasStub(),
+      runtime,
+      workspaceEnvironment: workspaceEnvironmentStub(),
+      getViewportMotion: emptyViewportMotionState,
+      setViewportMotion: vi.fn(),
+      requestViewportMotionFrame: vi.fn(),
+    });
+
+    const event = keyEvent("PageUp", { shiftKey: true });
+    windowTarget.listeners.get("keydown")?.(event);
+
+    expect(runtime.applyTransition).toHaveBeenCalledWith(
+      event,
+      expect.objectContaining({}),
+    );
+  });
+
 });

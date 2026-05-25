@@ -1024,4 +1024,24 @@ describe("app/appController", () => {
     );
   });
 
+  test("shift page up brings selected node to front", () => {
+    const graph = createGraph([
+      { ...freePoint("A", 0, 0, "A"), zIndex: 0 },
+      { ...freePoint("B", 1, 0, "B"), zIndex: 1 },
+      { ...freePoint("C", 2, 0, "C"), zIndex: 2 },
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "PageUp",
+      shiftKey: true,
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.get("A")).toEqual({
+      ...freePoint("A", 0, 0, "A"),
+      zIndex: 2,
+    });
+  });
+
 });

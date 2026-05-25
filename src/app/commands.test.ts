@@ -296,4 +296,53 @@ describe("app/commands", () => {
     expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
 
+  test("z-order commands update selected node z-indices", () => {
+    const graph = createGraph([
+      { ...freePoint("A", 0, 0, "A"), zIndex: 0 },
+      { ...freePoint("B", 1, 0, "B"), zIndex: 1 },
+      { ...freePoint("C", 2, 0, "C"), zIndex: 2 },
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "B");
+
+    const forward = appCommandForKey("PageUp")?.run(
+      appState(graph, viewState, null),
+    );
+
+    expect(forward?.history).toBe("commit");
+    expect(forward?.state.graph.byId.get("B")).toEqual({
+      ...freePoint("B", 1, 0, "B"),
+      zIndex: 2,
+    });
+    expect(forward?.state.graph.byId.get("C")).toEqual({
+      ...freePoint("C", 2, 0, "C"),
+      zIndex: 1,
+    });
+  });
+
+  test("shift page z-order command moves selected node to front", () => {
+    const graph = createGraph([
+      { ...freePoint("A", 0, 0, "A"), zIndex: 0 },
+      { ...freePoint("B", 1, 0, "B"), zIndex: 1 },
+      { ...freePoint("C", 2, 0, "C"), zIndex: 2 },
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "A");
+
+    const command = appCommandForKey("PageUp", { shiftKey: true });
+    const result = command?.run(appState(graph, viewState, null));
+
+    expect(command?.id).toBe("bring-selected-to-front");
+    expect(result?.state.graph.byId.get("A")).toEqual({
+      ...freePoint("A", 0, 0, "A"),
+      zIndex: 2,
+    });
+  });
+
+  test("z-order commands are disabled with empty selection", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const state = appState(graph, emptyViewState(), null);
+    const command = appCommandForKey("PageUp");
+
+    expect(command && appCommandDisabledReason(command, state)).toBe("");
+  });
+
 });

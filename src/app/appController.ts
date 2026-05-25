@@ -59,6 +59,7 @@ type AppTransitionInit = Omit<AppTransition, "history" | "effects"> &
 
 export type KeyInput = Readonly<{
   key: string;
+  shiftKey?: boolean;
 }>;
 
 export type PointerInput = Readonly<{
@@ -72,7 +73,9 @@ export function handleKeyDown(
   state: AppState,
   input: KeyInput,
 ): AppTransition {
-  const command = appCommandForKey(input.key);
+  const command = appCommandForKey(input.key, {
+    shiftKey: input.shiftKey ?? false,
+  });
 
   if (!command) {
     return unchanged(state);

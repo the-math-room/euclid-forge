@@ -90,7 +90,10 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
 
     input.runtime.applyTransition(
       event,
-      handleKeyDown(input.runtime.getState(), { key: event.key }),
+      handleKeyDown(input.runtime.getState(), {
+        key: event.key,
+        shiftKey: event.shiftKey,
+      }),
     );
   });
 

@@ -31,6 +31,10 @@ export type GraphEdit =
   | Readonly<{
       kind: "DELETE_NODES";
       ids: readonly NodeId[];
+    }>
+  | Readonly<{
+      kind: "SET_NODE_Z_INDICES";
+      zIndices: ReadonlyMap<NodeId, number>;
     }>;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
@@ -52,6 +56,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "DELETE_NODES":
       return deleteNodes(graph, edit.ids);
+
+    case "SET_NODE_Z_INDICES":
+      return setNodeZIndices(graph, edit.zIndices);
   }
 }
 
@@ -171,6 +178,44 @@ function translateFreePoints(
         node.y + delta.y,
         node.label,
       );
+    }),
+  );
+}
+
+function setNodeZIndices(
+  graph: Graph,
+  zIndices: ReadonlyMap<NodeId, number>,
+): Graph {
+  if (zIndices.size === 0) {
+    return graph;
+  }
+
+  for (const [id, zIndex] of zIndices) {
+    if (!graph.byId.has(id)) {
+      throw new Error(`Cannot set z-index for missing node: ${id}`);
+    }
+
+    if (!Number.isFinite(zIndex)) {
+      throw new Error(`Node z-index must be finite for ${id}: ${zIndex}`);
+    }
+  }
+
+  return createGraph(
+    graph.nodes.map((node) => {
+      const zIndex = zIndices.get(node.id);
+
+      if (zIndex === undefined) {
+        return node;
+      }
+
+      if (node.zIndex === zIndex) {
+        return node;
+      }
+
+      return Object.freeze({
+        ...node,
+        zIndex,
+      }) as GeometryNode;
     }),
   );
 }

@@ -32,6 +32,12 @@ import {
   unhideAllNodes,
   zoomViewport,
 } from "./viewState";
+import {
+  bringNodesForward,
+  bringNodesToFront,
+  sendNodesBackward,
+  sendNodesToBack,
+} from "./zOrder";
 
 export type CommandHistoryPolicy = "commit" | "ignore";
 
@@ -261,6 +267,86 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   }),
 
   command({
+    id: "bring-selected-forward",
+    keys: ["pageup"],
+    disabledReason: selectedNodesDisabledReason,
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "SET_NODE_Z_INDICES",
+            zIndices: bringNodesForward(
+              state.graph,
+              state.viewState.selectedNodeIds,
+            ),
+          }),
+          state.viewState,
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "send-selected-backward",
+    keys: ["pagedown"],
+    disabledReason: selectedNodesDisabledReason,
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "SET_NODE_Z_INDICES",
+            zIndices: sendNodesBackward(
+              state.graph,
+              state.viewState.selectedNodeIds,
+            ),
+          }),
+          state.viewState,
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "bring-selected-to-front",
+    keys: ["shift+pageup"],
+    disabledReason: selectedNodesDisabledReason,
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "SET_NODE_Z_INDICES",
+            zIndices: bringNodesToFront(
+              state.graph,
+              state.viewState.selectedNodeIds,
+            ),
+          }),
+          state.viewState,
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
+    id: "send-selected-to-back",
+    keys: ["shift+pagedown"],
+    disabledReason: selectedNodesDisabledReason,
+    run: (state) =>
+      commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "SET_NODE_Z_INDICES",
+            zIndices: sendNodesToBack(
+              state.graph,
+              state.viewState.selectedNodeIds,
+            ),
+          }),
+          state.viewState,
+          state.dragState,
+        ),
+      ),
+  }),
+
+  command({
     id: "delete-selected",
     keys: ["delete", "backspace"],
     disabledReason: deleteSelectedDisabledReason,
@@ -311,11 +397,25 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   }),
 ]);
 
-export function appCommandForKey(key: string): AppCommand | null {
+export type AppCommandKeyModifiers = Readonly<{
+  shiftKey?: boolean;
+}>;
+
+export function appCommandForKey(
+  key: string,
+  modifiers: AppCommandKeyModifiers = {},
+): AppCommand | null {
   const normalized = normalizeCommandKey(key);
+  const shifted = modifiers.shiftKey
+    ? normalizeCommandKey(`shift+${key}`)
+    : null;
 
   return (
-    APP_COMMANDS.find((command) => command.keys.includes(normalized)) ?? null
+    (shifted
+      ? APP_COMMANDS.find((command) => command.keys.includes(shifted))
+      : null) ??
+    APP_COMMANDS.find((command) => command.keys.includes(normalized)) ??
+    null
   );
 }
 
@@ -364,6 +464,10 @@ function viewportPanStep(state: AppState): number {
   return 40 / state.viewState.viewportZoom;
 }
 
+
+function selectedNodesDisabledReason(state: AppState): string | null {
+  return state.viewState.selectedNodeIds.size > 0 ? null : "";
+}
 
 function deleteSelectedDisabledReason(state: AppState): string | null {
   const selected = [...state.viewState.selectedNodeIds];

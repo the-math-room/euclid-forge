@@ -215,4 +215,39 @@ describe("representation/applyGraphEdit", () => {
       }),
     ).toThrow("Cannot delete nodes with unselected dependents");
   });
+  test("sets node z-indices", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+
+    const edited = applyGraphEdit(graph, {
+      kind: "SET_NODE_Z_INDICES",
+      zIndices: new Map([
+        ["A", 2],
+        ["B", 1],
+      ]),
+    });
+
+    expect(edited.byId.get("A")).toEqual({
+      ...freePoint("A", 0, 0, "A"),
+      zIndex: 2,
+    });
+    expect(edited.byId.get("B")).toEqual({
+      ...freePoint("B", 1, 0, "B"),
+      zIndex: 1,
+    });
+  });
+
+  test("rejects z-index updates for missing nodes", () => {
+    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+
+    expect(() =>
+      applyGraphEdit(graph, {
+        kind: "SET_NODE_Z_INDICES",
+        zIndices: new Map([["missing", 1]]),
+      }),
+    ).toThrow("Cannot set z-index for missing node: missing");
+  });
+
 });
