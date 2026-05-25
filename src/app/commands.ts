@@ -1,3 +1,5 @@
+import { evaluateGraph } from "../evaluation/evaluateGraph";
+import { curveIntersectionCandidatesForScene } from "../evaluation/curveIntersectionCandidates";
 import {
   centroidConstruction,
   circleConstruction,
@@ -7,6 +9,8 @@ import {
   triangleSideMidpointConstruction,
 } from "../representation/constructions";
 import { applyGraphEdit } from "../representation/edit";
+import { curveIntersectionNode } from "../representation/node";
+import type { GeometryNode, NodeId } from "../representation/node";
 import {
   deleteNodesDisabledReason,
 } from "../representation/deletePolicy";
@@ -267,10 +271,15 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       const nodeA = state.graph.byId.get(curveA);
       const nodeB = state.graph.byId.get(curveB);
 
-      if (nodeA?.kind !== "SEGMENT" || nodeB?.kind !== "SEGMENT") {
+      const nodes =
+        nodeA?.kind === "SEGMENT" && nodeB?.kind === "SEGMENT"
+          ? segmentIntersectionConstruction(state.graph, curveA, curveB)
+          : curveIntersectionConstruction(state, curveA, curveB);
+
+      if (nodes.length === 0) {
         return ignore(
           state,
-          "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
+          "No currently defined curve intersection candidates to create.",
         );
       }
 
@@ -278,11 +287,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
         appState(
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
-            nodes: segmentIntersectionConstruction(
-              state.graph,
-              curveA,
-              curveB,
-            ),
+            nodes,
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -531,6 +536,90 @@ function ignore(
 
 function viewportPanStep(state: AppState): number {
   return 40 / state.viewState.viewportZoom;
+}
+
+
+
+function curveIntersectionConstruction(
+  state: AppState,
+  curveA: NodeId,
+  curveB: NodeId,
+): readonly GeometryNode[] {
+  if (curveA === curveB) {
+    throw new Error("Cannot create curve intersections from duplicate curves");
+  }
+
+  const evaluated = evaluateGraph(state.graph);
+  const result = curveIntersectionCandidatesForScene(evaluated, curveA, curveB);
+
+  if (result.issue) {
+    return Object.freeze([]);
+  }
+
+  const additions: GeometryNode[] = [];
+
+  for (const candidate of result.candidates) {
+    const existing = [...state.graph.nodes, ...additions].find(
+      (node) =>
+        node.kind === "CURVE_INTERSECTION" &&
+        sameUnorderedPair(node.curveA, node.curveB, curveA, curveB) &&
+        node.branchKey === candidate.branchKey,
+    );
+
+    if (existing) {
+      continue;
+    }
+
+    const id = nextCurveIntersectionId(
+      [...state.graph.nodes, ...additions],
+      curveA,
+      curveB,
+      candidate.branchKey,
+    );
+
+    additions.push(
+      curveIntersectionNode(id, curveA, curveB, candidate.branchKey, id),
+    );
+  }
+
+  return Object.freeze(additions);
+}
+
+function sameUnorderedPair(
+  leftA: NodeId,
+  leftB: NodeId,
+  rightA: NodeId,
+  rightB: NodeId,
+): boolean {
+  return (
+    (leftA === rightA && leftB === rightB) ||
+    (leftA === rightB && leftB === rightA)
+  );
+}
+
+function nextCurveIntersectionId(
+  nodes: readonly { id: NodeId }[],
+  curveA: NodeId,
+  curveB: NodeId,
+  branchKey: string,
+): NodeId {
+  const base = `X_${curveA}_${curveB}_${safeIdPart(branchKey)}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
+}
+
+function safeIdPart(value: string): string {
+  return value.replace(/[^A-Za-z0-9_]+/g, "_");
 }
 
 

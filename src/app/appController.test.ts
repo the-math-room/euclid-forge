@@ -186,13 +186,14 @@ describe("app/appController", () => {
   });
 
 
-  test("I reports that selected curve intersections cannot be persisted yet", () => {
+  test("I creates curve intersections for selected non-segment curve pairs", () => {
     const graph = createGraph([
-      freePoint("A", 0, 0, "A"),
-      freePoint("B", 1, 0, "B"),
-      freePoint("C", 0, 1, "C"),
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("O", 0, 0, "O"),
+      freePoint("R", 1, 0, "R"),
       segmentNode("AB", "A", "B"),
-      circleNode("circle", "A", "B"),
+      circleNode("circle", "O", "R"),
     ]);
     const viewState = toggleSelectedNode(
       toggleSelectedNode(emptyViewState(), "AB"),
@@ -203,13 +204,20 @@ describe("app/appController", () => {
       key: "i",
     });
 
-    expect(transition.history).toBe("ignore");
-    expect(transition.state.graph).toBe(graph);
-    expect(transition.effects).toContainEqual({
-      kind: "SHOW_STATUS",
-      message:
-        "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
-    });
+    expect(transition.history).toBe("commit");
+    const curveIntersections = transition.state.graph.nodes.filter(
+      (node) => node.kind === "CURVE_INTERSECTION",
+    );
+
+    expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
+      "linear-circle:0",
+      "linear-circle:1",
+    ]);
+    expect(
+      curveIntersections.every(
+        (node) => node.curveA === "AB" && node.curveB === "circle",
+      ),
+    ).toBe(true);
   });
 
   test("creates a centroid for one selected triangle with G", () => {

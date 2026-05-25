@@ -58,13 +58,14 @@ describe("app segment intersection command", () => {
 });
 
 
-  test("recognizes non-segment curve pairs but does not persist them yet", () => {
+  test("creates curve intersection nodes for non-segment curve pairs", () => {
     const graph = createGraph([
-      freePoint("A", 0, 0, "A"),
-      freePoint("B", 1, 0, "B"),
-      freePoint("C", 0, 1, "C"),
+      freePoint("A", -2, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("O", 0, 0, "O"),
+      freePoint("R", 1, 0, "R"),
       segmentNode("AB", "A", "B"),
-      circleNode("circle", "A", "B"),
+      circleNode("circle", "O", "R"),
     ]);
     const viewState = toggleSelectedNode(
       toggleSelectedNode(emptyViewState(), "AB"),
@@ -73,10 +74,22 @@ describe("app segment intersection command", () => {
 
     const result = appCommandForKey("i")?.run(appState(graph, viewState, null));
 
-    expect(result).toEqual({
-      state: appState(graph, viewState, null),
-      history: "ignore",
-      statusMessage:
-        "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
-    });
+    expect(result?.history).toBe("commit");
+    if (!result) {
+      throw new Error("Expected I command result");
+    }
+
+    const curveIntersections = result.state.graph.nodes.filter(
+      (node) => node.kind === "CURVE_INTERSECTION",
+    );
+
+    expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
+      "linear-circle:0",
+      "linear-circle:1",
+    ]);
+    expect(
+      curveIntersections.every(
+        (node) => node.curveA === "AB" && node.curveB === "circle",
+      ),
+    ).toBe(true);
   });
