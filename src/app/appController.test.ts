@@ -181,7 +181,34 @@ describe("app/appController", () => {
     expect(transition.effects).toContainEqual({
       kind: "SHOW_STATUS",
       message:
-        "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.",
+        "Select exactly two curve nodes, such as segments or circles, to create an intersection.",
+    });
+  });
+
+
+  test("I reports that selected curve intersections cannot be persisted yet", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      segmentNode("AB", "A", "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "AB"),
+      "circle",
+    );
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "i",
+    });
+
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
+    expect(transition.effects).toContainEqual({
+      kind: "SHOW_STATUS",
+      message:
+        "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
     });
   });
 

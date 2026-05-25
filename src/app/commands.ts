@@ -17,14 +17,14 @@ import {
 } from "./effectiveVisibility";
 import {
   requireSelectedCirclePoints,
+  requireSelectedConstructibleCurveTuple,
   requireSelectedSegmentEndpoints,
   requireSelectedConstructiblePointTuple,
   requireSelectedFreePointVertices,
   requireSelectedTriangle,
   selectedCirclePoints,
+  selectedConstructibleCurveTuple,
   selectedSegmentEndpoints,
-  requireSelectedSegmentTuple,
-  selectedSegmentTuple,
   selectedFreePointVertices,
   selectedTriangle,
 } from "./selectionPredicates";
@@ -259,11 +259,20 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
     keys: ["i"],
     disabledReason: segmentIntersectionDisabledReason,
     run: (state) => {
-      const [segmentA, segmentB] = requireSelectedSegmentTuple(
+      const [curveA, curveB] = requireSelectedConstructibleCurveTuple(
         state,
         2,
         "Cannot run create-segment-intersection while disabled",
       );
+      const nodeA = state.graph.byId.get(curveA);
+      const nodeB = state.graph.byId.get(curveB);
+
+      if (nodeA?.kind !== "SEGMENT" || nodeB?.kind !== "SEGMENT") {
+        return ignore(
+          state,
+          "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
+        );
+      }
 
       return commit(
         appState(
@@ -271,8 +280,8 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
             kind: "ADD_NODES",
             nodes: segmentIntersectionConstruction(
               state.graph,
-              segmentA,
-              segmentB,
+              curveA,
+              curveB,
             ),
           }),
           clearSelection(state.viewState),
@@ -526,11 +535,11 @@ function viewportPanStep(state: AppState): number {
 
 
 function segmentIntersectionDisabledReason(state: AppState): string | null {
-  if (selectedSegmentTuple(state, 2)) {
+  if (selectedConstructibleCurveTuple(state, 2)) {
     return null;
   }
 
-  return "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.";
+  return "Select exactly two curve nodes, such as segments or circles, to create an intersection.";
 }
 
 function selectedNodesDisabledReason(state: AppState): string | null {

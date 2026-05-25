@@ -7,6 +7,7 @@ import {
 import { emptyViewState, toggleSelectedNode } from "./viewState";
 import { createGraph } from "../representation/graph";
 import {
+  circleNode,
   freePoint,
   segmentIntersectionNode,
   segmentNode,
@@ -36,7 +37,7 @@ describe("app segment intersection command", () => {
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
   });
 
-  test("is disabled unless exactly two segments are selected", () => {
+  test("is disabled unless exactly two curve nodes are selected", () => {
     const graph = createGraph([
       freePoint("A", -1, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -51,7 +52,31 @@ describe("app segment intersection command", () => {
           appState(graph, toggleSelectedNode(emptyViewState(), "AB"), null),
         ),
     ).toBe(
-      "Select exactly two segment nodes to create a segment intersection. Triangle borders are not segments unless you create segment nodes for them.",
+      "Select exactly two curve nodes, such as segments or circles, to create an intersection.",
     );
   });
 });
+
+
+  test("recognizes non-segment curve pairs but does not persist them yet", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      segmentNode("AB", "A", "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "AB"),
+      "circle",
+    );
+
+    const result = appCommandForKey("i")?.run(appState(graph, viewState, null));
+
+    expect(result).toEqual({
+      state: appState(graph, viewState, null),
+      history: "ignore",
+      statusMessage:
+        "Curve intersection candidates are available in the meaning layer, but only segment-segment intersections can be persisted as graph nodes yet.",
+    });
+  });
