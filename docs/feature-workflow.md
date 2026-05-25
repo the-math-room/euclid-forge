@@ -1,15 +1,15 @@
 # Feature Workflow
 
-This document describes how to add features without weakening Euclid Forge's architecture.
+This document describes how to add features in the Euclid Forge monorepo without weakening the core/app boundary.
 
 ## Default workflow
 
 1. Make the smallest coherent patch.
 2. Keep `npm run check` green between patches.
 3. Prefer behavior tests before or with implementation.
-4. Put shape-specific behavior in `src/geometry/definitions/*` when possible.
-5. Route consumer-facing headless behavior through `src/core/index.ts`.
-6. Avoid new abstractions unless a real feature creates pressure.
+4. Decide whether the change belongs in `packages/core`, `apps/forge`, or both.
+5. Keep `packages/core` headless.
+6. Route reusable engine behavior through the core package surface.
 7. Update docs when the mental model changes.
 
 Validation command:
@@ -18,58 +18,123 @@ Validation command:
 npm run check
 ```
 
+## Monorepo rule
+
+The repository may be physically unified, but dependency direction is not negotiable.
+
+```txt
+apps/forge may import packages/core
+packages/core may not import apps/forge
+```
+
+When in doubt, ask which side would still make sense outside a browser.
+
+## Choosing the right package
+
+### Put behavior in `packages/core` when it involves
+
+```txt
+math
+geometry denotation
+graph representation
+graph edits
+construction helpers
+evaluation
+diagnostics
+dependency inspection
+delete policy
+workspace parsing
+workspace serialization
+headless fixtures
+headless view-state or viewport math
+```
+
+### Put behavior in `apps/forge` when it involves
+
+```txt
+keyboard shortcuts
+pointer gestures
+DOM events
+HTML canvas drawing
+file picker/download plumbing
+status messages
+history grouping
+render scheduling
+CSS
+browser smoke tests
+```
+
+### Split the feature when necessary
+
+Many geometry features are naturally split.
+
+Example:
+
+```txt
+core:
+  define the node, graph dependencies, evaluation, diagnostics, construction helper
+
+forge:
+  expose a command, decide selection behavior, hit test it, render it
+```
+
+Do not move browser concepts into core just to make a feature easier to wire.
+
 ## Headless core workflow
 
 New engine-facing behavior should be available through the headless core surface when it is useful outside the browser editor.
 
-Preferred consumer import:
+Preferred consumer import from forge:
 
 ```ts
 import {
   createGeometryEngine,
   geometryWorkspaceFromJsonText,
   diagnosticsWithCode,
-} from "../core";
+} from "@euclid-forge/core";
 ```
 
-A feature is a good candidate for core exposure if it involves:
+Subpath imports are acceptable when the app is intentionally consuming a lower-level core capability:
+
+```ts
+import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
+import { applyGraphEdit } from "@euclid-forge/core/representation/edit";
+```
+
+Avoid relative imports from `apps/forge` into `packages/core`.
+
+## Browser app workflow
+
+The browser app should adapt user intent to headless operations.
+
+Typical app flow:
 
 ```txt
-workspace parsing or serialization
-graph construction or graph edits
-evaluation
-diagnostics
-dependency inspection
-golden fixtures
+DOM event
+→ app intent / command
+→ core graph edit or app view-state update
+→ transition result
+→ runtime effects/history/render request
 ```
 
-The browser app should own:
-
-```txt
-keyboard shortcuts
-pointer gestures
-DOM events
-file picker/download plumbing
-status messages
-history grouping
-render scheduling
-CSS
-```
+The app can know about the graph and evaluated geometry. It should not duplicate the core's mathematical rules.
 
 ## Adding a new geometry kind
 
 A new geometry kind usually touches these areas:
 
 ```txt
-representation/node.ts
-evaluation/evaluated.ts
-geometry/definitions/<kind>.ts
-geometry/geometryRegistry.ts
-rendering renderer/theme, if visual
-interaction hit geometry, if selectable
-construction wrappers/commands, if constructible
-tests
-core fixture, if workspace-relevant
+packages/core/src/representation/node.ts
+packages/core/src/evaluation/evaluated.ts
+packages/core/src/geometry/definitions/<kind>.ts
+packages/core/src/geometry/geometryRegistry.ts
+packages/core/src/representation/constructions.ts, if constructible
+packages/core tests and fixtures
+
+apps/forge/src/rendering renderer/theme, if visual
+apps/forge/src/interaction hit geometry, if selectable
+apps/forge/src/app selection predicates or commands, if user-constructible
+apps/forge tests
 docs
 ```
 
@@ -81,6 +146,7 @@ docs
 What node kind is this?
 What graph dependencies does it have?
 Does it denote a mathematical object or a UI convenience?
+Can it be serialized without app state?
 ```
 
 ### Evaluation
@@ -90,6 +156,16 @@ What evaluated geometry does it produce when defined?
 Can it become undefined for some valid graph configurations?
 What diagnostic code should be recorded when undefined?
 What sourceKind should the evaluated value carry?
+Is evaluation deterministic without viewport, pointer, or DOM context?
+```
+
+### Construction
+
+```txt
+What selected inputs should create it?
+Are those inputs constructible points, constructible curves, or editable free points?
+Does construction need to avoid duplicates?
+Does construction belong in core, app, or both?
 ```
 
 ### Rendering
@@ -99,6 +175,7 @@ Does it render?
 Which render layer?
 How does it draw?
 How is selected/hovered state made visible?
+Can the renderer consume only evaluated geometry and render options?
 ```
 
 ### Interaction
@@ -107,203 +184,68 @@ How is selected/hovered state made visible?
 Is it hittable/selectable?
 Which hit class?
 What geometric hit test applies?
+How does z-order affect selection?
+Does it need browser pixels, or can it use viewport math from core?
 ```
 
 ### Body drag
 
 Only add body-drag metadata when translation of declared free source points preserves the represented shape.
 
-```txt
-interaction.bodyDrag.sourcePointIds(node, context)
-```
-
 Good examples:
 
 ```txt
 triangle → its three free vertices
 circle   → its free center and through points
+line     → its two free defining points, when both are free
 ```
 
 Bad examples without more design:
 
 ```txt
-midpoint → dragging would require inverse segment/source edits
-centroid → dragging would require ambiguous inverse triangle edits
-intersection point → dragging would require constraint solving
+centroid alone
+midpoint alone
+intersection point alone
+a shape with constrained source points
 ```
 
-## Constructible inputs
+## Boundary-check workflow
 
-Use constructible-point predicates for point construction inputs. Do not use free-point predicates unless the operation specifically requires editability.
+Before or with a monorepo cleanup, make sure `scripts/check-boundaries.mjs` rejects at least these cases:
 
 ```txt
-constructible point ≠ directly draggable point
+packages/core importing apps/forge
+packages/core importing rendering, interaction, app, or styles
+packages/core referencing document/window/HTMLElement/HTMLCanvasElement/CanvasRenderingContext2D
+apps/forge importing packages/core by relative filesystem path
 ```
 
-Current constructible point-valued nodes include:
+A temporary migration script is fine for mechanical rewrites, but the final state should be enforced by `npm run check`.
+
+## Review checklist
+
+Before merging, ask:
 
 ```txt
-FREE_POINT
-MIDPOINT
-CENTROID
-SEGMENT_INTERSECTION
-CURVE_INTERSECTION
+Did the core stay headless?
+Did forge remain a consumer of core?
+Are imports package-shaped instead of fragile relative cross-package paths?
+Did tests cover behavior at the layer that owns it?
+Did docs change if the seam changed?
 ```
 
-Current constructible curve-valued nodes include:
+## Good cleanup patches
+
+Good cleanup patches are small and enforce a seam:
 
 ```txt
-SEGMENT
-CIRCLE
+move browser-only helpers out of core
+move math/evaluation helpers out of forge
+centralize core exports
+tighten boundary checks
+rename aliases that obscure constructible vs editable points
+move rendering constants into theme
+extract app command helpers that are growing too large
 ```
 
-## Dynamic undefined constructions
-
-A construction node may be valid graph syntax but undefined in the current numeric configuration.
-
-Examples:
-
-```txt
-parallel segment intersection
-coincident segment intersection
-bounded segment intersection outside the finite segment extents
-curve intersection branch whose sources no longer have that branch
-dependent construction whose input point is currently unavailable
-```
-
-Undefined evaluated geometry should be omitted from the scene and recorded as a diagnostic. Dependents should also be omitted when their evaluated dependencies are unavailable.
-
-Do not turn ordinary derived constructions into constraints. Refusing, clamping, or projecting drags belongs to a future constraint-solver design.
-
-## Diagnostics
-
-Diagnostics are a headless-core surface, not just UI strings.
-
-They currently have this shape:
-
-```ts
-{
-  nodeId: string;
-  severity: "warning";
-  code:
-    | "MISSING_DEPENDENCY"
-    | "NO_REAL_INTERSECTION"
-    | "NO_UNIQUE_INTERSECTION"
-    | "STALE_INTERSECTION_BRANCH"
-    | "UNDEFINED_GEOMETRY";
-  message: string;
-}
-```
-
-Prefer tests that assert stable `code` values rather than parsing human-readable messages.
-
-Use core diagnostic helpers such as:
-
-```ts
-diagnosticsWithCode(engine.diagnostics(), "NO_REAL_INTERSECTION")
-```
-
-## Intersections and future curve work
-
-Prefer denotational abstractions over shape-pair graph explosions.
-
-The guiding model is:
-
-```txt
-geometry node → mathematical denotation
-curve denotation → point set / implicit equation / parameterized carrier / domain
-intersection → operation over denotations
-evaluation → numeric interpretation that returns classified candidates or diagnostics
-```
-
-Avoid graph concepts such as:
-
-```txt
-SEGMENT_CIRCLE_INTERSECTION
-CIRCLE_CIRCLE_INTERSECTION
-CIRCLE_PARABOLA_INTERSECTION
-PARABOLA_PARABOLA_INTERSECTION
-```
-
-Prefer the existing `CURVE_INTERSECTION` representation unless the feature has a distinct user-facing meaning.
-
-## When adding new curve kinds
-
-Preferred order:
-
-```txt
-1. Add meaning-level denotation / solver support.
-2. Add evaluated-geometry-to-curve-denotation support.
-3. Add tests for classified candidates.
-4. Let CURVE_INTERSECTION consume the new candidate branches.
-5. Add a core fixture if the behavior is workspace-relevant.
-6. Only then add command/UI affordances if needed.
-```
-
-## Adding a command
-
-Commands should stay table-like:
-
-```txt
-id
-keys
-disabledReason
-run
-```
-
-Use selection predicate helpers instead of growing local command-specific query logic.
-
-Commands may return `statusMessage` for recognized no-op states that should be explained to the user.
-
-### Boundary construction command
-
-`J` joins selected constructible points:
-
-```txt
-2 selected constructible points → segment
-3 selected constructible points → triangle
-```
-
-Circle construction remains on `C`:
-
-```txt
-2 selected constructible points → circle from center and through point
-```
-
-### Intersection command
-
-`I` creates intersections from selected constructible curves:
-
-```txt
-2 selected segment nodes          → SEGMENT_INTERSECTION
-segment + circle or circle+circle → CURVE_INTERSECTION branch nodes
-```
-
-## Workspace fixtures
-
-Workspace fixtures should live under:
-
-```txt
-src/core/fixtures/
-```
-
-Use the core fixture runner for both happy-path and partially undefined construction workspaces.
-
-## Documentation checklist
-
-Update docs when any of these change:
-
-```txt
-layer responsibilities
-headless core public surface
-registry responsibilities
-pointer intent order
-render/hit ordering
-keyboard shortcuts
-workspace format expectations
-feature workflow for new shapes
-intersection semantics
-undefined-construction behavior
-diagnostic codes
-denotational curve/intersection direction
-```
+Avoid cleanup patches that mix large file moves, behavior changes, and new features unless there is no practical alternative.

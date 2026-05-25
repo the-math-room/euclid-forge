@@ -1,53 +1,119 @@
 # Architecture
 
-Euclid Forge is a layered geometry editor with a growing headless core and one intentional cross-sectional geometry seam.
+Euclid Forge is a monorepo with a headless geometry core and a browser/editor application.
+
+The physical layout may live in one repository, but the architectural dependency still points in one direction:
+
+```txt
+packages/core  →  headless geometry engine
+apps/forge     →  browser/editor application that consumes core
+```
+
+`core` must never depend on `forge`. The monorepo exists to make coordinated work easier, not to make the engine aware of the app.
+
+## Dependency rule
+
+```txt
+apps/forge may import packages/core
+packages/core may not import apps/forge
+```
+
+The boundary checker should make this rule mechanical. A failing boundary check is an architectural failure, not a style warning.
+
+## Intended monorepo map
+
+```txt
+packages/core/src/
+  meaning/          pure math and denotational geometry helpers
+  representation/   construction syntax, graph validity, graph edits
+  evaluation/       graph → evaluated geometry and diagnostics
+  geometry/         per-kind geometry definitions and registry dispatch
+  core/             headless engine/workspace/view-state facade
+  view/             viewport/view-state math that remains browser-independent
+
+apps/forge/src/
+  app/              browser shell, user intent, state/history/effects
+  interaction/      hit testing and pointer-facing geometry adapters
+  rendering/        evaluated geometry → canvas pixels
+  styles/           CSS and app presentation
+```
+
+This document uses `core` to mean the package under `packages/core`, and `forge` to mean the browser app under `apps/forge`.
+
+## Boundary rules
+
+### Core may own
+
+```txt
+math primitives
+geometry denotations
+graph representation
+graph edits
+construction helpers
+dependency inspection
+delete policy
+evaluation
+diagnostics
+workspace parsing and serialization
+headless view-state and viewport math
+test fixtures for headless behavior
+```
+
+### Core must not own
+
+```txt
+DOM events
+HTMLCanvasElement or CanvasRenderingContext2D
+document or window access
+keyboard shortcuts
+pointer capture
+file picker/download plumbing
+status messages
+render scheduling
+CSS
+browser-only app history policy
+```
+
+### Forge may own
+
+```txt
+keyboard shortcuts
+pointer gestures
+DOM events
+file picker/download plumbing
+status messages
+history grouping
+render scheduling
+canvas rendering
+CSS
+browser smoke tests
+```
+
+### Forge should consume core through package boundaries
+
+Prefer imports that make the dependency direction obvious:
+
+```ts
+import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
+import { applyGraphEdit } from "@euclid-forge/core/representation/edit";
+```
+
+Avoid reaching across the filesystem with relative paths from `apps/forge` into `packages/core`.
+
+## Layer model inside core
+
+The headless package still has a layered architecture:
 
 ```txt
 meaning
 → representation
 → evaluation
-→ core
-→ app
+→ core facade
 ```
 
-The boundary checker enforces import direction. The `geometry/` directory is the exception-by-design: it gathers per-geometry behavior while keeping the rest of the pipeline layered.
+The `geometry/` directory remains an intentional cross-sectional seam. It gathers per-geometry behavior while keeping the rest of the pipeline layered.
 
-## Layer map
-
-```txt
-meaning/          pure math and denotational geometry helpers
-representation/   construction syntax and graph validity
-evaluation/       graph → evaluated geometry and diagnostics
-core/             headless engine/workspace/view-state facade
-rendering/        evaluated geometry → canvas pixels
-interaction/      pure hit testing
-geometry/         per-kind geometry definitions and registry dispatch
-app/              browser shell, user intent, state/history/effects
-```
-
-## Boundary rules
-
-The project-wide boundary checker includes `core/` as an explicit layer.
-
-```txt
-core may import:
-  meaning
-  representation
-  evaluation
-
-app may import:
-  core
-  meaning
-  representation
-  evaluation
-  rendering
-  interaction
-  styles
-```
-
-Core must not import app, rendering, interaction, or styles. The browser app is a consumer of the headless core, not a dependency of it.
-
-## meaning
+### meaning
 
 Pure math. No graph, rendering, DOM, state, or app policy.
 
@@ -65,7 +131,7 @@ classified intersection candidates
 
 Curve work is denotational: shapes should be interpretable as mathematical objects such as point sets, curves, implicit equations, domains, or parameterized carriers.
 
-## representation
+### representation
 
 Construction syntax and graph validity.
 
@@ -86,243 +152,145 @@ constructible curve eligibility
 
 The graph is the mathematical construction document. It is not view state. Derived geometry is not stored as independent coordinates in the graph.
 
-### Constructible points vs editable points
+### evaluation
+
+Turns graph syntax into evaluated geometry.
+
+Owns:
 
 ```txt
-FREE_POINT             constructible + directly draggable
-MIDPOINT               constructible, not directly draggable
-CENTROID               constructible, not directly draggable
-SEGMENT_INTERSECTION   constructible when defined, not directly draggable
-CURVE_INTERSECTION     constructible when defined, not directly draggable
+evaluateGraph
+evaluated geometry values
+undefined/diagnostic results
+curve intersection candidates
+visibility-independent scene ordering
 ```
 
-### Constructible curves
+Evaluation must be deterministic from graph state and numeric geometry. It should not depend on viewport hit radius, pointer context, canvas pixels, or browser state.
 
-Current constructible curve nodes:
+### core facade
+
+The public headless surface for consumers.
+
+Owns:
 
 ```txt
-SEGMENT
-CIRCLE
+geometry engine construction
+workspace parsing
+workspace serialization
+public diagnostics helpers
+stable imports for app and tests
 ```
 
-The `I` command uses this vocabulary to accept two selected curve nodes.
+This layer can compose lower core layers, but it still cannot know about the browser app.
 
-## evaluation
+### view
 
-Gives meaning to a validated graph.
+Viewport and view-state math is allowed in core only when it is browser-independent.
+
+Allowed:
 
 ```txt
-Graph → EvaluatedScene
+worldToScreen / screenToWorld math
+viewport center, zoom, rotation values
+immutable view-state update helpers
 ```
 
-Evaluation derives geometry and does not mutate the graph. Evaluation is dispatched through the geometry registry.
-
-Evaluated geometry carries two identities:
+Not allowed:
 
 ```txt
-kind        evaluated shape class: POINT / SEGMENT / CIRCLE / TRIANGLE
-sourceKind  source graph node kind: FREE_POINT / MIDPOINT / CENTROID / ...
+canvas sizing
+devicePixelRatio reads
+DOM event interpretation
+requestAnimationFrame
+CSS or rendering colors
 ```
 
-## Diagnostics
+## Forge app flow
 
-Evaluation is partial. Some construction nodes are valid graph syntax but may be temporarily undefined for the current numeric configuration.
-
-Diagnostics have this shape:
-
-```ts
-type EvaluationIssue = Readonly<{
-  nodeId: NodeId;
-  severity: "warning";
-  code: EvaluationIssueCode;
-  message: string;
-}>;
-```
-
-Current diagnostic codes include:
+The browser app remains an adapter around the headless core.
 
 ```txt
-MISSING_DEPENDENCY
-NO_REAL_INTERSECTION
-NO_UNIQUE_INTERSECTION
-STALE_INTERSECTION_BRANCH
-UNDEFINED_GEOMETRY
+DOM event
+→ app intent / command
+→ graph edit or view-state update
+→ transition result
+→ runtime effects/history/render request
+→ evaluate graph
+→ render evaluated scene
 ```
 
-Dependents of omitted geometry are omitted too. The graph still remembers the construction; if dependencies become valid again, the geometry can reappear.
-
-## Curve intersections
-
-`CURVE_INTERSECTION` is the general persisted curve-intersection construction. It is point-valued and branch-specific:
+The current app-side seams are:
 
 ```txt
-curveA
-curveB
-branchKey
-label
+appController.ts       pure-ish transition reducer
+commands.ts            keyboard command table and construction adapters
+pointerIntent.ts       pointer input → semantic app intent
+appRuntime.ts          mutable runtime shell
+transitionEffects.ts   DOM side effects for transitions
+interaction/           hit testing
+rendering/             canvas drawing
 ```
 
-Evaluation maps source evaluated geometry into curve denotations, computes classified intersection candidates, and selects the candidate whose branch key matches the node. If the source curves no longer have that branch, the node is omitted and an evaluation diagnostic is recorded.
+## Rendering and interaction rules
 
-The `I` command currently preserves the older `SEGMENT_INTERSECTION` path for segment + segment selections. Segment + circle and circle + circle selections create `CURVE_INTERSECTION` nodes.
+Rendering consumes evaluated geometry. It should not perform graph construction or decide mathematical validity.
 
-## core
-
-The internal headless-core surface.
-
-Core owns the engine-facing API:
+Interaction may use evaluated geometry and graph metadata to answer app questions such as:
 
 ```txt
-src/core/index.ts
-src/core/engine.ts
-src/core/workspace.ts
-src/core/viewState.ts
-src/core/diagnostics.ts
-src/core/fixtures/*
+what did the pointer hit?
+which selectable thing wins?
+which free source points can move during body drag?
 ```
 
-Core currently exposes:
+Interaction should not mutate the graph. Mutations should go through app commands/controller transitions and core graph edits.
+
+## Adding features across the monorepo
+
+Use this rule of thumb:
 
 ```txt
-createGeometryEngine
-parseGeometryWorkspace
-geometryWorkspaceFromJsonText
-deserializeWorkspace
-serializeWorkspace
-diagnostic query helpers
-graph/edit/evaluation/workspace types
+If the behavior is mathematical or workspace-relevant, start in packages/core.
+If the behavior is a browser gesture, visual treatment, or app effect, start in apps/forge.
 ```
 
-The preferred consumer import is:
-
-```ts
-import {
-  createGeometryEngine,
-  geometryWorkspaceFromJsonText,
-  diagnosticsWithCode,
-} from "../core";
-```
-
-### Workspace ownership
-
-Core owns workspace data semantics:
+A geometry-kind feature commonly touches both, but each side should keep its responsibility narrow:
 
 ```txt
-unknown object → validated workspace
-JSON text → validated workspace
-workspace state → serialized workspace
+packages/core:
+  representation
+  geometry definition
+  evaluation
+  diagnostics
+  graph edits/construction helpers
+  serialization if needed
+
+apps/forge:
+  command wiring
+  selection predicates
+  hit testing
+  rendering
+  status text
+  smoke tests if browser behavior changes
 ```
 
-The app owns browser file I/O and adapts core workspace state into app editor state.
+## Hard-check expectations
+
+The boundary checker should fail when:
 
 ```txt
-core/workspace.ts
-  WorkspaceState = graph + viewState
-  parse/serialize/JSON text parsing
-
-app/workspace.ts
-  deserializeWorkspace(...) → AppState compatibility adapter
-
-app/workspaceFiles.ts
-  browser file I/O and download helpers
+packages/core imports apps/forge
+packages/core imports app/, rendering/, interaction/, or styles/
+packages/core references DOM/browser globals directly
+apps/forge imports packages/core by fragile relative path
+a local app layer imports against the intended app-side direction
 ```
 
-### View-state ownership
+The checker should be conservative. False positives are acceptable if they protect the core/app boundary and are easy to resolve explicitly.
 
-Core owns `ViewState` and its pure helpers:
+## Design principle
 
-```txt
-selection
-hover
-hidden nodes
-viewport center / zoom / rotation
-```
+The monorepo should reduce coordination cost. It should not reduce architectural pressure.
 
-`app/viewState.ts` remains a compatibility re-export during the migration:
-
-```ts
-export * from "../core/viewState";
-```
-
-### Golden fixtures
-
-Golden fixtures live in:
-
-```txt
-src/core/fixtures/
-```
-
-The core fixture runner validates workspace parsing, evaluation, diagnostics, expected evaluated IDs, and serialization round trips through the headless core facade.
-
-## rendering
-
-Draws evaluated geometry.
-
-```txt
-EvaluatedScene + Viewport + render options → canvas pixels
-```
-
-Render layer order:
-
-```txt
-AREA → LINEAR → POINT
-```
-
-## interaction
-
-Pure hit testing. It does not mutate app state and does not know browser event effects.
-
-Hit priority:
-
-```txt
-POINT → LINEAR → AREA
-```
-
-## geometry
-
-The controlled cross-layer seam for shape-specific behavior.
-
-A geometry definition may provide:
-
-```txt
-representation.dependencies
-evaluation.evaluate
-rendering.layer
-rendering.render
-interaction.hitClass
-interaction.hitTest
-interaction.bodyDrag.sourcePointIds
-construction.factories
-```
-
-The core split does not yet physically split `geometry/`. If a future package extraction requires stricter separation, the likely direction is to divide this seam into core/evaluation, rendering, and interaction capabilities.
-
-## app
-
-Owns browser/user concerns:
-
-```txt
-AppState
-drag state
-history
-commands
-pointer intent
-DOM bindings
-workspace file picker/download effects
-status effects
-render scheduling
-```
-
-The app layer turns input into explicit transitions:
-
-```txt
-input + AppState → AppTransition
-```
-
-## Workspace files
-
-Workspace serialization stores graph nodes and view state. Workspace parsing and serialization semantics live in `core/workspace.ts`. Browser file I/O lives in `app/workspaceFiles.ts`.
-
-## Boundary rule
-
-Follow the direction of the layer map. Use `geometry/` only for per-kind shape behavior. It is the respectful blur, not a license for arbitrary imports.
+A correct change should feel easier because all code is nearby. An incorrect dependency should feel harder because the checks reject it immediately.

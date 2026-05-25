@@ -12,7 +12,7 @@ import {
   triangleNode,
 } from "@euclid-forge/core/representation/node";
 import { worldToScreen } from "@euclid-forge/core/view/viewport";
-import { testViewport } from "../rendering/testHelpers";
+import { testViewport } from "../testHelpers/viewport";
 import {
   hitTestCircleSelection,
   hitTestCircleTarget,

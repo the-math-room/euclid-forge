@@ -1,141 +1,269 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, normalize, relative } from "node:path";
+#!/usr/bin/env node
 
-const ROOT = process.cwd();
-const SRC = join(ROOT, "src");
+import fs from "node:fs";
+import path from "node:path";
 
-const layers = [
-  "meaning",
-  "representation",
-  "evaluation",
-  "rendering",
-  "interaction",
-  "geometry",
-  "core",
-  "app",
-  "styles",
+const root = process.cwd();
+
+const SOURCE_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+]);
+
+const IGNORED_DIRS = new Set([
+  ".git",
+  "node_modules",
+  "dist",
+  "dist-ssr",
+  "coverage",
+  "test-results",
+  "playwright-report",
+  ".vite",
+  ".cache",
+  ".tmp",
+]);
+
+const CORE_ROOT_CANDIDATES = [
+  "packages/core/src",
+  "src/core",
+  "src/meaning",
+  "src/representation",
+  "src/evaluation",
 ];
 
-const allowedImports = {
-  meaning: [],
-  representation: ["meaning", "geometry"],
-  evaluation: ["meaning", "representation", "geometry"],
-  rendering: ["meaning", "evaluation", "geometry"],
-  interaction: ["meaning", "representation", "evaluation", "rendering", "geometry"],
-  geometry: ["meaning", "representation", "evaluation", "rendering"],
-  core: ["meaning", "representation", "evaluation"],
-  app: ["meaning", "representation", "evaluation", "rendering", "interaction", "core", "styles"],
-  styles: [],
-};
+const FORGE_ROOT_CANDIDATES = [
+  "apps/forge/src",
+  "src/app",
+  "src/interaction",
+  "src/rendering",
+  "src/styles",
+];
 
-function walk(dir) {
-  const out = [];
+const FORGE_ONLY_PATH_PARTS = [
+  "/apps/forge/",
+  "/src/app/",
+  "/src/interaction/",
+  "/src/rendering/",
+  "/src/styles/",
+];
 
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
-    const stat = statSync(path);
+const BROWSER_GLOBAL_PATTERNS = [
+  /\bwindow\b/,
+  /\bdocument\b/,
+  /\bHTMLElement\b/,
+  /\bHTMLCanvasElement\b/,
+  /\bCanvasRenderingContext2D\b/,
+  /\bPointerEvent\b/,
+  /\bKeyboardEvent\b/,
+  /\bMouseEvent\b/,
+  /\bTouchEvent\b/,
+  /\bFile\b/,
+  /\bBlob\b/,
+  /\bFileReader\b/,
+  /\blocalStorage\b/,
+  /\bsessionStorage\b/,
+  /\brequestAnimationFrame\b/,
+  /\bcancelAnimationFrame\b/,
+  /\bURL\.createObjectURL\b/,
+  /\bURL\.revokeObjectURL\b/,
+];
 
-    if (stat.isDirectory()) {
-      out.push(...walk(path));
-      continue;
-    }
+const errors = [];
 
-    if (/\.(ts|tsx)$/.test(path)) {
-      out.push(path);
+for (const file of walk(root)) {
+  const rel = normalize(path.relative(root, file));
+
+  if (!SOURCE_EXTENSIONS.has(path.extname(file))) {
+    continue;
+  }
+
+  const text = fs.readFileSync(file, "utf8");
+
+  if (isCoreFile(rel)) {
+    checkCoreFile(rel, text);
+  }
+
+  checkLegacyLayerDirection(rel, text);
+}
+
+if (errors.length > 0) {
+  console.error("Boundary check failed:\n");
+  for (const error of errors) {
+    console.error(`- ${error}`);
+  }
+  process.exit(1);
+}
+
+console.log("Boundary check passed.");
+
+function checkCoreFile(rel, text) {
+  for (const specifier of importSpecifiers(text)) {
+    if (isForgeImport(rel, specifier)) {
+      errors.push(
+        `${rel} imports forge-owned code (${specifier}). Core must remain headless and must not depend on forge.`,
+      );
     }
   }
 
-  return out;
+  for (const pattern of BROWSER_GLOBAL_PATTERNS) {
+    if (pattern.test(stripCommentsAndStrings(text))) {
+      errors.push(
+        `${rel} appears to use browser/DOM API ${pattern}. Core must stay browser-free.`,
+      );
+    }
+  }
 }
 
-function layerOfFile(file) {
-  const rel = relative(SRC, file).replaceAll("\\", "/");
+function checkLegacyLayerDirection(rel, text) {
+  // Compatibility check for the pre-monorepo app layout.
+  // This preserves the old local layer discipline while the tree is moving.
+  const layer = legacyLayerFor(rel);
 
-  return layers.find((layer) => rel === layer || rel.startsWith(`${layer}/`)) ?? null;
+  if (!layer) {
+    return;
+  }
+
+  const allowed = {
+    app: new Set(["app", "interaction", "rendering", "styles", "core"]),
+    interaction: new Set(["interaction", "core"]),
+    rendering: new Set(["rendering", "core"]),
+    styles: new Set(["styles"]),
+    core: new Set(["core"]),
+  }[layer];
+
+  for (const specifier of importSpecifiers(text)) {
+    const targetLayer = legacyLayerForImport(rel, specifier);
+
+    if (!targetLayer) {
+      continue;
+    }
+
+    if (!allowed.has(targetLayer)) {
+      errors.push(
+        `${rel} imports ${specifier}, crossing from ${layer} to ${targetLayer}.`,
+      );
+    }
+  }
 }
 
-function layerOfResolvedPath(path) {
-  const normalized = path.replaceAll("\\", "/");
-  const layerPattern = layers.join("|");
-  const match = normalized.match(
-    new RegExp(`(?:^|/)src/(${layerPattern})(?:/|$)`),
+function isCoreFile(rel) {
+  return CORE_ROOT_CANDIDATES.some(
+    (candidate) => rel === candidate || rel.startsWith(`${candidate}/`),
   );
-
-  return match?.[1] ?? null;
 }
 
-function resolveImport(fromFile, specifier) {
-  if (specifier.startsWith("./") || specifier.startsWith("../")) {
-    return normalize(join(dirname(fromFile), specifier));
+function isForgeFile(rel) {
+  return FORGE_ROOT_CANDIDATES.some(
+    (candidate) => rel === candidate || rel.startsWith(`${candidate}/`),
+  );
+}
+
+function isForgeImport(fromRel, specifier) {
+  if (specifier.startsWith("@euclid-forge/forge")) {
+    return true;
+  }
+
+  if (specifier.startsWith("@euclid-forge/core")) {
+    return false;
+  }
+
+  if (!specifier.startsWith(".")) {
+    return false;
+  }
+
+  const fromDir = path.posix.dirname(fromRel);
+  const resolved = normalize(path.posix.normalize(path.posix.join(fromDir, specifier)));
+  const withSlashes = `/${resolved}/`;
+
+  if (isForgeFile(resolved)) {
+    return true;
+  }
+
+  return FORGE_ONLY_PATH_PARTS.some((part) => withSlashes.includes(part));
+}
+
+function legacyLayerFor(rel) {
+  if (rel.startsWith("src/app/")) return "app";
+  if (rel.startsWith("src/interaction/")) return "interaction";
+  if (rel.startsWith("src/rendering/")) return "rendering";
+  if (rel.startsWith("src/styles/")) return "styles";
+  if (
+    rel.startsWith("src/core/") ||
+    rel.startsWith("src/meaning/") ||
+    rel.startsWith("src/representation/") ||
+    rel.startsWith("src/evaluation/")
+  ) {
+    return "core";
   }
 
   return null;
 }
 
-function importSpecifiers(source) {
-  const specs = [];
+function legacyLayerForImport(fromRel, specifier) {
+  if (specifier.startsWith("@euclid-forge/core")) {
+    return "core";
+  }
+
+  if (!specifier.startsWith(".")) {
+    return null;
+  }
+
+  const fromDir = path.posix.dirname(fromRel);
+  const resolved = normalize(path.posix.normalize(path.posix.join(fromDir, specifier)));
+
+  return legacyLayerFor(resolved);
+}
+
+function importSpecifiers(text) {
+  const specifiers = [];
 
   const patterns = [
-    /import(?:[\s\S]*?)from\s+["']([^"']+)["']/g,
-    /import\s+["']([^"']+)["']/g,
-    /import\s*\(\s*["']([^"']+)["']\s*\)/g,
+    /\bimport\s+(?:type\s+)?(?:[^'"]*?\s+from\s+)?["']([^"']+)["']/g,
+    /\bexport\s+(?:type\s+)?[^'"]*?\s+from\s+["']([^"']+)["']/g,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
+    /\brequire\s*\(\s*["']([^"']+)["']\s*\)/g,
   ];
 
   for (const pattern of patterns) {
-    let match;
-
-    while ((match = pattern.exec(source)) !== null) {
-      specs.push(match[1]);
+    for (const match of text.matchAll(pattern)) {
+      if (match[1]) {
+        specifiers.push(match[1]);
+      }
     }
   }
 
-  return specs;
+  return specifiers;
 }
 
-const violations = [];
+function stripCommentsAndStrings(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(/`(?:\\.|[^`])*`/g, "``")
+    .replace(/"(?:\\.|[^"])*"/g, "\"\"")
+    .replace(/'(?:\\.|[^'])*'/g, "''");
+}
 
-for (const file of walk(SRC)) {
-  const fromLayer = layerOfFile(file);
-
-  if (!fromLayer) {
-    continue;
-  }
-
-  const source = readFileSync(file, "utf8");
-
-  for (const specifier of importSpecifiers(source)) {
-    const resolved = resolveImport(file, specifier);
-
-    if (!resolved) {
+function* walk(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (IGNORED_DIRS.has(entry.name)) {
       continue;
     }
 
-    const toLayer = layerOfResolvedPath(resolved);
+    const fullPath = path.join(dir, entry.name);
 
-    if (!toLayer || toLayer === fromLayer) {
-      continue;
-    }
-
-    if (!allowedImports[fromLayer].includes(toLayer)) {
-      violations.push({
-        file: relative(ROOT, file),
-        specifier,
-        reason: `${fromLayer}/ may not import ${toLayer}/`,
-      });
+    if (entry.isDirectory()) {
+      yield* walk(fullPath);
+    } else if (entry.isFile()) {
+      yield fullPath;
     }
   }
 }
 
-if (violations.length > 0) {
-  console.error("\nDenotational boundary violations detected:\n");
-
-  for (const violation of violations) {
-    console.error(`- ${violation.file}`);
-    console.error(`  imports: ${violation.specifier}`);
-    console.error(`  reason:  ${violation.reason}\n`);
-  }
-
-  process.exit(1);
+function normalize(value) {
+  return value.split(path.sep).join("/");
 }
-
-console.log("Denotational boundaries OK.");
