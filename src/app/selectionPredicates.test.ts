@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createGraph } from "../representation/graph";
 import {
   centroidNode,
+  circleNode,
   freePoint,
   midpointNode,
   segmentNode,
@@ -9,12 +10,13 @@ import {
 } from "../representation/node";
 import { appState } from "./appState";
 import {
-  selectedConstructiblePointTuple,
   requireSelectedCirclePoints,
   requireSelectedFreePointVertices,
   requireSelectedSegmentEndpoints,
   requireSelectedTriangle,
   selectedCirclePoints,
+  selectedConstructibleCurveTuple,
+  selectedConstructiblePointTuple,
   selectedFreePointVertices,
   selectedSegmentEndpoints,
   selectedTriangle,
@@ -26,6 +28,7 @@ function selectedState(ids: readonly string[]) {
     freePoint("A", 0, 0, "A"),
     freePoint("B", 1, 0, "B"),
     freePoint("C", 0, 1, "C"),
+    segmentNode("AB", "A", "B"),
     triangleNode("ABC", "A", "B", "C"),
   ]);
 
@@ -39,6 +42,60 @@ function selectedState(ids: readonly string[]) {
 
 describe("app/selectionPredicates", () => {
 
+
+
+  test("selects exactly two constructible curve nodes", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      segmentNode("AB", "A", "B"),
+      circleNode("circle", "A", "B"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    expect(
+      selectedConstructibleCurveTuple(
+        appState(
+          graph,
+          ["AB", "circle"].reduce(
+            (current, id) => toggleSelectedNode(current, id),
+            emptyViewState(),
+          ),
+          null,
+        ),
+        2,
+      ),
+    ).toEqual(["AB", "circle"]);
+
+    expect(
+      selectedConstructibleCurveTuple(
+        appState(
+          graph,
+          ["AB", "ABC"].reduce(
+            (current, id) => toggleSelectedNode(current, id),
+            emptyViewState(),
+          ),
+          null,
+        ),
+        2,
+      ),
+    ).toBeNull();
+
+    expect(
+      selectedConstructibleCurveTuple(
+        appState(
+          graph,
+          ["AB"].reduce(
+            (current, id) => toggleSelectedNode(current, id),
+            emptyViewState(),
+          ),
+          null,
+        ),
+        2,
+      ),
+    ).toBeNull();
+  });
 
   test("accepts derived point nodes as constructible point inputs", () => {
     const graph = createGraph([

@@ -1,4 +1,5 @@
 import type { NodeId } from "../representation/node";
+import { isConstructibleCurveNode } from "../representation/curveNode";
 import { isConstructiblePointNode } from "../representation/pointNode";
 import type { AppState } from "./appState";
 
@@ -91,6 +92,41 @@ export const selectedFreePointTuple = selectedConstructiblePointTuple;
 export const requireSelectedFreePointTuple = requireSelectedConstructiblePointTuple;
 export const selectedFreePointVertices = selectedTriangleVertices;
 export const requireSelectedFreePointVertices = requireSelectedTriangleVertices;
+
+export function selectedConstructibleCurveTuple<const N extends number>(
+  state: AppState,
+  count: N,
+): TupleOf<NodeId, N> | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== count) {
+    return null;
+  }
+
+  for (const id of selected) {
+    const node = state.graph.byId.get(id);
+
+    if (!node || !isConstructibleCurveNode(node)) {
+      return null;
+    }
+  }
+
+  return selected as TupleOf<NodeId, N>;
+}
+
+export function requireSelectedConstructibleCurveTuple<const N extends number>(
+  state: AppState,
+  count: N,
+  message: string,
+): TupleOf<NodeId, N> {
+  const tuple = selectedConstructibleCurveTuple(state, count);
+
+  if (!tuple) {
+    throw new Error(message);
+  }
+
+  return tuple;
+}
 
 export function selectedSegmentTuple<const N extends number>(
   state: AppState,
