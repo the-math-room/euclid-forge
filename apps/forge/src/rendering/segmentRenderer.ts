@@ -1,11 +1,13 @@
 import type { EvaluatedSegment } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
+import type { RenderTheme } from "./theme";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 export type SegmentRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
+  theme?: RenderTheme;
 }>;
 
 export function renderSegment(
@@ -14,6 +16,7 @@ export function renderSegment(
   segment: EvaluatedSegment,
   options: SegmentRenderOptions = {},
 ): void {
+  const theme = options.theme ?? RENDER_THEME;
   const a = worldToScreen(viewport, segment.a);
   const b = worldToScreen(viewport, segment.b);
 
@@ -23,8 +26,8 @@ export function renderSegment(
   ctx.save();
 
   if (selected) {
-    ctx.strokeStyle = RENDER_THEME.segment.selectedStroke;
-    ctx.lineWidth = RENDER_THEME.segment.selectedLineWidthPx;
+    ctx.strokeStyle = theme.segment.selectedStroke;
+    ctx.lineWidth = theme.segment.selectedLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -33,8 +36,8 @@ export function renderSegment(
   }
 
   if (hovered) {
-    ctx.strokeStyle = RENDER_THEME.segment.hoverStroke;
-    ctx.lineWidth = RENDER_THEME.segment.hoverLineWidthPx;
+    ctx.strokeStyle = theme.segment.hoverStroke;
+    ctx.lineWidth = theme.segment.hoverLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -42,8 +45,8 @@ export function renderSegment(
     ctx.stroke();
   }
 
-  ctx.strokeStyle = RENDER_THEME.segment.stroke;
-  ctx.lineWidth = RENDER_THEME.segment.lineWidthPx;
+  ctx.strokeStyle = theme.segment.stroke;
+  ctx.lineWidth = theme.segment.lineWidthPx;
 
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);

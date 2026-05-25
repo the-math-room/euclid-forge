@@ -3,10 +3,12 @@ import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 import { RENDER_THEME } from "./theme";
+import type { RenderTheme } from "./theme";
 
 export type CircleRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
+  theme?: RenderTheme;
 }>;
 
 export function renderCircle(
@@ -15,6 +17,7 @@ export function renderCircle(
   circle: EvaluatedCircle,
   options: CircleRenderOptions = {},
 ): void {
+  const theme = options.theme ?? RENDER_THEME;
   const center = worldToScreen(viewport, circle.center);
   const edge = worldToScreen(viewport, {
     x: circle.center.x + circle.radius,
@@ -26,17 +29,26 @@ export function renderCircle(
 
   ctx.save();
 
-  if (selected || hovered) {
-    ctx.strokeStyle = selected ? "#fbbf24" : "#94a3b8";
-    ctx.lineWidth = 5;
+  if (selected) {
+    ctx.strokeStyle = theme.circle.selectedStrokeStyle;
+    ctx.lineWidth = theme.circle.selectedLineWidth;
 
     ctx.beginPath();
     ctx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = RENDER_THEME.circle.lineWidth;
+  if (hovered) {
+    ctx.strokeStyle = theme.circle.hoverStrokeStyle;
+    ctx.lineWidth = theme.circle.hoverLineWidth;
+
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = theme.circle.strokeStyle;
+  ctx.lineWidth = theme.circle.lineWidth;
 
   ctx.beginPath();
   ctx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);

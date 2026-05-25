@@ -41,7 +41,7 @@ lerna-debug.log*
 # TypeScript
 *.tsbuildinfo
 
-# Push Script
-push.sh
+# Patch Script
+patch.sh
 # Local package staging / extraction previews
 .tmp/

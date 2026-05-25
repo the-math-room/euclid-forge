@@ -1,11 +1,13 @@
 import type { EvaluatedTriangle } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
+import type { RenderTheme } from "./theme";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 export type TriangleRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
   hoveredNodeId?: string | null;
+  theme?: RenderTheme;
 }>;
 
 export function renderTriangle(
@@ -14,6 +16,7 @@ export function renderTriangle(
   triangle: EvaluatedTriangle,
   options: TriangleRenderOptions = {},
 ): void {
+  const theme = options.theme ?? RENDER_THEME;
   const a = worldToScreen(viewport, triangle.a);
   const b = worldToScreen(viewport, triangle.b);
   const c = worldToScreen(viewport, triangle.c);
@@ -23,8 +26,8 @@ export function renderTriangle(
   ctx.save();
 
   if (hovered) {
-    ctx.strokeStyle = RENDER_THEME.triangle.hoverStroke;
-    ctx.lineWidth = RENDER_THEME.triangle.hoverLineWidthPx;
+    ctx.strokeStyle = theme.triangle.hoverStroke;
+    ctx.lineWidth = theme.triangle.hoverLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -35,8 +38,8 @@ export function renderTriangle(
   }
 
   if (selected) {
-    ctx.strokeStyle = RENDER_THEME.triangle.selectedStroke;
-    ctx.lineWidth = RENDER_THEME.triangle.selectedLineWidthPx;
+    ctx.strokeStyle = theme.triangle.selectedStroke;
+    ctx.lineWidth = theme.triangle.selectedLineWidthPx;
 
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -46,8 +49,8 @@ export function renderTriangle(
     ctx.stroke();
   }
 
-  ctx.strokeStyle = RENDER_THEME.triangle.stroke;
-  ctx.lineWidth = RENDER_THEME.triangle.lineWidthPx;
+  ctx.strokeStyle = theme.triangle.stroke;
+  ctx.lineWidth = theme.triangle.lineWidthPx;
 
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);

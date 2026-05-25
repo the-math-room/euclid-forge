@@ -3,10 +3,12 @@ import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 import { RENDER_THEME } from "./theme";
+import type { RenderTheme } from "./theme";
 
 export type LineRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
   selectedNodeIds?: ReadonlySet<string>;
+  theme?: RenderTheme;
 }>;
 
 export function renderLine(
@@ -15,6 +17,7 @@ export function renderLine(
   line: EvaluatedLine,
   options: LineRenderOptions = {},
 ): void {
+  const theme = options.theme ?? RENDER_THEME;
   const endpoints = viewportLineEndpoints(viewport, line);
 
   if (!endpoints) {
@@ -26,9 +29,9 @@ export function renderLine(
 
   ctx.save();
 
-  if (selected || hovered) {
-    ctx.strokeStyle = selected ? "#fbbf24" : "#94a3b8";
-    ctx.lineWidth = 5;
+  if (selected) {
+    ctx.strokeStyle = theme.line.selectedStrokeStyle;
+    ctx.lineWidth = theme.line.selectedLineWidth;
 
     ctx.beginPath();
     ctx.moveTo(endpoints.start.x, endpoints.start.y);
@@ -36,8 +39,18 @@ export function renderLine(
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = 2;
+  if (hovered) {
+    ctx.strokeStyle = theme.line.hoverStrokeStyle;
+    ctx.lineWidth = theme.line.hoverLineWidth;
+
+    ctx.beginPath();
+    ctx.moveTo(endpoints.start.x, endpoints.start.y);
+    ctx.lineTo(endpoints.end.x, endpoints.end.y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = theme.line.strokeStyle;
+  ctx.lineWidth = theme.line.lineWidth;
 
   ctx.beginPath();
   ctx.moveTo(endpoints.start.x, endpoints.start.y);

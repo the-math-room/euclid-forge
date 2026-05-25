@@ -1,11 +1,13 @@
 import type { EvaluatedPoint } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
+import type { PointTheme, RenderTheme } from "./theme";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
 export type PointRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
   hoveredNodeId?: string | null;
+  theme?: RenderTheme;
 }>;
 
 export function renderPoint(
@@ -14,22 +16,23 @@ export function renderPoint(
   point: EvaluatedPoint,
   options: PointRenderOptions = {},
 ): void {
+  const theme = options.theme ?? RENDER_THEME;
   const screen = worldToScreen(viewport, point.point);
-  const style = RENDER_THEME.point.styles[point.role];
+  const style = theme.point.styles[point.role];
   const selected = options.selectedNodeIds?.has(point.id) ?? false;
   const hovered = options.hoveredNodeId === point.id;
 
   ctx.save();
 
   if (hovered) {
-    ctx.strokeStyle = RENDER_THEME.point.hoverStroke;
+    ctx.strokeStyle = theme.point.hoverStroke;
     ctx.lineWidth = 2;
 
     ctx.beginPath();
     ctx.arc(
       screen.x,
       screen.y,
-      style.radiusPx + RENDER_THEME.point.hoverRingOffsetPx,
+      style.radiusPx + theme.point.hoverRingOffsetPx,
       0,
       Math.PI * 2,
     );
@@ -37,14 +40,14 @@ export function renderPoint(
   }
 
   if (selected) {
-    ctx.strokeStyle = RENDER_THEME.point.selectedStroke;
+    ctx.strokeStyle = theme.point.selectedStroke;
     ctx.lineWidth = 2;
 
     ctx.beginPath();
     ctx.arc(
       screen.x,
       screen.y,
-      style.radiusPx + RENDER_THEME.point.selectedRingOffsetPx,
+      style.radiusPx + theme.point.selectedRingOffsetPx,
       0,
       Math.PI * 2,
     );
@@ -57,7 +60,7 @@ export function renderPoint(
   ctx.arc(screen.x, screen.y, style.radiusPx, 0, Math.PI * 2);
   ctx.fill();
 
-  renderPointLabel(ctx, screen.x, screen.y, point.label);
+  renderPointLabel(ctx, theme.point, screen.x, screen.y, point.label);
 
   ctx.restore();
 }
@@ -75,11 +78,11 @@ export function renderPoints(
 
 function renderPointLabel(
   ctx: CanvasRenderingContext2D,
+  theme: PointTheme,
   pointX: number,
   pointY: number,
   label: string,
 ): void {
-  const theme = RENDER_THEME.point;
   const pill = theme.labelPill;
   const textX = pointX + theme.labelOffsetX;
   const textY = pointY + theme.labelOffsetY;

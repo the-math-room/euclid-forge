@@ -5,7 +5,74 @@ export type PointStyle = Readonly<{
   radiusPx: number;
 }>;
 
-export const RENDER_THEME = Object.freeze({
+export type PointLabelPillTheme = Readonly<{
+  fill: string;
+  stroke: string;
+  strokeWidthPx: number;
+  paddingXPx: number;
+  paddingYPx: number;
+  radiusPx: number;
+  fallbackAscentPx: number;
+  fallbackDescentPx: number;
+}>;
+
+export type PointTheme = Readonly<{
+  styles: Readonly<Record<EvaluatedPointRole, PointStyle>>;
+
+  hoverStroke: string;
+  hoverRingOffsetPx: number;
+
+  selectedStroke: string;
+  selectedRingOffsetPx: number;
+
+  labelFill: string;
+  labelFont: string;
+  labelOffsetX: number;
+  labelOffsetY: number;
+  labelPill: PointLabelPillTheme;
+}>;
+
+export type LinearTheme = Readonly<{
+  stroke: string;
+  lineWidthPx: number;
+
+  hoverStroke: string;
+  hoverLineWidthPx: number;
+
+  selectedStroke: string;
+  selectedLineWidthPx: number;
+}>;
+
+export type CircleTheme = Readonly<{
+  strokeStyle: string;
+  lineWidth: number;
+  selectedStrokeStyle: string;
+  selectedLineWidth: number;
+  hoverStrokeStyle: string;
+  hoverLineWidth: number;
+}>;
+
+export type LineTheme = Readonly<{
+  strokeStyle: string;
+  lineWidth: number;
+  selectedStrokeStyle: string;
+  selectedLineWidth: number;
+  hoverStrokeStyle: string;
+  hoverLineWidth: number;
+}>;
+
+export type RenderTheme = Readonly<{
+  background: string;
+  point: PointTheme;
+  segment: LinearTheme;
+  circle: CircleTheme;
+  line: LineTheme;
+  triangle: LinearTheme;
+}>;
+
+export const SCREEN_RENDER_THEME: RenderTheme = Object.freeze({
+  background: "#0f172a",
+
   point: Object.freeze({
     styles: Object.freeze({
       FREE: Object.freeze({
@@ -24,7 +91,7 @@ export const RENDER_THEME = Object.freeze({
         fill: "#f472b6",
         radiusPx: 5,
       }),
-    } satisfies Record<EvaluatedPointRole, PointStyle>),
+    }),
 
     hoverStroke: "#94a3b8",
     hoverRingOffsetPx: 4,
@@ -59,23 +126,23 @@ export const RENDER_THEME = Object.freeze({
     selectedLineWidthPx: 6,
   }),
 
-  circle: {
-    strokeStyle: "#38bdf8",
+  circle: Object.freeze({
+    strokeStyle: "#e5e7eb",
     lineWidth: 2,
-    selectedStrokeStyle: "#facc15",
-    selectedLineWidth: 3,
-    hoverStrokeStyle: "#fde68a",
-    hoverLineWidth: 3,
-  },
+    selectedStrokeStyle: "#fbbf24",
+    selectedLineWidth: 5,
+    hoverStrokeStyle: "#94a3b8",
+    hoverLineWidth: 5,
+  }),
 
-  line: {
-    strokeStyle: "#94a3b8",
-    lineWidth: 1.5,
-    selectedStrokeStyle: "#facc15",
-    selectedLineWidth: 3,
-    hoverStrokeStyle: "#fde68a",
-    hoverLineWidth: 3,
-  },
+  line: Object.freeze({
+    strokeStyle: "#e5e7eb",
+    lineWidth: 2,
+    selectedStrokeStyle: "#fbbf24",
+    selectedLineWidth: 5,
+    hoverStrokeStyle: "#94a3b8",
+    hoverLineWidth: 5,
+  }),
 
   triangle: Object.freeze({
     stroke: "#e5e7eb",
@@ -88,3 +155,91 @@ export const RENDER_THEME = Object.freeze({
     selectedLineWidthPx: 5,
   }),
 });
+
+export const PRINT_RENDER_THEME: RenderTheme = Object.freeze({
+  background: "#ffffff",
+
+  point: Object.freeze({
+    styles: Object.freeze({
+      FREE: Object.freeze({
+        fill: "#111827",
+        radiusPx: 6,
+      }),
+      MIDPOINT: Object.freeze({
+        fill: "#374151",
+        radiusPx: 5,
+      }),
+      CENTROID: Object.freeze({
+        fill: "#4b5563",
+        radiusPx: 5,
+      }),
+      INTERSECTION: Object.freeze({
+        fill: "#111827",
+        radiusPx: 5,
+      }),
+    }),
+
+    hoverStroke: "#111827",
+    hoverRingOffsetPx: 4,
+
+    selectedStroke: "#111827",
+    selectedRingOffsetPx: 6,
+
+    labelFill: "#111827",
+    labelFont: "14px system-ui, sans-serif",
+    labelOffsetX: 10,
+    labelOffsetY: -10,
+    labelPill: Object.freeze({
+      fill: "rgb(255 255 255 / 0.86)",
+      stroke: "rgb(17 24 39 / 0.24)",
+      strokeWidthPx: 1,
+      paddingXPx: 4,
+      paddingYPx: 2,
+      radiusPx: 5,
+      fallbackAscentPx: 11,
+      fallbackDescentPx: 3,
+    }),
+  }),
+
+  segment: Object.freeze({
+    stroke: "#111827",
+    lineWidthPx: 2,
+
+    hoverStroke: "#111827",
+    hoverLineWidthPx: 4,
+
+    selectedStroke: "#111827",
+    selectedLineWidthPx: 4,
+  }),
+
+  circle: Object.freeze({
+    strokeStyle: "#111827",
+    lineWidth: 2,
+    selectedStrokeStyle: "#111827",
+    selectedLineWidth: 4,
+    hoverStrokeStyle: "#111827",
+    hoverLineWidth: 4,
+  }),
+
+  line: Object.freeze({
+    strokeStyle: "#111827",
+    lineWidth: 2,
+    selectedStrokeStyle: "#111827",
+    selectedLineWidth: 4,
+    hoverStrokeStyle: "#111827",
+    hoverLineWidth: 4,
+  }),
+
+  triangle: Object.freeze({
+    stroke: "#111827",
+    lineWidthPx: 2,
+
+    hoverStroke: "#111827",
+    hoverLineWidthPx: 4,
+
+    selectedStroke: "#111827",
+    selectedLineWidthPx: 4,
+  }),
+});
+
+export const RENDER_THEME = SCREEN_RENDER_THEME;

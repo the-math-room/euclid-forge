@@ -216,3 +216,101 @@ body {
     width: 100%;
   }
 }
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 0.35in;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+  }
+
+  #app {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  #geometry-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #0f172a;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #tool-surface,
+  #help-overlay,
+  #status-message,
+  #build-info {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    size: letter landscape;
+    margin: 0.35in;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: #ffffff;
+  }
+
+  body {
+    display: grid;
+    place-items: center;
+  }
+
+  #app {
+    position: relative;
+    width: 10.3in;
+    height: 7.725in;
+    overflow: hidden;
+    background: #0f172a;
+  }
+
+  #geometry-canvas {
+    display: block;
+    width: 10.3in;
+    height: 7.725in;
+    background: #0f172a;
+  }
+
+  #tool-surface,
+  #help-overlay,
+  #status-message,
+  #build-info {
+    display: none !important;
+  }
+}
+
+#print-surface {
+  display: none;
+}
+
+@media print {
+  #geometry-canvas {
+    display: none !important;
+  }
+
+  #print-surface {
+    display: block;
+    width: 10.3in;
+    height: 7.725in;
+    object-fit: contain;
+    background: #ffffff;
+  }
+}

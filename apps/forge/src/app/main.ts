@@ -20,6 +20,7 @@ import {
 import { createRenderScheduler } from "./renderScheduler";
 import { statusSurfaceForDocument } from "./statusSurface";
 import { renderScene } from "../rendering/renderScene";
+import { installPrintSurface } from "./printSurface";
 import { browserWorkspaceActionEnvironment } from "./workspaceActions";
 import {
   emptyViewportMotionState,
@@ -126,6 +127,12 @@ function main(): void {
       viewportMotion = next;
     },
     requestViewportMotionFrame,
+  });
+
+  installPrintSurface({
+    document,
+    windowTarget: window,
+    getState: runtime.getState,
   });
 
   runtime.requestRender();
