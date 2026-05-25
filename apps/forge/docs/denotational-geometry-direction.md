@@ -14,13 +14,13 @@ The graph is not a cache of rendered coordinates. It is construction syntax. Eva
 
 ## Headless core
 
-Euclid Forge now has an internal headless core surface:
+Euclid Forge uses the package facade:
 
 ```txt
-src/core/index.ts
+@euclid-forge/core
 ```
 
-The headless core owns workspace parsing, evaluation access, diagnostics, dependency inspection, immutable graph edits, serialization, and golden fixtures.
+The headless core owns workspace parsing, evaluation access, diagnostics, dependency inspection, immutable graph edits, construction helpers, cascading deletes, free-point planning, serialization, and golden fixtures.
 
 A typical consumer path:
 
@@ -38,8 +38,6 @@ const next = engine.applyEdit({
 });
 ```
 
-This is not yet a stabilized public package API, but it is the internal seam new engine-facing work should pass through.
-
 ## Current model
 
 Euclid Forge currently supports concrete construction nodes such as:
@@ -47,6 +45,7 @@ Euclid Forge currently supports concrete construction nodes such as:
 ```txt
 FREE_POINT
 SEGMENT
+LINE
 CIRCLE
 TRIANGLE
 MIDPOINT
@@ -131,6 +130,46 @@ id:    X_C2_C1_circle_circle_1
 label: X2
 ```
 
+## Tangent snapping
+
+Tangent snapping is primarily an interaction/construction-time policy.
+
+A future UX policy may say:
+
+```txt
+near tangent within hit radius → snap to one tangent candidate
+```
+
+But that should not make runtime graph evaluation depend on viewport state.
+
+Keep the distinction:
+
+```txt
+construction-time policy:
+  may use viewport/hit-radius tolerance and pointer context
+
+evaluation-time policy:
+  deterministic from graph state and numeric geometry
+```
+
+## Modal tools and denotation
+
+Modal tools should not change the denotational model. They are only a more direct way to create the same graph syntax.
+
+For example:
+
+```txt
+Segment mode click A, click B
+```
+
+and:
+
+```txt
+Shift-select A and B, press J
+```
+
+should produce equivalent graph semantics.
+
 ## Future curve/intersection direction
 
 Avoid designing future curve intersections as a combinatorial family of graph concepts:
@@ -156,31 +195,9 @@ intersection
   → classified numeric candidates
 ```
 
-## Tangent snapping
-
-Tangent snapping is primarily an interaction/construction-time policy.
-
-A future UX policy may say:
-
-```txt
-near tangent within hit radius → snap to one tangent candidate
-```
-
-But that should not make runtime graph evaluation depend on viewport state.
-
-Keep the distinction:
-
-```txt
-construction-time policy:
-  may use viewport/hit-radius tolerance and pointer context
-
-evaluation-time policy:
-  deterministic from graph state and numeric geometry
-```
-
 ## Near-term feature pressure
 
-The next strong geometry primitive is likely `LINE`, because it stresses the right abstractions:
+The next strong geometry primitive is still likely deeper `LINE` work, because it stresses the right abstractions:
 
 ```txt
 segment: bounded linear curve
@@ -188,4 +205,5 @@ line: unbounded linear curve
 ray: half-bounded linear curve
 ```
 
-That will test whether curve domains, hit testing, rendering, and intersection candidate generation are sufficiently denotational without forcing a physical package split first.
+That will test whether curve domains, hit testing, rendering, modal tools, and intersection candidate generation are sufficiently denotational.
+

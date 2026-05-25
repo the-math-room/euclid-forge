@@ -5,14 +5,20 @@ This document describes how to add features in the Euclid Forge monorepo without
 ## Default workflow
 
 1. Make the smallest coherent patch.
-2. Keep `npm run check` green between patches.
+2. Keep `npm run check:concise` green between patches.
 3. Prefer behavior tests before or with implementation.
 4. Decide whether the change belongs in `packages/core`, `apps/forge`, or both.
 5. Keep `packages/core` headless.
 6. Route reusable engine behavior through the core package surface.
 7. Update docs when the mental model changes.
 
-Validation command:
+Validation command for normal patch loops:
+
+```bash
+npm run check:concise
+```
+
+Canonical full validation:
 
 ```bash
 npm run check
@@ -39,6 +45,7 @@ geometry denotation
 graph representation
 graph edits
 construction helpers
+free-point planning
 evaluation
 diagnostics
 dependency inspection
@@ -54,6 +61,7 @@ headless view-state or viewport math
 ```txt
 keyboard shortcuts
 pointer gestures
+modal tools
 DOM events
 HTML canvas drawing
 file picker/download plumbing
@@ -75,16 +83,16 @@ core:
   define the node, graph dependencies, evaluation, diagnostics, construction helper
 
 forge:
-  expose a command, decide selection behavior, hit test it, render it
+  expose a command or modal tool, decide selection behavior, hit test it, render it
 ```
 
-Do not move browser concepts into core just to make a feature easier to wire.
+Do not move browser concepts into Core just to make a feature easier to wire.
 
 ## Headless core workflow
 
 New engine-facing behavior should be available through the headless core surface when it is useful outside the browser editor.
 
-Preferred consumer import from forge:
+Preferred consumer import from Forge:
 
 ```ts
 import {
@@ -97,8 +105,7 @@ import {
 Subpath imports are acceptable when the app is intentionally consuming a lower-level core capability:
 
 ```ts
-import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
-import { applyGraphEdit } from "@euclid-forge/core/representation/edit";
+import { screenToWorld } from "@euclid-forge/core/view/viewport";
 ```
 
 Avoid relative imports from `apps/forge` into `packages/core`.
@@ -111,7 +118,7 @@ Typical app flow:
 
 ```txt
 DOM event
-→ app intent / command
+→ app intent / command / modal tool
 → core graph edit or app view-state update
 → transition result
 → runtime effects/history/render request
@@ -133,9 +140,29 @@ packages/core tests and fixtures
 
 apps/forge/src/rendering renderer/theme, if visual
 apps/forge/src/interaction hit geometry, if selectable
-apps/forge/src/app selection predicates or commands, if user-constructible
-apps/forge tests
+apps/forge/src/app selection predicates, commands, or modal tools, if user-constructible
+apps/forge smoke tests, if browser behavior changes
 docs
+```
+
+## Modal tool workflow
+
+When adding or changing a modal tool:
+
+```txt
+activeTool.ts          tool state, required input counts, status text
+activeToolPointer.ts   pointer behavior for the active tool
+toolSurface.ts         toolbar exposure
+pointerIntent.ts       hit/add/drag intent, if needed
+commands.ts            keyboard parity, if needed
+smoke tests            browser-level user workflow
+```
+
+Keep this split:
+
+```txt
+Core decides whether a construction is valid.
+Forge decides what a click/tap means in the current active tool.
 ```
 
 ## Geometry definition checklist
@@ -162,10 +189,10 @@ Is evaluation deterministic without viewport, pointer, or DOM context?
 ### Construction
 
 ```txt
-What selected inputs should create it?
+What selected or modal inputs should create it?
 Are those inputs constructible points, constructible curves, or editable free points?
 Does construction need to avoid duplicates?
-Does construction belong in core, app, or both?
+Does construction belong in Core, app, or both?
 ```
 
 ### Rendering
@@ -185,7 +212,7 @@ Is it hittable/selectable?
 Which hit class?
 What geometric hit test applies?
 How does z-order affect selection?
-Does it need browser pixels, or can it use viewport math from core?
+Does it need browser pixels, or can it use viewport math from Core?
 ```
 
 ### Body drag
@@ -220,17 +247,18 @@ packages/core referencing document/window/HTMLElement/HTMLCanvasElement/CanvasRe
 apps/forge importing packages/core by relative filesystem path
 ```
 
-A temporary migration script is fine for mechanical rewrites, but the final state should be enforced by `npm run check`.
+A temporary migration script is fine for mechanical rewrites, but the final state should be enforced by checks.
 
 ## Review checklist
 
 Before merging, ask:
 
 ```txt
-Did the core stay headless?
-Did forge remain a consumer of core?
+Did Core stay headless?
+Did Forge remain a consumer of Core?
 Are imports package-shaped instead of fragile relative cross-package paths?
 Did tests cover behavior at the layer that owns it?
+Did smoke coverage change when browser behavior changed?
 Did docs change if the seam changed?
 ```
 
@@ -239,13 +267,16 @@ Did docs change if the seam changed?
 Good cleanup patches are small and enforce a seam:
 
 ```txt
-move browser-only helpers out of core
-move math/evaluation helpers out of forge
-centralize core exports
+move browser-only helpers out of Core
+move math/evaluation helpers out of Forge
+centralize Core exports
 tighten boundary checks
 rename aliases that obscure constructible vs editable points
 move rendering constants into theme
+extract app transition helpers
 extract app command helpers that are growing too large
+consolidate source dump entrypoints
 ```
 
 Avoid cleanup patches that mix large file moves, behavior changes, and new features unless there is no practical alternative.
+

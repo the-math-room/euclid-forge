@@ -2,7 +2,7 @@
 
 Core geometry features should be developed headless-first.
 
-The goal is to make the mathematical and graph semantics correct before adding editor commands, rendering, or pointer interaction in Euclid Forge.
+The goal is to make the mathematical and graph semantics correct before adding editor commands, rendering, pointer interaction, or toolbar affordances in Euclid Forge.
 
 ## Recommended sequence
 
@@ -10,11 +10,12 @@ The goal is to make the mathematical and graph semantics correct before adding e
 2. Add mathematical primitives or denotations if needed.
 3. Add representation node shape if the feature needs a persistent graph node.
 4. Add construction helpers for stable graph creation.
-5. Add evaluation behavior.
-6. Register the geometry definition.
-7. Add workspace, fixture, and public API coverage where appropriate.
-8. Run `npm run check` in `euclid-core`.
-9. Adapt Euclid Forge rendering, interaction, and commands after the headless API is stable.
+5. Add graph edit, dependency, or delete-policy behavior if needed.
+6. Add evaluation behavior.
+7. Register the geometry definition.
+8. Add workspace, fixture, and public API coverage where appropriate.
+9. Run `npm run check -w @euclid-forge/core`.
+10. Adapt Euclid Forge rendering, interaction, modal tools, commands, and smoke coverage after the headless API is stable.
 
 ## Example: adding `LINE`
 
@@ -46,7 +47,23 @@ Suggested patches:
 
 ### Patch 4: Forge adapters
 
-In `euclid-forge`, add rendering, hit testing, commands, shortcuts, and smoke coverage.
+In `apps/forge`, add rendering, hit testing, commands, shortcuts, modal tool support, status text, and smoke coverage.
+
+## Example: app ergonomics over core invariants
+
+For modal construction tools, Core should own only the headless invariant:
+
+```text
+Graph + Vec2 → planned free-point node/id
+```
+
+Forge should own the browser interpretation:
+
+```text
+An empty click in Segment mode creates a point and uses it as the first segment input.
+```
+
+That split keeps Core mathy and lets the app evolve its UX without weakening the engine boundary.
 
 ## Commit style
 
@@ -57,6 +74,28 @@ Add unbounded line denotation
 Add line graph representation
 Evaluate line geometry nodes
 Adapt Forge to render lines
+Add line modal tool coverage
 ```
 
 Avoid combining math, graph representation, rendering, and UI commands into one large patch unless the change is purely mechanical.
+
+## Validation
+
+Routine patch-loop gate:
+
+```bash
+npm run check:concise
+```
+
+Core-focused gate:
+
+```bash
+npm run check:core
+```
+
+Full gate:
+
+```bash
+npm run check
+```
+
