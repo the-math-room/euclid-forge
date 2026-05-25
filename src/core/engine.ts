@@ -14,11 +14,11 @@ import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type { ViewState } from "./viewState";
 import { emptyViewState } from "./viewState";
-import type { GeometryWorkspace } from "./workspace";
 import {
   deserializeWorkspace,
   serializeWorkspace,
-} from "../app/workspace";
+  type GeometryWorkspace,
+} from "./workspace";
 
 export type GeometryEngineState = Readonly<{
   graph: Graph;
