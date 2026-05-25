@@ -1,4 +1,5 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
+import type { Graph } from "../representation/graph";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type { ConstructionFactory } from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
@@ -15,6 +16,7 @@ import type {
 } from "./geometryDefinition";
 import { eraseGeometryDefinition } from "./geometryDefinition";
 import type {
+  GeometryBodyDrag,
   GeometryHitCandidate,
   GeometryHitContext,
 } from "./interactionContext";
@@ -107,6 +109,40 @@ export function hitGeometryValue(
   );
 
   return definition.interaction?.hitTest(value, context) ?? null;
+}
+
+export function bodyDragForGeometryNode(
+  graph: Graph,
+  id: NodeId,
+): GeometryBodyDrag | null {
+  const node = graph.byId.get(id);
+
+  if (!node) {
+    return null;
+  }
+
+  const definition = requireAnyGeometryDefinition(node.kind);
+  const sourcePointIds = definition.interaction?.bodyDrag?.sourcePointIds(
+    node,
+    {
+      areFreePoints: (ids) =>
+        ids.every((sourceId) => graph.byId.get(sourceId)?.kind === "FREE_POINT"),
+    },
+  );
+
+  if (!sourcePointIds || sourcePointIds.length === 0) {
+    return null;
+  }
+
+  if (!sourcePointIds.every((sourceId) => graph.byId.get(sourceId)?.kind === "FREE_POINT")) {
+    throw new Error(
+      `Body drag source points for ${id} must all be free points`,
+    );
+  }
+
+  return Object.freeze({
+    sourcePointIds: Object.freeze([...sourcePointIds]),
+  });
 }
 
 export function constructionFactoryForGeometryKind(

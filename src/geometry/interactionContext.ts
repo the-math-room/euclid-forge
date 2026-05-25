@@ -37,3 +37,11 @@ export type GeometryHitCandidate = Readonly<{
   hitClass: GeometryHitClass;
   target: HitTarget;
 }>;
+
+export type GeometryBodyDragContext = Readonly<{
+  areFreePoints: (ids: readonly NodeId[]) => boolean;
+}>;
+
+export type GeometryBodyDrag = Readonly<{
+  sourcePointIds: readonly NodeId[];
+}>;

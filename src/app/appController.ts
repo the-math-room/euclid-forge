@@ -128,16 +128,17 @@ export function handlePointerDown(
         ],
       });
 
-    case "DRAG_TRIANGLE":
+    case "DRAG_BODY":
       return transition({
         state: appState(state.graph, viewState, {
-          kind: "TRIANGLE",
-          vertexIds: intent.vertexIds,
+          kind: "BODY",
+          nodeId: intent.id,
+          sourcePointIds: intent.sourcePointIds,
           initialPointerWorld: screenToWorld(input.viewport, input.point),
-          initialVertexPositions: initialFreePointPositions(
+          initialSourcePointPositions: initialFreePointPositions(
             state.graph,
-            intent.vertexIds,
-            "triangle drag",
+            intent.sourcePointIds,
+            "body drag",
           ),
         }),
         shouldRender: false,
@@ -200,7 +201,7 @@ export function handlePointerMove(
         ),
       );
 
-    case "TRIANGLE": {
+    case "BODY": {
       const delta = deltaBetween(state.dragState.initialPointerWorld, world);
 
       return changed(
@@ -208,7 +209,7 @@ export function handlePointerMove(
           applyGraphEdit(state.graph, {
             kind: "SET_FREE_POINT_POSITIONS",
             positions: translatedFreePointPositions(
-              state.dragState.initialVertexPositions,
+              state.dragState.initialSourcePointPositions,
               delta,
             ),
           }),

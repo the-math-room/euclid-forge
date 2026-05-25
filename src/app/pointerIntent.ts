@@ -1,9 +1,9 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { visibleEvaluatedScene } from "../evaluation/visibleScene";
 import {
+  hitTestDraggableAreaBody,
   hitTestFreePointTarget,
   hitTestSelectionTarget,
-  hitTestTriangleInterior,
 } from "../interaction/hitTest";
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
@@ -22,9 +22,9 @@ export type PointerDownIntent =
       id: NodeId;
     }>
   | Readonly<{
-      kind: "DRAG_TRIANGLE";
+      kind: "DRAG_BODY";
       id: NodeId;
-      vertexIds: readonly [NodeId, NodeId, NodeId];
+      sourcePointIds: readonly NodeId[];
     }>
   | Readonly<{
       kind: "ADD_FREE_POINT";
@@ -78,18 +78,18 @@ export function pointerDownIntent(
     };
   }
 
-  const triangleHit = hitTestTriangleInterior(
+  const bodyHit = hitTestDraggableAreaBody(
     state.graph,
     evaluated,
     input.viewport,
     input.point,
   );
 
-  if (triangleHit) {
+  if (bodyHit) {
     return {
-      kind: "DRAG_TRIANGLE",
-      id: triangleHit.id,
-      vertexIds: triangleHit.vertexIds,
+      kind: "DRAG_BODY",
+      id: bodyHit.id,
+      sourcePointIds: bodyHit.sourcePointIds,
     };
   }
 
@@ -118,7 +118,7 @@ export function hoverIntent(
         id: intent.id,
       };
 
-    case "DRAG_TRIANGLE":
+    case "DRAG_BODY":
       return {
         kind: "HOVER_NODE",
         id: intent.id,

@@ -3,6 +3,7 @@ import type { GeometryNode, NodeId } from "../representation/node";
 import type { GeometryConstructionFactories } from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
 import type {
+  GeometryBodyDragContext,
   GeometryHitCandidate,
   GeometryHitClass,
   GeometryHitContext,
@@ -47,6 +48,12 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
       value: EvaluatedGeometry,
       context: GeometryHitContext,
     ) => GeometryHitCandidate | null;
+    bodyDrag?: Readonly<{
+      sourcePointIds: (
+        node: NodeByKind<K>,
+        context: GeometryBodyDragContext,
+      ) => readonly NodeId[] | null;
+    }>;
   }>;
 
   construction?: Readonly<{
@@ -82,6 +89,12 @@ export type AnyGeometryDefinition = Readonly<{
       value: EvaluatedGeometry,
       context: GeometryHitContext,
     ) => GeometryHitCandidate | null;
+    bodyDrag?: Readonly<{
+      sourcePointIds: (
+        node: GeometryNode,
+        context: GeometryBodyDragContext,
+      ) => readonly NodeId[] | null;
+    }>;
   }>;
 
   construction?: Readonly<{

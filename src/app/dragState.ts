@@ -1,5 +1,6 @@
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
+import type { FreePointPositionSnapshot } from "./freePointDrag";
 
 export type DragState =
   | Readonly<{
@@ -7,8 +8,9 @@ export type DragState =
       nodeId: NodeId;
     }>
   | Readonly<{
-      kind: "TRIANGLE";
-      vertexIds: readonly NodeId[];
+      kind: "BODY";
+      nodeId: NodeId;
+      sourcePointIds: readonly NodeId[];
       initialPointerWorld: Vec2;
-      initialVertexPositions: ReadonlyMap<NodeId, Vec2>;
+      initialSourcePointPositions: FreePointPositionSnapshot;
     }>;

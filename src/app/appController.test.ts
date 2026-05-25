@@ -583,15 +583,15 @@ describe("app/appController", () => {
       shiftKey: false,
     });
 
-    expect(transition.state.dragState?.kind).toBe("TRIANGLE");
+    expect(transition.state.dragState?.kind).toBe("BODY");
 
-    if (transition.state.dragState?.kind !== "TRIANGLE") {
-      throw new Error("Expected triangle drag state");
+    if (transition.state.dragState?.kind !== "BODY") {
+      throw new Error("Expected body drag state");
     }
 
     expect(transition.state.dragState.initialPointerWorld).toEqual(vec2(0, 0));
     expect(
-      [...transition.state.dragState.initialVertexPositions],
+      [...transition.state.dragState.initialSourcePointPositions],
     ).toEqual([
       ["A", vec2(-2, -1)],
       ["B", vec2(2, -1)],
@@ -608,10 +608,11 @@ describe("app/appController", () => {
     ]);
 
     const state = appState(graph, emptyViewState(), {
-      kind: "TRIANGLE",
-      vertexIds: ["A", "B", "C"],
+      kind: "BODY",
+      nodeId: "ABC",
+      sourcePointIds: ["A", "B", "C"],
       initialPointerWorld: vec2(0, 0),
-      initialVertexPositions: new Map([
+      initialSourcePointPositions: new Map([
         ["A", vec2(-2, -1)],
         ["B", vec2(2, -1)],
         ["C", vec2(0, 2)],
@@ -662,13 +663,13 @@ describe("app/appController", () => {
       shiftKey: false,
     });
 
-    expect(transition.state.dragState?.kind).toBe("TRIANGLE");
+    expect(transition.state.dragState?.kind).toBe("BODY");
 
-    if (transition.state.dragState?.kind !== "TRIANGLE") {
-      throw new Error("Expected triangle drag state");
+    if (transition.state.dragState?.kind !== "BODY") {
+      throw new Error("Expected body drag state");
     }
 
-    expect(transition.state.dragState.vertexIds).toEqual(["D", "E", "F"]);
+    expect(transition.state.dragState.sourcePointIds).toEqual(["D", "E", "F"]);
   });
 
   test("shift-click selects the later-rendered overlapping triangle", () => {
@@ -958,6 +959,69 @@ describe("app/appController", () => {
         "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
     });
     expect(transition.shouldPreventDefault).toBe(true);
+  });
+
+  test("pointerdown on a circle records body drag source positions", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+
+    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(0.5, 0)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.dragState?.kind).toBe("BODY");
+
+    if (transition.state.dragState?.kind !== "BODY") {
+      throw new Error("Expected body drag state");
+    }
+
+    expect(transition.state.dragState.nodeId).toBe("circle");
+    expect(transition.state.dragState.sourcePointIds).toEqual(["A", "B"]);
+    expect(
+      [...transition.state.dragState.initialSourcePointPositions],
+    ).toEqual([
+      ["A", vec2(0, 0)],
+      ["B", vec2(2, 0)],
+    ]);
+  });
+
+  test("circle body drag translates center and through points", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+
+    const state = appState(graph, emptyViewState(), {
+      kind: "BODY",
+      nodeId: "circle",
+      sourcePointIds: ["A", "B"],
+      initialPointerWorld: vec2(0, 0),
+      initialSourcePointPositions: new Map([
+        ["A", vec2(0, 0)],
+        ["B", vec2(2, 0)],
+      ]),
+    });
+
+    const transition = handlePointerMove(state, {
+      pointerId: 1,
+      point: worldToScreen(viewport, vec2(3, 4)),
+      viewport,
+      shiftKey: false,
+    });
+
+    expect(transition.state.graph.byId.get("A")).toEqual(
+      freePoint("A", 3, 4, "A"),
+    );
+    expect(transition.state.graph.byId.get("B")).toEqual(
+      freePoint("B", 5, 4, "B"),
+    );
   });
 
 });

@@ -88,9 +88,9 @@ describe("app/pointerIntent", () => {
         shiftKey: false,
       }),
     ).toEqual({
-      kind: "DRAG_TRIANGLE",
+      kind: "DRAG_BODY",
       id: "DEF",
-      vertexIds: ["D", "E", "F"],
+      sourcePointIds: ["D", "E", "F"],
     });
   });
 
@@ -246,4 +246,26 @@ describe("app/pointerIntent", () => {
       kind: "NONE",
     });
   });
+  test("pointerdown can drag a circle body", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      circleNode("circle", "A", "B"),
+    ]);
+    const state = appState(graph, emptyViewState(), null);
+
+    expect(
+      pointerDownIntent(state, {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0.5, 0)),
+        viewport,
+        shiftKey: false,
+      }),
+    ).toEqual({
+      kind: "DRAG_BODY",
+      id: "circle",
+      sourcePointIds: ["A", "B"],
+    });
+  });
+
 });

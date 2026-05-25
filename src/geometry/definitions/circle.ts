@@ -16,6 +16,7 @@ import type {
 } from "../geometryDefinition";
 import { hitCircleValue } from "../hitGeometry";
 import type {
+  GeometryBodyDragContext,
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
@@ -70,6 +71,17 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
           }
         : null;
     },
+
+    bodyDrag: Object.freeze({
+      sourcePointIds: (
+        node: NodeByKind<"CIRCLE">,
+        context: GeometryBodyDragContext,
+      ): readonly NodeId[] | null => {
+        const sourcePointIds = [node.center, node.through];
+
+        return context.areFreePoints(sourcePointIds) ? sourcePointIds : null;
+      },
+    }),
   }),
 
   rendering: Object.freeze({

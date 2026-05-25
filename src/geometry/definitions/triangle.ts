@@ -16,6 +16,7 @@ import type {
 } from "../geometryDefinition";
 import { hitTriangleValue } from "../hitGeometry";
 import type {
+  GeometryBodyDragContext,
   GeometryHitCandidate,
   GeometryHitContext,
 } from "../interactionContext";
@@ -40,8 +41,8 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
 
         return {
           kind: "TRIANGLE",
-        sourceKind: node.kind,
-        ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
+          sourceKind: node.kind,
+          ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
           id: node.id,
           a: a.point,
           b: b.point,
@@ -69,6 +70,17 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
             }
           : null;
       },
+
+      bodyDrag: Object.freeze({
+        sourcePointIds: (
+          node: NodeByKind<"TRIANGLE">,
+          context: GeometryBodyDragContext,
+        ): readonly NodeId[] | null => {
+          const sourcePointIds = [node.a, node.b, node.c];
+
+          return context.areFreePoints(sourcePointIds) ? sourcePointIds : null;
+        },
+      }),
     }),
 
     rendering: Object.freeze({

@@ -1,6 +1,9 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
-import { hitGeometryValue } from "../geometry/geometryRegistry";
+import {
+  bodyDragForGeometryNode,
+  hitGeometryValue,
+} from "../geometry/geometryRegistry";
 import type {
   CircleHit,
   GeometryHitCandidate,
@@ -31,6 +34,11 @@ export type TriangleInteriorHit = Readonly<{
   vertexIds: readonly [NodeId, NodeId, NodeId];
 }>;
 
+export type AreaBodyDragHit = Readonly<{
+  id: NodeId;
+  sourcePointIds: readonly NodeId[];
+}>;
+
 export function hitTestTargetByClass(
   evaluated: EvaluatedScene,
   viewport: Viewport,
@@ -50,6 +58,54 @@ export function hitTestSelectionTarget(
     hitTestTargetByClass(evaluated, viewport, screenPoint, "LINEAR") ??
     hitTestTargetByClass(evaluated, viewport, screenPoint, "AREA")
   );
+}
+
+export function hitTestDraggableAreaBody(
+  graph: Graph,
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): AreaBodyDragHit | null {
+  let best: Readonly<{
+    value: EvaluatedGeometry;
+    target: HitTarget;
+    sourcePointIds: readonly NodeId[];
+  }> | null = null;
+
+  for (const value of reverseVisualOrder(evaluated.ordered)) {
+    const candidate = hitGeometryValue(value, {
+      viewport,
+      screenPoint,
+    });
+
+    if (!candidate || candidate.hitClass !== "AREA") {
+      continue;
+    }
+
+    const bodyDrag = bodyDragForGeometryNode(graph, candidate.target.id);
+
+    if (!bodyDrag) {
+      continue;
+    }
+
+    if (
+      !best ||
+      isBetterHit(value, candidate.target, best.value, best.target)
+    ) {
+      best = {
+        value,
+        target: candidate.target,
+        sourcePointIds: bodyDrag.sourcePointIds,
+      };
+    }
+  }
+
+  return best
+    ? {
+        id: best.target.id,
+        sourcePointIds: best.sourcePointIds,
+      }
+    : null;
 }
 
 export function hitTestPointTarget(
