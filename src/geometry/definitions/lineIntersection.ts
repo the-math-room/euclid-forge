@@ -3,7 +3,7 @@ import type {
   EvaluatedPoint,
 } from "../../evaluation/evaluated";
 import { GeometryEvaluationIssueError } from "../../evaluation/evaluationIssue";
-import { lineIntersection } from "../../meaning/vec2";
+import { segmentIntersection } from "../../meaning/vec2";
 import {
   lineIntersectionNode,
   type GeometryNode,
@@ -41,12 +41,12 @@ export const lineIntersectionDefinition: GeometryDefinition<"LINE_INTERSECTION">
       ): EvaluatedPoint => {
         const lineA = context.getSegment(node.lineA);
         const lineB = context.getSegment(node.lineB);
-        const point = lineIntersection(lineA.a, lineA.b, lineB.a, lineB.b);
+        const point = segmentIntersection(lineA.a, lineA.b, lineB.a, lineB.b);
 
         if (!point) {
           throw new GeometryEvaluationIssueError(
             node.id,
-            `Cannot evaluate ${node.id}; lines ${node.lineA} and ${node.lineB} are parallel or coincident`,
+            `Cannot evaluate ${node.id}; segments ${node.lineA} and ${node.lineB} do not have a unique bounded intersection`,
           );
         }
 

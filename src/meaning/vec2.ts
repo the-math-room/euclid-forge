@@ -19,6 +19,13 @@ export function deltaBetween(a: Vec2, b: Vec2): Vec2 {
   return vec2(b.x - a.x, b.y - a.y);
 }
 
+
+export type LineIntersectionResult = Readonly<{
+  point: Vec2;
+  t: number;
+  u: number;
+}>;
+
 export function lineIntersection(
   a1: Vec2,
   a2: Vec2,
@@ -26,6 +33,41 @@ export function lineIntersection(
   b2: Vec2,
   epsilon = 1e-9,
 ): Vec2 | null {
+  return lineIntersectionWithParameters(a1, a2, b1, b2, epsilon)?.point ?? null;
+}
+
+export function segmentIntersection(
+  a1: Vec2,
+  a2: Vec2,
+  b1: Vec2,
+  b2: Vec2,
+  epsilon = 1e-9,
+): Vec2 | null {
+  const result = lineIntersectionWithParameters(a1, a2, b1, b2, epsilon);
+
+  if (!result) {
+    return null;
+  }
+
+  if (
+    result.t < -epsilon ||
+    result.t > 1 + epsilon ||
+    result.u < -epsilon ||
+    result.u > 1 + epsilon
+  ) {
+    return null;
+  }
+
+  return result.point;
+}
+
+export function lineIntersectionWithParameters(
+  a1: Vec2,
+  a2: Vec2,
+  b1: Vec2,
+  b2: Vec2,
+  epsilon = 1e-9,
+): LineIntersectionResult | null {
   const ax = a2.x - a1.x;
   const ay = a2.y - a1.y;
   const bx = b2.x - b1.x;
@@ -44,10 +86,16 @@ export function lineIntersection(
   const cx = b1.x - a1.x;
   const cy = b1.y - a1.y;
   const t = cross(cx, cy, bx, by) / determinant;
+  const u = cross(cx, cy, ax, ay) / determinant;
 
-  return vec2(a1.x + t * ax, a1.y + t * ay);
+  return Object.freeze({
+    point: vec2(a1.x + t * ax, a1.y + t * ay),
+    t,
+    u,
+  });
 }
 
 function cross(ax: number, ay: number, bx: number, by: number): number {
   return ax * by - ay * bx;
 }
+

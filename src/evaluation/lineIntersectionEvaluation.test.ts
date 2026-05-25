@@ -34,7 +34,7 @@ describe("evaluation/line intersection", () => {
     expect(evaluated.issues).toEqual([]);
   });
 
-  test("omits parallel line intersections and records an issue", () => {
+  test("omits parallel or non-crossing segment intersections and records an issue", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
       freePoint("B", 1, 0, "B"),
@@ -53,7 +53,32 @@ describe("evaluation/line intersection", () => {
       {
         nodeId: "X",
         message:
-          "Cannot evaluate X; lines AB and CD are parallel or coincident",
+          "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
+      },
+    ]);
+  });
+
+
+  test("omits intersections when supporting lines cross outside the finite segments", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 2, -1, "C"),
+      freePoint("D", 2, 1, "D"),
+      segmentNode("AB", "A", "B"),
+      segmentNode("CD", "C", "D"),
+      lineIntersectionNode("X", "AB", "CD", "X"),
+    ]);
+
+    const evaluated = evaluateGraph(graph);
+
+    expect(evaluated.values.has("X")).toBe(false);
+    expect(evaluated.ordered.some((value) => value.id === "X")).toBe(false);
+    expect(evaluated.issues).toEqual([
+      {
+        nodeId: "X",
+        message:
+          "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
       },
     ]);
   });
