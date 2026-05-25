@@ -45,6 +45,7 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
           throw new GeometryEvaluationIssueError(
             node.id,
             `Cannot evaluate ${node.id}; ${result.issue}`,
+            curveIntersectionIssueCode(result.issue),
           );
         }
 
@@ -56,6 +57,7 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
           throw new GeometryEvaluationIssueError(
             node.id,
             `Cannot evaluate ${node.id}; branch ${node.branchKey} is not currently defined`,
+            "STALE_INTERSECTION_BRANCH",
           );
         }
 
@@ -117,4 +119,31 @@ export function curveIntersectionConstructionNode(
   label = id,
 ) {
   return curveIntersectionNode(id, curveA, curveB, branchKey, label);
+}
+
+
+function curveIntersectionIssueCode(
+  issue: string,
+):
+  | "NO_REAL_INTERSECTION"
+  | "NO_UNIQUE_INTERSECTION"
+  | "UNDEFINED_GEOMETRY" {
+  if (
+    issue.includes("do not intersect") ||
+    issue.includes("does not intersect") ||
+    issue.includes("contained within") ||
+    issue.includes("outside bounded curve domains")
+  ) {
+    return "NO_REAL_INTERSECTION";
+  }
+
+  if (
+    issue.includes("coincident") ||
+    issue.includes("parallel") ||
+    issue.includes("no unique")
+  ) {
+    return "NO_UNIQUE_INTERSECTION";
+  }
+
+  return "UNDEFINED_GEOMETRY";
 }

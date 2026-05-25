@@ -40,7 +40,7 @@ const GOLDEN_FIXTURES: readonly GoldenFixtureExpectation[] = [
       "C1",
       "C2",
     ],
-    diagnosticCodes: ["UNDEFINED_GEOMETRY"],
+    diagnosticCodes: ["NO_REAL_INTERSECTION"],
   },
 ];
 

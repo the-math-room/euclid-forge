@@ -47,6 +47,7 @@ export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSEC
           throw new GeometryEvaluationIssueError(
             node.id,
             `Cannot evaluate ${node.id}; segments ${node.segmentA} and ${node.segmentB} do not have a unique bounded intersection`,
+            "NO_UNIQUE_INTERSECTION",
           );
         }
 

@@ -2,6 +2,9 @@ import type { NodeId } from "../representation/node";
 
 export type EvaluationIssueCode =
   | "MISSING_DEPENDENCY"
+  | "NO_REAL_INTERSECTION"
+  | "NO_UNIQUE_INTERSECTION"
+  | "STALE_INTERSECTION_BRANCH"
   | "UNDEFINED_GEOMETRY";
 
 export class GeometryEvaluationIssueError extends Error {
