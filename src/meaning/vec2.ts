@@ -20,6 +20,19 @@ export function deltaBetween(a: Vec2, b: Vec2): Vec2 {
 }
 
 
+export type IntersectionMultiplicity = "SIMPLE" | "TANGENT";
+
+export type IntersectionCandidate = Readonly<{
+  point: Vec2;
+  multiplicity: IntersectionMultiplicity;
+  branchKey: string;
+}>;
+
+export type IntersectionResult = Readonly<{
+  candidates: readonly IntersectionCandidate[];
+  issue?: string;
+}>;
+
 export type LineIntersectionResult = Readonly<{
   point: Vec2;
   t: number;
@@ -43,22 +56,42 @@ export function segmentIntersection(
   b2: Vec2,
   epsilon = 1e-9,
 ): Vec2 | null {
+  return segmentSegmentIntersections(a1, a2, b1, b2, epsilon).candidates[0]
+    ?.point ?? null;
+}
+
+export function segmentSegmentIntersections(
+  a1: Vec2,
+  a2: Vec2,
+  b1: Vec2,
+  b2: Vec2,
+  epsilon = 1e-9,
+): IntersectionResult {
   const result = lineIntersectionWithParameters(a1, a2, b1, b2, epsilon);
 
   if (!result) {
-    return null;
+    return intersectionIssue(
+      "Segments are parallel or coincident; no unique intersection point",
+    );
   }
 
-  if (
-    result.t < -epsilon ||
-    result.t > 1 + epsilon ||
-    result.u < -epsilon ||
-    result.u > 1 + epsilon
-  ) {
-    return null;
+  if (!isUnitIntervalParameter(result.t, epsilon)) {
+    return intersectionIssue(
+      "Supporting lines intersect outside the first segment",
+    );
   }
 
-  return result.point;
+  if (!isUnitIntervalParameter(result.u, epsilon)) {
+    return intersectionIssue(
+      "Supporting lines intersect outside the second segment",
+    );
+  }
+
+  return oneIntersectionCandidate({
+    point: result.point,
+    multiplicity: "SIMPLE",
+    branchKey: "segment-segment",
+  });
 }
 
 export function lineIntersectionWithParameters(
@@ -93,6 +126,25 @@ export function lineIntersectionWithParameters(
     t,
     u,
   });
+}
+
+function oneIntersectionCandidate(
+  candidate: IntersectionCandidate,
+): IntersectionResult {
+  return Object.freeze({
+    candidates: Object.freeze([candidate]),
+  });
+}
+
+function intersectionIssue(message: string): IntersectionResult {
+  return Object.freeze({
+    candidates: Object.freeze([]),
+    issue: message,
+  });
+}
+
+function isUnitIntervalParameter(value: number, epsilon: number): boolean {
+  return value >= -epsilon && value <= 1 + epsilon;
 }
 
 function cross(ax: number, ay: number, bx: number, by: number): number {
