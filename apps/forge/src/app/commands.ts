@@ -8,7 +8,7 @@ import {
   segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
-} from "@euclid-forge/core/representation/constructions";
+} from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
 import { curveIntersectionNode } from "@euclid-forge/core";
 import type { GeometryNode, NodeId } from "@euclid-forge/core";
