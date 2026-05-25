@@ -1,7 +1,6 @@
 # Feature Workflow
 
-This document describes how to add features without weakening Euclid Forge's
-architecture.
+This document describes how to add features without weakening Euclid Forge's architecture.
 
 ## Default workflow
 
@@ -9,13 +8,52 @@ architecture.
 2. Keep `npm run check` green between patches.
 3. Prefer behavior tests before or with implementation.
 4. Put shape-specific behavior in `src/geometry/definitions/*` when possible.
-5. Avoid new abstractions unless a real feature creates pressure.
-6. Update docs when the mental model changes.
+5. Route consumer-facing headless behavior through `src/core/index.ts`.
+6. Avoid new abstractions unless a real feature creates pressure.
+7. Update docs when the mental model changes.
 
 Validation command:
 
 ```bash
 npm run check
+```
+
+## Headless core workflow
+
+New engine-facing behavior should be available through the headless core surface when it is useful outside the browser editor.
+
+Preferred consumer import:
+
+```ts
+import {
+  createGeometryEngine,
+  geometryWorkspaceFromJsonText,
+  diagnosticsWithCode,
+} from "../core";
+```
+
+A feature is a good candidate for core exposure if it involves:
+
+```txt
+workspace parsing or serialization
+graph construction or graph edits
+evaluation
+diagnostics
+dependency inspection
+golden fixtures
+```
+
+The browser app should own:
+
+```txt
+keyboard shortcuts
+pointer gestures
+DOM events
+file picker/download plumbing
+status messages
+history grouping
+render scheduling
+CSS
 ```
 
 ## Adding a new geometry kind
@@ -31,15 +69,11 @@ rendering renderer/theme, if visual
 interaction hit geometry, if selectable
 construction wrappers/commands, if constructible
 tests
+core fixture, if workspace-relevant
 docs
 ```
 
-The core unions are closed for now. Add the new kind deliberately to the relevant
-unions rather than trying to make an open plugin system.
-
 ## Geometry definition checklist
-
-Each shape definition should answer the applicable questions.
 
 ### Representation
 
@@ -54,7 +88,7 @@ Does it denote a mathematical object or a UI convenience?
 ```txt
 What evaluated geometry does it produce when defined?
 Can it become undefined for some valid graph configurations?
-What evaluation issue should be recorded when undefined?
+What diagnostic code should be recorded when undefined?
 What sourceKind should the evaluated value carry?
 ```
 
@@ -67,12 +101,6 @@ How does it draw?
 How is selected/hovered state made visible?
 ```
 
-Render layers are:
-
-```txt
-AREA → LINEAR → POINT
-```
-
 ### Interaction
 
 ```txt
@@ -81,16 +109,9 @@ Which hit class?
 What geometric hit test applies?
 ```
 
-Hit class priority is:
-
-```txt
-POINT → LINEAR → AREA
-```
-
 ### Body drag
 
-Only add body-drag metadata when translation of declared free source points
-preserves the represented shape.
+Only add body-drag metadata when translation of declared free source points preserves the represented shape.
 
 ```txt
 interaction.bodyDrag.sourcePointIds(node, context)
@@ -111,13 +132,9 @@ centroid → dragging would require ambiguous inverse triangle edits
 intersection point → dragging would require constraint solving
 ```
 
-Do not use a plain `draggable: true` flag. The app needs the source point IDs,
-not just a capability bit.
-
 ## Constructible inputs
 
-Use constructible-point predicates for point construction inputs. Do not use
-free-point predicates unless the operation specifically requires editability.
+Use constructible-point predicates for point construction inputs. Do not use free-point predicates unless the operation specifically requires editability.
 
 ```txt
 constructible point ≠ directly draggable point
@@ -133,8 +150,6 @@ SEGMENT_INTERSECTION
 CURVE_INTERSECTION
 ```
 
-Use constructible-curve predicates for intersection-style curve inputs.
-
 Current constructible curve-valued nodes include:
 
 ```txt
@@ -142,13 +157,9 @@ SEGMENT
 CIRCLE
 ```
 
-Dragging should still require free points or registry-declared free source
-points.
-
 ## Dynamic undefined constructions
 
-A construction node may be valid graph syntax but undefined in the current
-numeric configuration.
+A construction node may be valid graph syntax but undefined in the current numeric configuration.
 
 Examples:
 
@@ -160,13 +171,37 @@ curve intersection branch whose sources no longer have that branch
 dependent construction whose input point is currently unavailable
 ```
 
-Undefined evaluated geometry should be omitted from the scene and recorded as an
-evaluation issue. Dependents should also be omitted when their evaluated
-dependencies are unavailable.
+Undefined evaluated geometry should be omitted from the scene and recorded as a diagnostic. Dependents should also be omitted when their evaluated dependencies are unavailable.
 
-Do not turn ordinary derived constructions into constraints. Refusing, clamping,
-or projecting drags belongs to a future constraint-solver design, not to the
-current dynamic-construction evaluator.
+Do not turn ordinary derived constructions into constraints. Refusing, clamping, or projecting drags belongs to a future constraint-solver design.
+
+## Diagnostics
+
+Diagnostics are a headless-core surface, not just UI strings.
+
+They currently have this shape:
+
+```ts
+{
+  nodeId: string;
+  severity: "warning";
+  code:
+    | "MISSING_DEPENDENCY"
+    | "NO_REAL_INTERSECTION"
+    | "NO_UNIQUE_INTERSECTION"
+    | "STALE_INTERSECTION_BRANCH"
+    | "UNDEFINED_GEOMETRY";
+  message: string;
+}
+```
+
+Prefer tests that assert stable `code` values rather than parsing human-readable messages.
+
+Use core diagnostic helpers such as:
+
+```ts
+diagnosticsWithCode(engine.diagnostics(), "NO_REAL_INTERSECTION")
+```
 
 ## Intersections and future curve work
 
@@ -178,11 +213,10 @@ The guiding model is:
 geometry node → mathematical denotation
 curve denotation → point set / implicit equation / parameterized carrier / domain
 intersection → operation over denotations
-evaluation → numeric interpretation that returns classified candidates or issues
+evaluation → numeric interpretation that returns classified candidates or diagnostics
 ```
 
-Do not introduce graph concepts like these unless there is a specific
-user-facing meaning that requires them:
+Avoid graph concepts such as:
 
 ```txt
 SEGMENT_CIRCLE_INTERSECTION
@@ -191,29 +225,9 @@ CIRCLE_PARABOLA_INTERSECTION
 PARABOLA_PARABOLA_INTERSECTION
 ```
 
-Prefer the existing `CURVE_INTERSECTION` representation:
-
-```txt
-curveA
-curveB
-branchKey
-label
-```
-
-Specialized algorithms can exist internally, but they should be hidden behind
-denotational/capability-level APIs when possible.
-
-When tangent snapping is added, keep the distinction clear:
-
-```txt
-construction-time interaction policy may use viewport/hit-radius tolerance
-evaluation-time numeric policy should remain deterministic from graph state
-```
+Prefer the existing `CURVE_INTERSECTION` representation unless the feature has a distinct user-facing meaning.
 
 ## When adding new curve kinds
-
-New curve-valued geometry should first provide a curve denotation path, then join
-the shared intersection machinery.
 
 Preferred order:
 
@@ -222,12 +236,9 @@ Preferred order:
 2. Add evaluated-geometry-to-curve-denotation support.
 3. Add tests for classified candidates.
 4. Let CURVE_INTERSECTION consume the new candidate branches.
-5. Only then add command/UI affordances if needed.
+5. Add a core fixture if the behavior is workspace-relevant.
+6. Only then add command/UI affordances if needed.
 ```
-
-Do not add a new graph node kind for each pair of curves. Prefer the existing
-`CURVE_INTERSECTION` representation unless the feature has a distinct
-user-facing meaning.
 
 ## Adding a command
 
@@ -240,14 +251,9 @@ disabledReason
 run
 ```
 
-Use selection predicate helpers instead of growing local command-specific query
-logic.
+Use selection predicate helpers instead of growing local command-specific query logic.
 
-Durable graph/view changes should return `history: "commit"`. Pure viewport
-navigation and hover-like changes usually ignore history.
-
-Commands may return `statusMessage` for recognized no-op states that should be
-explained to the user.
+Commands may return `statusMessage` for recognized no-op states that should be explained to the user.
 
 ### Boundary construction command
 
@@ -258,17 +264,11 @@ explained to the user.
 3 selected constructible points → triangle
 ```
 
-This is intentionally limited to two and three points for now. Four or more
-points require an ordering story before polygon construction should be added.
-
 Circle construction remains on `C`:
 
 ```txt
 2 selected constructible points → circle from center and through point
 ```
-
-Even though circle also consumes two selected points, it should keep a semantic
-wrapper separate from segment endpoints.
 
 ### Intersection command
 
@@ -279,59 +279,15 @@ wrapper separate from segment endpoints.
 segment + circle or circle+circle → CURVE_INTERSECTION branch nodes
 ```
 
-Triangle borders are not segment nodes unless explicit segments were created.
-The selected-segment visual affordance should remain strong enough that users
-can tell whether both segments are selected.
+## Workspace fixtures
 
-## Adding pointer behavior
-
-Pointer behavior should remain simple and policy-driven.
-
-Current order:
+Workspace fixtures should live under:
 
 ```txt
-shift-click → selection
-free point hit → direct point drag
-draggable area body hit → body drag
-empty canvas → add point
+src/core/fixtures/
 ```
 
-Free-point dragging should continue to beat area-body dragging. Otherwise large
-areas become frustrating to work over.
-
-If a new shape should drag as a body, prefer registry body-drag metadata over
-hardcoding the shape in pointer intent.
-
-## Adding z-order behavior
-
-Z-order is represented as node `zIndex`.
-
-User-facing commands:
-
-```txt
-PageUp              bring selected forward
-PageDown            send selected backward
-Shift+PageUp        bring selected to front
-Shift+PageDown      send selected to back
-```
-
-`zIndex` only resolves conflicts within the same render layer or hit class. It
-must not collapse the distinct render and hit priority models.
-
-When changing z-order behavior, test both:
-
-```txt
-render/hit winner among same-class overlaps
-point priority over high-z areas
-```
-
-## Adding workspace-visible metadata
-
-If metadata lives on graph nodes, workspace serialization will usually preserve
-it naturally because nodes are serialized as graph nodes.
-
-Still test compatibility when changing required fields. Prefer optional metadata
-or parser defaults unless a migration is intentionally being introduced.
+Use the core fixture runner for both happy-path and partially undefined construction workspaces.
 
 ## Documentation checklist
 
@@ -339,6 +295,7 @@ Update docs when any of these change:
 
 ```txt
 layer responsibilities
+headless core public surface
 registry responsibilities
 pointer intent order
 render/hit ordering
@@ -347,7 +304,6 @@ workspace format expectations
 feature workflow for new shapes
 intersection semantics
 undefined-construction behavior
+diagnostic codes
 denotational curve/intersection direction
 ```
-
-Docs should explain why the architecture works, not merely list files.
