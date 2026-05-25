@@ -2,9 +2,9 @@ import {
   applyGraphEdit,
   circleConstruction,
   deleteNodesDisabledReason,
-  freePoint,
   isConstructiblePointNode,
   lineConstruction,
+  planFreePoint,
   screenToWorld,
   segmentConstruction,
   triangleConstruction,
@@ -145,26 +145,15 @@ function createFreePointInput(
   input: PointerInput,
 ): { readonly graph: Graph; readonly id: NodeId } {
   const point = screenToWorld(input.viewport, input.point);
-  const id = nextModalPointId(state.graph);
-  const node = freePoint(id, point.x, point.y, id);
+  const planned = planFreePoint(state.graph, point);
 
   return {
     graph: applyGraphEdit(state.graph, {
       kind: "ADD_NODES",
-      nodes: [node],
+      nodes: [planned.node],
     }),
-    id,
+    id: planned.id,
   };
-}
-
-function nextModalPointId(graph: Graph): NodeId {
-  for (let index = 1; ; index += 1) {
-    const id = `P${index}`;
-
-    if (!graph.byId.has(id)) {
-      return id;
-    }
-  }
 }
 
 function constructionNodesForPointTool(

@@ -2,6 +2,7 @@ import type { Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
 import { freePoint, type GeometryNode, type NodeId } from "./node";
 import { canDeleteNodes, cascadingDeleteIds } from "./deletePolicy";
+import { planFreePoint } from "./freePointPlanning";
 
 export type GraphEdit = Readonly<
   | {
@@ -62,9 +63,7 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 }
 
 function addFreePoint(graph: Graph, point: Vec2): Graph {
-  return addNodes(graph, [
-    freePoint(nextFreePointId(graph), point.x, point.y, nextFreePointId(graph)),
-  ]);
+  return addNodes(graph, [planFreePoint(graph, point).node]);
 }
 
 function addNodes(graph: Graph, nodes: readonly GeometryNode[]): Graph {
@@ -206,14 +205,4 @@ function setNodeZIndices(
           };
     }),
   );
-}
-
-function nextFreePointId(graph: Graph): NodeId {
-  for (let index = 1; ; index += 1) {
-    const id = `P${index}`;
-
-    if (!graph.byId.has(id)) {
-      return id;
-    }
-  }
 }

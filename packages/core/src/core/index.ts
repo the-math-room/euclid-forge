@@ -139,3 +139,9 @@ export {
 } from "../representation/deletePolicy";
 export { isConstructibleCurveNode } from "../representation/curveNode";
 export { isConstructiblePointNode } from "../representation/pointNode";
+
+export {
+  nextFreePointId,
+  planFreePoint,
+  type PlannedFreePoint,
+} from "../representation/freePointPlanning";
