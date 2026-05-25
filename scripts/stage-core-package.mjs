@@ -96,3 +96,6 @@ for (const layer of staged) {
 console.log("");
 console.log("Preview entrypoint:");
 console.log("- src/core/index.ts");
+console.log("");
+console.log("Run isolated typecheck with:");
+console.log("- npm run check:core-package");
