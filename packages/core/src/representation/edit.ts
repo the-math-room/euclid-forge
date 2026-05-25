@@ -1,41 +1,40 @@
 import type { Vec2 } from "../meaning/vec2";
-import { createGraph } from "./graph";
-import type { Graph } from "./graph";
-import { canDeleteNodes } from "./deletePolicy";
-import { freePoint } from "./node";
-import type { GeometryNode, NodeId } from "./node";
+import { createGraph, type Graph } from "./graph";
+import { freePoint, type GeometryNode, type NodeId } from "./node";
+import { canDeleteNodes, cascadingDeleteIds } from "./deletePolicy";
 
-export type GraphEdit =
-  | Readonly<{
+export type GraphEdit = Readonly<
+  | {
       kind: "ADD_FREE_POINT";
       point: Vec2;
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "ADD_NODES";
       nodes: readonly GeometryNode[];
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "MOVE_FREE_POINT";
       id: NodeId;
       point: Vec2;
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "TRANSLATE_FREE_POINTS";
       ids: readonly NodeId[];
       delta: Vec2;
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "SET_FREE_POINT_POSITIONS";
       positions: ReadonlyMap<NodeId, Vec2>;
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "DELETE_NODES";
       ids: readonly NodeId[];
-    }>
-  | Readonly<{
+    }
+  | {
       kind: "SET_NODE_Z_INDICES";
       zIndices: ReadonlyMap<NodeId, number>;
-    }>;
+    }
+>;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
   switch (edit.kind) {
@@ -62,6 +61,12 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
   }
 }
 
+function addFreePoint(graph: Graph, point: Vec2): Graph {
+  return addNodes(graph, [
+    freePoint(nextFreePointId(graph), point.x, point.y, nextFreePointId(graph)),
+  ]);
+}
+
 function addNodes(graph: Graph, nodes: readonly GeometryNode[]): Graph {
   if (nodes.length === 0) {
     return graph;
@@ -70,31 +75,71 @@ function addNodes(graph: Graph, nodes: readonly GeometryNode[]): Graph {
   return createGraph([...graph.nodes, ...nodes]);
 }
 
-function deleteNodes(graph: Graph, ids: readonly NodeId[]): Graph {
-  if (!canDeleteNodes(graph, ids)) {
-    throw new Error("Cannot delete nodes with unselected dependents");
+function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
+  const node = graph.byId.get(id);
+
+  if (!node) {
+    throw new Error(`Cannot move missing node: ${id}`);
   }
 
-  const idSet = new Set(ids);
+  if (node.kind !== "FREE_POINT") {
+    throw new Error(`Cannot directly move constrained node: ${id}`);
+  }
 
-  return createGraph(graph.nodes.filter((node) => !idSet.has(node.id)));
+  return createGraph(
+    graph.nodes.map((candidate) =>
+      candidate.id === id
+        ? {
+            ...node,
+            x: point.x,
+            y: point.y,
+          }
+        : candidate,
+    ),
+  );
 }
 
-function addFreePoint(graph: Graph, point: Vec2): Graph {
-  const id = nextPointId(graph);
+function translateFreePoints(
+  graph: Graph,
+  ids: readonly NodeId[],
+  delta: Vec2,
+): Graph {
+  if (ids.length === 0) {
+    return graph;
+  }
 
-  return createGraph([...graph.nodes, freePoint(id, point.x, point.y, id)]);
+  const positions = new Map<NodeId, Vec2>();
+
+  for (const id of ids) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot translate missing node: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot directly translate constrained node: ${id}`);
+    }
+
+    positions.set(id, { x: node.x + delta.x, y: node.y + delta.y });
+  }
+
+  return setFreePointPositions(graph, positions);
 }
 
 function setFreePointPositions(
   graph: Graph,
   positions: ReadonlyMap<NodeId, Vec2>,
 ): Graph {
+  if (positions.size === 0) {
+    return graph;
+  }
+
   for (const [id] of positions) {
     const node = graph.byId.get(id);
 
     if (!node) {
-      throw new Error(`Cannot set position for missing node: ${id}`);
+      throw new Error(`Cannot set missing node position: ${id}`);
     }
 
     if (node.kind !== "FREE_POINT") {
@@ -116,113 +161,59 @@ function setFreePointPositions(
         );
       }
 
-      return freePoint(node.id, point.x, point.y, node.label);
+      return {
+        ...node,
+        x: point.x,
+        y: point.y,
+      };
     }),
   );
 }
 
-function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
-  const node = graph.byId.get(id);
-
-  if (!node) {
-    throw new Error(`Cannot move missing node: ${id}`);
+function deleteNodes(graph: Graph, ids: readonly NodeId[]): Graph {
+  if (!canDeleteNodes(graph, ids)) {
+    throw new Error("Cannot delete nodes.");
   }
 
-  if (node.kind !== "FREE_POINT") {
-    throw new Error(`Cannot directly move constrained node: ${id}`);
-  }
+  const idsToDelete = cascadingDeleteIds(graph, ids);
 
-  return createGraph(
-    graph.nodes.map((candidate) => {
-      if (candidate.id !== id) {
-        return candidate;
-      }
-
-      return freePoint(node.id, point.x, point.y, node.label);
-    }),
-  );
-}
-
-function translateFreePoints(
-  graph: Graph,
-  ids: readonly NodeId[],
-  delta: Vec2,
-): Graph {
-  const idSet = new Set(ids);
-
-  for (const id of idSet) {
-    const node = graph.byId.get(id);
-
-    if (!node) {
-      throw new Error(`Cannot translate missing node: ${id}`);
-    }
-
-    if (node.kind !== "FREE_POINT") {
-      throw new Error(`Cannot directly translate constrained node: ${id}`);
-    }
-  }
-
-  return createGraph(
-    graph.nodes.map((node) => {
-      if (!idSet.has(node.id)) {
-        return node;
-      }
-
-      if (node.kind !== "FREE_POINT") {
-        throw new Error(
-          `Cannot directly translate constrained node: ${node.id}`,
-        );
-      }
-
-      return freePoint(node.id, node.x + delta.x, node.y + delta.y, node.label);
-    }),
-  );
+  return createGraph(graph.nodes.filter((node) => !idsToDelete.has(node.id)));
 }
 
 function setNodeZIndices(
   graph: Graph,
-  zIndices: ReadonlyMap<NodeId, number>,
+  updates: ReadonlyMap<NodeId, number>,
 ): Graph {
-  if (zIndices.size === 0) {
+  if (updates.size === 0) {
     return graph;
   }
 
-  for (const [id, zIndex] of zIndices) {
+  for (const [id] of updates) {
     if (!graph.byId.has(id)) {
       throw new Error(`Cannot set z-index for missing node: ${id}`);
-    }
-
-    if (!Number.isFinite(zIndex)) {
-      throw new Error(`Node z-index must be finite for ${id}: ${zIndex}`);
     }
   }
 
   return createGraph(
     graph.nodes.map((node) => {
-      const zIndex = zIndices.get(node.id);
+      const zIndex = updates.get(node.id);
 
-      if (zIndex === undefined) {
-        return node;
-      }
-
-      if (node.zIndex === zIndex) {
-        return node;
-      }
-
-      return Object.freeze({
-        ...node,
-        zIndex,
-      }) as GeometryNode;
+      return zIndex === undefined
+        ? node
+        : {
+            ...node,
+            zIndex,
+          };
     }),
   );
 }
 
-function nextPointId(graph: Graph): NodeId {
-  let index = 1;
+function nextFreePointId(graph: Graph): NodeId {
+  for (let index = 1; ; index += 1) {
+    const id = `P${index}`;
 
-  while (graph.byId.has(`P${index}`)) {
-    index += 1;
+    if (!graph.byId.has(id)) {
+      return id;
+    }
   }
-
-  return `P${index}`;
 }

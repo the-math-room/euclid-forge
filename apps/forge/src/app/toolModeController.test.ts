@@ -220,7 +220,7 @@ describe("app/tool mode pointer behavior", () => {
     expect(transition.state.activeTool).toEqual({ kind: "delete" });
   });
 
-  test("delete mode reports blocked deletes", () => {
+  test("delete mode cascades through dependents", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
       freePoint("B", 2, 0, "B"),
@@ -237,9 +237,10 @@ describe("app/tool mode pointer behavior", () => {
       },
     );
 
-    expect(transition.history).toBe("ignore");
-    expect(transition.effects[0]?.kind).toBe("SHOW_STATUS");
-    expect(transition.state.graph.byId.has("A")).toBe(true);
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.has("A")).toBe(false);
+    expect(transition.state.graph.byId.has("AB")).toBe(false);
+    expect(transition.state.graph.byId.has("B")).toBe(true);
   });
 
   test("construction modes reject non-point inputs", () => {

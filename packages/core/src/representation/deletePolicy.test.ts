@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { createGraph } from "./graph";
 import { centroidNode, freePoint, segmentNode, triangleNode } from "./node";
-import { canDeleteNodes, deleteNodesDisabledReason } from "./deletePolicy";
+import {
+  canDeleteNodes,
+  cascadingDeleteIds,
+  deleteNodesDisabledReason,
+} from "./deletePolicy";
 
 describe("representation/deletePolicy", () => {
-  test("allows deleting nodes with no unselected dependents", () => {
+  test("allows deleting nodes with no dependents", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
       freePoint("B", 1, 1, "B"),
@@ -12,19 +16,27 @@ describe("representation/deletePolicy", () => {
 
     expect(canDeleteNodes(graph, ["A"])).toBe(true);
     expect(deleteNodesDisabledReason(graph, ["A"])).toBeNull();
+    expect([...cascadingDeleteIds(graph, ["A"])]).toEqual(["A"]);
   });
 
-  test("allows deleting a selected subgraph", () => {
+  test("allows deleting a root node by cascading to dependents", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
+      segmentNode("AB", "A", "B"),
       centroidNode("G", "ABC", "G"),
     ]);
 
-    expect(canDeleteNodes(graph, ["ABC", "G"])).toBe(true);
-    expect(deleteNodesDisabledReason(graph, ["ABC", "G"])).toBeNull();
+    expect(canDeleteNodes(graph, ["A"])).toBe(true);
+    expect(deleteNodesDisabledReason(graph, ["A"])).toBeNull();
+    expect([...cascadingDeleteIds(graph, ["A"])].sort()).toEqual([
+      "A",
+      "AB",
+      "ABC",
+      "G",
+    ]);
   });
 
   test("rejects empty deletion sets", () => {
@@ -42,21 +54,6 @@ describe("representation/deletePolicy", () => {
     expect(canDeleteNodes(graph, ["missing"])).toBe(false);
     expect(deleteNodesDisabledReason(graph, ["missing"])).toBe(
       "Cannot delete missing node: missing.",
-    );
-  });
-
-  test("explains unselected dependents", () => {
-    const graph = createGraph([
-      freePoint("A", -2, -1, "A"),
-      freePoint("B", 2, -1, "B"),
-      freePoint("C", 0, 2, "C"),
-      triangleNode("ABC", "A", "B", "C"),
-      segmentNode("AB", "A", "B"),
-    ]);
-
-    expect(canDeleteNodes(graph, ["A"])).toBe(false);
-    expect(deleteNodesDisabledReason(graph, ["A"])).toBe(
-      "Cannot delete A; AB, ABC depends on it. Select dependents too, or hide instead.",
     );
   });
 });

@@ -199,19 +199,27 @@ describe("representation/applyGraphEdit", () => {
     expect(next.byId.get("A")).toEqual(freePoint("A", 0, 0, "A"));
   });
 
-  test("rejects deleting nodes with unselected dependents", () => {
+  test("cascades deletion to transitive dependents", () => {
     const graph = createGraph([
-      freePoint("A", 0, 0, "A"),
-      freePoint("B", 1, 0, "B"),
+      freePoint("A", -2, -1, "A"),
+      freePoint("B", 2, -1, "B"),
+      freePoint("C", 0, 2, "C"),
+      triangleNode("ABC", "A", "B", "C"),
       segmentNode("AB", "A", "B"),
+      centroidNode("G", "ABC", "G"),
     ]);
 
-    expect(() =>
-      applyGraphEdit(graph, {
-        kind: "DELETE_NODES",
-        ids: ["A"],
-      }),
-    ).toThrow("Cannot delete nodes with unselected dependents");
+    const next = applyGraphEdit(graph, {
+      kind: "DELETE_NODES",
+      ids: ["A"],
+    });
+
+    expect(next.byId.has("A")).toBe(false);
+    expect(next.byId.has("AB")).toBe(false);
+    expect(next.byId.has("ABC")).toBe(false);
+    expect(next.byId.has("G")).toBe(false);
+    expect(next.byId.get("B")).toEqual(freePoint("B", 2, -1, "B"));
+    expect(next.byId.get("C")).toEqual(freePoint("C", 0, 2, "C"));
   });
   test("sets node z-indices", () => {
     const graph = createGraph([

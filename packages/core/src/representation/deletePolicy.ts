@@ -1,6 +1,6 @@
 import type { Graph } from "./graph";
 import type { NodeId } from "./node";
-import { dependenciesOf } from "./dependencies";
+import { transitiveDependentsOf } from "./dependencies";
 
 export function canDeleteNodes(graph: Graph, ids: Iterable<NodeId>): boolean {
   return deleteNodesDisabledReason(graph, ids) === null;
@@ -22,37 +22,19 @@ export function deleteNodesDisabledReason(
     }
   }
 
-  const blockedBy = new Map<NodeId, NodeId[]>();
+  return null;
+}
 
-  for (const node of graph.nodes) {
-    if (idSet.has(node.id)) {
-      continue;
-    }
+export function cascadingDeleteIds(
+  graph: Graph,
+  ids: Iterable<NodeId>,
+): ReadonlySet<NodeId> {
+  const roots = new Set(ids);
+  const cascade = new Set<NodeId>(roots);
 
-    for (const dependency of dependenciesOf(node)) {
-      if (!idSet.has(dependency)) {
-        continue;
-      }
-
-      const dependents = blockedBy.get(dependency) ?? [];
-      dependents.push(node.id);
-      blockedBy.set(dependency, dependents);
-    }
+  for (const dependent of transitiveDependentsOf(graph, roots)) {
+    cascade.add(dependent);
   }
 
-  if (blockedBy.size === 0) {
-    return null;
-  }
-
-  const [source, dependents] = [...blockedBy][0] ?? [];
-
-  if (!source || !dependents || dependents.length === 0) {
-    return "Cannot delete nodes with unselected dependents.";
-  }
-
-  const sortedDependents = [...dependents].sort();
-  const dependentList = sortedDependents.slice(0, 3).join(", ");
-  const suffix = sortedDependents.length > 3 ? ", ..." : "";
-
-  return `Cannot delete ${source}; ${dependentList}${suffix} depends on it. Select dependents too, or hide instead.`;
+  return cascade;
 }

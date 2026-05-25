@@ -134,6 +134,7 @@ export {
 } from "../representation/dependencies";
 export {
   canDeleteNodes,
+  cascadingDeleteIds,
   deleteNodesDisabledReason,
 } from "../representation/deletePolicy";
 export { isConstructibleCurveNode } from "../representation/curveNode";

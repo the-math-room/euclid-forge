@@ -402,20 +402,36 @@ describe("app/commands", () => {
     expect(result?.state.graph.byId.has("G")).toBe(false);
   });
 
-  test("delete selected explains unselected dependents", () => {
+  test("delete selected cascades through unselected dependents", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
       freePoint("C", 0, 2, "C"),
       triangleNode("ABC", "A", "B", "C"),
     ]);
-    const viewState = toggleSelectedNode(emptyViewState(), "A");
-    const state = appState(graph, viewState, null);
+    const state = appState(
+      graph,
+      {
+        ...emptyViewState(),
+        selectedNodeIds: new Set(["A"]),
+      },
+      null,
+    );
     const command = appCommandForKey("Delete");
 
-    expect(command && appCommandDisabledReason(command, state)).toBe(
-      "Cannot delete A; ABC depends on it. Select dependents too, or hide instead.",
-    );
+    expect(command && appCommandDisabledReason(command, state)).toBeNull();
+
+    if (!command) {
+      throw new Error("Missing delete command");
+    }
+
+    const result = command.run(state);
+
+    expect(result.history).toBe("commit");
+    expect(result.state.graph.byId.has("A")).toBe(false);
+    expect(result.state.graph.byId.has("ABC")).toBe(false);
+    expect(result.state.graph.byId.has("B")).toBe(true);
+    expect(result.state.graph.byId.has("C")).toBe(true);
   });
 
   test("delete selected is disabled when selection is empty", () => {

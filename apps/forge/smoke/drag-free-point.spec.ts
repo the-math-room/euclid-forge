@@ -99,26 +99,18 @@ test("shift-selects three free points and creates a triangle with J", async ({
   await expectLightEdgeNear(frame.canvas, { x: 3, y: 2.5 });
 });
 
-test("blocked delete shows a status message and keeps geometry", async ({
-  page,
-}) => {
+test("delete cascades through dependent geometry", async ({ page }) => {
   await page.goto("/");
 
   const frame = await getCanvasFrame(page);
 
   await shiftClickWorld(page, frame, { x: -2, y: -1 });
-  await waitForAnimationFrame(page);
-
   await page.keyboard.press("Delete");
   await waitForAnimationFrame(page);
 
-  const status = page.locator("#status-message");
-
-  await expect(status).toBeVisible();
-  await expect(status).toContainText("Cannot delete A");
-  await expect(status).toContainText("depends on it");
-
-  await expectYellowPointNear(frame.canvas, { x: -2, y: -1 });
+  await expectYellowPointNear(frame.canvas, { x: 2, y: -1 });
+  await expectYellowPointNear(frame.canvas, { x: 0, y: 2 });
+  await expectNoYellowPointNear(frame.canvas, { x: -2, y: -1 });
 });
 
 test("deletes an isolated point and undo restores it", async ({ page }) => {
