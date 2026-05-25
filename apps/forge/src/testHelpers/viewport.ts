@@ -1,5 +1,5 @@
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import type { Viewport } from "@euclid-forge/core/view/viewport";
+import { vec2 } from "@euclid-forge/core";
+import type { Viewport } from "@euclid-forge/core";
 
 export function testViewport(
   overrides: Partial<Viewport> = {},

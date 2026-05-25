@@ -3,14 +3,14 @@ import {
   parseSerializedWorkspace,
   serializeWorkspace,
 } from "@euclid-forge/core";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { vec2 } from "@euclid-forge/core";
+import { createGraph } from "@euclid-forge/core";
 import {
   centroidNode,
   freePoint,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
+} from "@euclid-forge/core";
 import { appState } from "./appState";
 import { deserializeWorkspace } from "./workspace";
 import {

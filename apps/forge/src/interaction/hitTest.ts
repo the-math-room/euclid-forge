@@ -1,5 +1,5 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
-import type { EvaluatedScene } from "@euclid-forge/core/evaluation/evaluateGraph";
+import type { EvaluatedScene } from "@euclid-forge/core";
 import {
   bodyDragForGeometryNode,
   hitGeometryValue,
@@ -13,9 +13,9 @@ import type {
   SegmentHit,
   TriangleHitTarget,
 } from "./geometryInteractionContext";
-import type { Graph } from "@euclid-forge/core/representation/graph";
-import type { NodeId } from "@euclid-forge/core/representation/node";
-import type { ScreenPoint, Viewport } from "@euclid-forge/core/view/viewport";
+import type { Graph } from "@euclid-forge/core";
+import type { NodeId } from "@euclid-forge/core";
+import type { ScreenPoint, Viewport } from "@euclid-forge/core";
 
 export type {
   CircleHit,

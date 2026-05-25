@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { createGraph } from "@euclid-forge/core";
 import {
   centroidNode,
   freePoint,
   midpointNode,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
+} from "@euclid-forge/core";
 import {
   clearEffectivelyHiddenSelection,
   effectiveHiddenNodeIds,

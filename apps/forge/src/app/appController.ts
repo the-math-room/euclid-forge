@@ -1,8 +1,8 @@
-import { deltaBetween } from "@euclid-forge/core/meaning/vec2";
-import { applyGraphEdit } from "@euclid-forge/core/representation/edit";
-import type { NodeId } from "@euclid-forge/core/representation/node";
-import type { ScreenPoint, Viewport } from "@euclid-forge/core/view/viewport";
-import { screenToWorld } from "@euclid-forge/core/view/viewport";
+import { deltaBetween } from "@euclid-forge/core";
+import { applyGraphEdit } from "@euclid-forge/core";
+import type { NodeId } from "@euclid-forge/core";
+import type { ScreenPoint, Viewport } from "@euclid-forge/core";
+import { screenToWorld } from "@euclid-forge/core";
 import {
   appCommandDisabledReason,
   appCommandForKey,

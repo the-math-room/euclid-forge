@@ -12,14 +12,17 @@
     "smoke": "playwright test --config=playwright.config.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run smoke"
+    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run smoke",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "typescript": "latest",
     "vite": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "prettier": "^3.8.3"
   },
   "dependencies": {
     "@euclid-forge/core": "0.1.0"

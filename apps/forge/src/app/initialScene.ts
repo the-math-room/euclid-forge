@@ -1,5 +1,5 @@
-import { createGraph } from "@euclid-forge/core/representation/graph";
-import type { Graph } from "@euclid-forge/core/representation/graph";
+import { createGraph } from "@euclid-forge/core";
+import type { Graph } from "@euclid-forge/core";
 import {
   centroidNode,
   circleNode,
@@ -9,7 +9,7 @@ import {
   segmentIntersectionNode,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
+} from "@euclid-forge/core";
 
 /**
  * Default browser sanity scene.

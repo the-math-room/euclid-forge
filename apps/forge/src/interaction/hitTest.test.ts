@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
-import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { evaluateGraph } from "@euclid-forge/core";
+import { vec2 } from "@euclid-forge/core";
+import { createGraph } from "@euclid-forge/core";
 import {
   centroidNode,
   circleNode,
@@ -10,8 +10,8 @@ import {
   midpointNode,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
-import { worldToScreen } from "@euclid-forge/core/view/viewport";
+} from "@euclid-forge/core";
+import { worldToScreen } from "@euclid-forge/core";
 import { testViewport } from "../testHelpers/viewport";
 import {
   hitTestCircleSelection,

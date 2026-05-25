@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { createGraph } from "@euclid-forge/core/representation/graph";
-import { freePoint, triangleNode } from "@euclid-forge/core/representation/node";
+import { vec2 } from "@euclid-forge/core";
+import { createGraph } from "@euclid-forge/core";
+import { freePoint, triangleNode } from "@euclid-forge/core";
 import {
   initialFreePointPositions,
   translatedFreePointPositions,

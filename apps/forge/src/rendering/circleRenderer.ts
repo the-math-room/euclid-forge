@@ -1,6 +1,6 @@
 import type { EvaluatedCircle } from "@euclid-forge/core/evaluation/evaluated";
-import type { Viewport } from "@euclid-forge/core/view/viewport";
-import { worldToScreen } from "@euclid-forge/core/view/viewport";
+import type { Viewport } from "@euclid-forge/core";
+import { worldToScreen } from "@euclid-forge/core";
 
 export type CircleRenderOptions = Readonly<{
   hoveredNodeId?: string | null;

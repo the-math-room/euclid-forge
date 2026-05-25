@@ -1,4 +1,4 @@
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
+import { vec2 } from "@euclid-forge/core";
 import type { ViewState } from "./viewState";
 
 export function testViewState(

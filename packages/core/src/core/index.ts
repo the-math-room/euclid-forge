@@ -109,3 +109,32 @@ export {
   type SegmentNode,
   type TriangleNode,
 } from "../representation/node";
+export {
+  centroid,
+  deltaBetween,
+  midpoint,
+  segmentIntersection,
+  segmentSegmentIntersections,
+  vec2,
+  type IntersectionCandidate,
+  type IntersectionMultiplicity,
+  type IntersectionResult,
+  type LineIntersectionResult,
+  type Vec2,
+} from "../meaning/vec2";
+export {
+  visibleEvaluatedScene,
+  type EvaluatedSceneVisibility,
+} from "../evaluation/visibleScene";
+export { curveIntersectionCandidatesForScene } from "../evaluation/curveIntersectionCandidates";
+export {
+  dependenciesOf,
+  dependentsOf,
+  transitiveDependentsOf,
+} from "../representation/dependencies";
+export {
+  canDeleteNodes,
+  deleteNodesDisabledReason,
+} from "../representation/deletePolicy";
+export { isConstructibleCurveNode } from "../representation/curveNode";
+export { isConstructiblePointNode } from "../representation/pointNode";

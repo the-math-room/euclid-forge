@@ -1,5 +1,5 @@
-import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
-import { curveIntersectionCandidatesForScene } from "@euclid-forge/core/evaluation/curveIntersectionCandidates";
+import { evaluateGraph } from "@euclid-forge/core";
+import { curveIntersectionCandidatesForScene } from "@euclid-forge/core";
 import {
   centroidConstruction,
   circleConstruction,
@@ -9,12 +9,12 @@ import {
   triangleConstruction,
   triangleSideMidpointConstruction,
 } from "@euclid-forge/core/representation/constructions";
-import { applyGraphEdit } from "@euclid-forge/core/representation/edit";
-import { curveIntersectionNode } from "@euclid-forge/core/representation/node";
-import type { GeometryNode, NodeId } from "@euclid-forge/core/representation/node";
+import { applyGraphEdit } from "@euclid-forge/core";
+import { curveIntersectionNode } from "@euclid-forge/core";
+import type { GeometryNode, NodeId } from "@euclid-forge/core";
 import {
   deleteNodesDisabledReason,
-} from "@euclid-forge/core/representation/deletePolicy";
+} from "@euclid-forge/core";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
 import {

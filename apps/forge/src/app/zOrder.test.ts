@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { createGraph } from "@euclid-forge/core/representation/graph";
-import { freePoint } from "@euclid-forge/core/representation/node";
+import { createGraph } from "@euclid-forge/core";
+import { freePoint } from "@euclid-forge/core";
 import {
   bringNodesForward,
   bringNodesToFront,

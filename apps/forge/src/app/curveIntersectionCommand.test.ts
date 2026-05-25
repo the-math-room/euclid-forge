@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { createGraph } from "@euclid-forge/core";
 import {
   circleNode,
   freePoint,
-} from "@euclid-forge/core/representation/node";
+} from "@euclid-forge/core";
 import { appState } from "./appState";
 import { appCommandForKey } from "./commands";
 import { emptyViewState, toggleSelectedNode } from "./viewState";

@@ -1,4 +1,4 @@
-import type { Viewport } from "@euclid-forge/core/view/viewport";
+import type { Viewport } from "@euclid-forge/core";
 
 export type GeometryRenderLayer = "AREA" | "LINEAR" | "POINT";
 

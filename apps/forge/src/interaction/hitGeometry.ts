@@ -5,7 +5,7 @@ import type {
   EvaluatedSegment,
   EvaluatedTriangle,
 } from "@euclid-forge/core/evaluation/evaluated";
-import { screenToWorld, worldToScreen } from "@euclid-forge/core/view/viewport";
+import { screenToWorld, worldToScreen } from "@euclid-forge/core";
 import type { GeometryHitContext } from "./geometryInteractionContext";
 import type {
   CircleHit,

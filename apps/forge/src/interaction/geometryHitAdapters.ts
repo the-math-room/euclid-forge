@@ -1,6 +1,6 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
-import type { Graph } from "@euclid-forge/core/representation/graph";
-import type { GeometryNode, NodeId } from "@euclid-forge/core/representation/node";
+import type { Graph } from "@euclid-forge/core";
+import type { GeometryNode, NodeId } from "@euclid-forge/core";
 import {
   hitCircleValue,
   hitLineValue,

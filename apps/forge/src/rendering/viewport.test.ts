@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { screenToWorld, worldToScreen } from "@euclid-forge/core/view/viewport";
+import { vec2 } from "@euclid-forge/core";
+import { screenToWorld, worldToScreen } from "@euclid-forge/core";
 import { testViewport } from "./testHelpers";
-import type { Viewport } from "@euclid-forge/core/view/viewport";
+import type { Viewport } from "@euclid-forge/core";
 
 describe("rendering/viewport", () => {
   test("maps world origin to the center of the screen", () => {

@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { vec2 } from "@euclid-forge/core";
+import { createGraph } from "@euclid-forge/core";
 import {
   centroidNode,
   circleNode,
   freePoint,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
-import { worldToScreen } from "@euclid-forge/core/view/viewport";
+} from "@euclid-forge/core";
+import { worldToScreen } from "@euclid-forge/core";
 import { testViewport } from "../testHelpers/viewport";
 import { appState } from "./appState";
 import {

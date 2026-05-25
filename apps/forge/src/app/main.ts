@@ -2,7 +2,7 @@ import "../styles/app.css";
 
 import { installBuildInfoSurface } from "./buildInfo";
 
-import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
+import { evaluateGraph } from "@euclid-forge/core";
 import { createAppRuntime } from "./appRuntime";
 import { initialAppState } from "./appState";
 import type { AppState } from "./appState";

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
-import { createGraph } from "@euclid-forge/core/representation/graph";
+import { vec2 } from "@euclid-forge/core";
+import { createGraph } from "@euclid-forge/core";
 import {
   centroidNode,
   circleNode,
@@ -9,7 +9,7 @@ import {
   midpointNode,
   segmentNode,
   triangleNode,
-} from "@euclid-forge/core/representation/node";
+} from "@euclid-forge/core";
 import { appState } from "./appState";
 import {
   APP_COMMANDS,

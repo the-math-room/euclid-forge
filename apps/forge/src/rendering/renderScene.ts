@@ -1,5 +1,5 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
-import type { EvaluatedScene } from "@euclid-forge/core/evaluation/evaluateGraph";
+import type { EvaluatedScene } from "@euclid-forge/core";
 import {
   renderEvaluatedGeometry as renderGeometryValue,
   renderLayerForGeometry as renderLayerForGeometryValue,
@@ -8,7 +8,7 @@ import type {
   GeometryRenderLayer,
   GeometryRenderOptions,
 } from "./geometryRenderingContext";
-import type { Viewport } from "@euclid-forge/core/view/viewport";
+import type { Viewport } from "@euclid-forge/core";
 
 export type RenderSceneOptions = GeometryRenderOptions;
 

@@ -1,5 +1,5 @@
-import type { Vec2 } from "@euclid-forge/core/meaning/vec2";
-import type { NodeId } from "@euclid-forge/core/representation/node";
+import type { Vec2 } from "@euclid-forge/core";
+import type { NodeId } from "@euclid-forge/core";
 import type { FreePointPositionSnapshot } from "./freePointDrag";
 
 export type DragState =

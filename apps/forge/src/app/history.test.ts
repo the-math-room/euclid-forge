@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { createGraph } from "@euclid-forge/core/representation/graph";
-import { freePoint } from "@euclid-forge/core/representation/node";
+import { createGraph } from "@euclid-forge/core";
+import { freePoint } from "@euclid-forge/core";
 import { appState } from "./appState";
 import {
   appStateFromHistory,
@@ -16,7 +16,7 @@ import {
   setViewportCenter,
   toggleSelectedNode,
 } from "./viewState";
-import { vec2 } from "@euclid-forge/core/meaning/vec2";
+import { vec2 } from "@euclid-forge/core";
 
 describe("app/history", () => {
   test("initializes with one present snapshot and empty past/future", () => {

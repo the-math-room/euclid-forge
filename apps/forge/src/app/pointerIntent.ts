@@ -1,16 +1,16 @@
-import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
-import { visibleEvaluatedScene } from "@euclid-forge/core/evaluation/visibleScene";
+import { evaluateGraph } from "@euclid-forge/core";
+import { visibleEvaluatedScene } from "@euclid-forge/core";
 import {
   hitTestDraggableAreaBody,
   hitTestFreePointTarget,
   hitTestSelectionTarget,
 } from "../interaction/hitTest";
-import type { Vec2 } from "@euclid-forge/core/meaning/vec2";
-import type { NodeId } from "@euclid-forge/core/representation/node";
+import type { Vec2 } from "@euclid-forge/core";
+import type { NodeId } from "@euclid-forge/core";
 import type { PointerInput } from "./appController";
 import type { AppState } from "./appState";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
-import { screenToWorld } from "@euclid-forge/core/view/viewport";
+import { screenToWorld } from "@euclid-forge/core";
 
 export type PointerDownIntent =
   | Readonly<{
