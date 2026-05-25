@@ -9,10 +9,11 @@
     "test:watch": "vitest src",
     "typecheck": "tsc --noEmit",
     "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:core-extractable": "node scripts/check-core-extractable.mjs",
     "smoke": "playwright test --config=playwright.config.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run smoke"
+    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run check:core-extractable && npm run smoke"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
