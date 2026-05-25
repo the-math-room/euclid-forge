@@ -156,6 +156,92 @@ export const SCREEN_RENDER_THEME: RenderTheme = Object.freeze({
   }),
 });
 
+export const HIGH_CONTRAST_RENDER_THEME: RenderTheme = Object.freeze({
+  background: "#ffffff",
+
+  point: Object.freeze({
+    styles: Object.freeze({
+      FREE: Object.freeze({
+        fill: "#b45309",
+        radiusPx: 6,
+      }),
+      MIDPOINT: Object.freeze({
+        fill: "#047857",
+        radiusPx: 5,
+      }),
+      CENTROID: Object.freeze({
+        fill: "#1d4ed8",
+        radiusPx: 5,
+      }),
+      INTERSECTION: Object.freeze({
+        fill: "#be185d",
+        radiusPx: 5,
+      }),
+    }),
+
+    hoverStroke: "#64748b",
+    hoverRingOffsetPx: 4,
+
+    selectedStroke: "#2563eb",
+    selectedRingOffsetPx: 6,
+
+    labelFill: "#111827",
+    labelFont: "14px system-ui, sans-serif",
+    labelOffsetX: 10,
+    labelOffsetY: -10,
+    labelPill: Object.freeze({
+      fill: "rgb(255 255 255 / 0.86)",
+      stroke: "rgb(17 24 39 / 0.24)",
+      strokeWidthPx: 1,
+      paddingXPx: 4,
+      paddingYPx: 2,
+      radiusPx: 5,
+      fallbackAscentPx: 11,
+      fallbackDescentPx: 3,
+    }),
+  }),
+
+  segment: Object.freeze({
+    stroke: "#111827",
+    lineWidthPx: 2,
+
+    hoverStroke: "#64748b",
+    hoverLineWidthPx: 5,
+
+    selectedStroke: "#2563eb",
+    selectedLineWidthPx: 6,
+  }),
+
+  circle: Object.freeze({
+    strokeStyle: "#111827",
+    lineWidth: 2,
+    selectedStrokeStyle: "#2563eb",
+    selectedLineWidth: 5,
+    hoverStrokeStyle: "#64748b",
+    hoverLineWidth: 5,
+  }),
+
+  line: Object.freeze({
+    strokeStyle: "#111827",
+    lineWidth: 2,
+    selectedStrokeStyle: "#2563eb",
+    selectedLineWidth: 5,
+    hoverStrokeStyle: "#64748b",
+    hoverLineWidth: 5,
+  }),
+
+  triangle: Object.freeze({
+    stroke: "#111827",
+    lineWidthPx: 2,
+
+    hoverStroke: "#64748b",
+    hoverLineWidthPx: 4,
+
+    selectedStroke: "#2563eb",
+    selectedLineWidthPx: 5,
+  }),
+});
+
 export const PRINT_RENDER_THEME: RenderTheme = Object.freeze({
   background: "#ffffff",
 

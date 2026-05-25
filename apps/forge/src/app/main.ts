@@ -3,6 +3,10 @@ import "../styles/app.css";
 import { installBuildInfoSurface } from "./buildInfo";
 import { appState } from "./appState";
 import { installToolSurface } from "./toolSurface";
+import {
+  installDisplayThemeSurface,
+  type CanvasDisplayMode,
+} from "./displayThemeSurface";
 
 import { evaluateGraph } from "@euclid-forge/core";
 import { createAppRuntime } from "./appRuntime";
@@ -20,6 +24,11 @@ import {
 import { createRenderScheduler } from "./renderScheduler";
 import { statusSurfaceForDocument } from "./statusSurface";
 import { renderScene } from "../rendering/renderScene";
+import {
+  HIGH_CONTRAST_RENDER_THEME,
+  RENDER_THEME,
+  type RenderTheme,
+} from "../rendering/theme";
 import { installPrintSurface } from "./printSurface";
 import { browserWorkspaceActionEnvironment } from "./workspaceActions";
 import {
@@ -32,6 +41,7 @@ function render(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   state: AppState,
+  theme: RenderTheme = RENDER_THEME,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
@@ -39,8 +49,11 @@ function render(
   const viewport = viewportForCanvas(canvas, state.viewState);
   const evaluated = evaluateGraph(state.graph);
 
-  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.fillStyle = theme.background;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
   const renderOptions = {
+    theme,
     selectedNodeIds: state.viewState.selectedNodeIds,
     hoveredNodeId: state.viewState.hoveredNodeId,
     hiddenNodeIds: effectiveHiddenNodeIds(state.graph, state.viewState),
@@ -74,8 +87,14 @@ function main(): void {
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
   const initialState = initialAppState();
+  let canvasDisplayMode: CanvasDisplayMode = "dark";
   const requestRender = createRenderScheduler(() => {
-    render(canvas, ctx, runtime.getState());
+    render(
+      canvas,
+      ctx,
+      runtime.getState(),
+      renderThemeForDisplayMode(canvasDisplayMode),
+    );
   });
   const runtime = createAppRuntime({
     canvas,
@@ -135,7 +154,20 @@ function main(): void {
     getState: runtime.getState,
   });
 
+  const displayThemeSurface = installDisplayThemeSurface(document, {
+    onModeChange(mode) {
+      canvasDisplayMode = mode;
+      displayThemeSurface.update(mode);
+      runtime.requestRender();
+    },
+  });
+  displayThemeSurface.update(canvasDisplayMode);
+
   runtime.requestRender();
+}
+
+function renderThemeForDisplayMode(mode: CanvasDisplayMode): RenderTheme {
+  return mode === "high-contrast" ? HIGH_CONTRAST_RENDER_THEME : RENDER_THEME;
 }
 
 main();

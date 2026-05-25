@@ -314,3 +314,34 @@ body {
     background: #ffffff;
   }
 }
+
+#display-theme-surface {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 6;
+}
+
+.display-theme-surface__button {
+  padding: 8px 10px;
+  border: 1px solid rgb(148 163 184 / 0.28);
+  border-radius: 10px;
+  background: rgb(15 23 42 / 0.72);
+  color: #f8fafc;
+  font:
+    13px system-ui,
+    sans-serif;
+  cursor: pointer;
+  user-select: none;
+}
+
+.display-theme-surface__button:hover {
+  border-color: rgb(248 250 252 / 0.4);
+  background: rgb(30 41 59 / 0.82);
+}
+
+@media print {
+  #display-theme-surface {
+    display: none !important;
+  }
+}
