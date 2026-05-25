@@ -12,7 +12,7 @@ import type {
   PointHit,
   SegmentHit,
   TriangleHitTarget,
-} from "../geometry/interactionContext";
+} from "./geometryInteractionContext";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../view/viewport";

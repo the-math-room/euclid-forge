@@ -1,6 +1,5 @@
 import type {
   EvaluatedCircle,
-  EvaluatedGeometry,
 } from "../../evaluation/evaluated";
 import {
   circleNode,
@@ -14,13 +13,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitCircleValue } from "../hitGeometry";
-import type {
-  GeometryBodyDragContext,
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
   kind: "CIRCLE",
 
@@ -50,40 +42,7 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
       };
     },
   }),
-
-  interaction: Object.freeze({
-    hitClass: "AREA",
-    hitTest: (
-      value: EvaluatedGeometry,
-      context: GeometryHitContext,
-    ): GeometryHitCandidate | null => {
-      if (value.kind !== "CIRCLE") {
-        return null;
-      }
-
-      const target = hitCircleValue(value, context);
-
-      return target
-        ? {
-            hitClass: "AREA",
-            target,
-          }
-        : null;
-    },
-
-    bodyDrag: Object.freeze({
-      sourcePointIds: (
-        node: NodeByKind<"CIRCLE">,
-        context: GeometryBodyDragContext,
-      ): readonly NodeId[] | null => {
-        const sourcePointIds = [node.center, node.through];
-
-        return context.areFreePoints(sourcePointIds) ? sourcePointIds : null;
-      },
-    }),
-  }),
-
-  construction: Object.freeze({
+construction: Object.freeze({
     factories: Object.freeze({
       circle: (
         { graph }: ConstructionContext,

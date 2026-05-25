@@ -1,5 +1,4 @@
 import type {
-  EvaluatedGeometry,
   EvaluatedSegment,
 } from "../../evaluation/evaluated";
 import {
@@ -14,12 +13,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitSegmentValue } from "../hitGeometry";
-import type {
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
   kind: "SEGMENT",
 
@@ -45,29 +38,7 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
       };
     },
   }),
-
-  interaction: Object.freeze({
-    hitClass: "LINEAR",
-    hitTest: (
-      value: EvaluatedGeometry,
-      context: GeometryHitContext,
-    ): GeometryHitCandidate | null => {
-      if (value.kind !== "SEGMENT") {
-        return null;
-      }
-
-      const target = hitSegmentValue(value, context);
-
-      return target
-        ? {
-            hitClass: "LINEAR",
-            target,
-          }
-        : null;
-    },
-  }),
-
-  construction: Object.freeze({
+construction: Object.freeze({
     factories: Object.freeze({
       segment: (
         { graph }: ConstructionContext,

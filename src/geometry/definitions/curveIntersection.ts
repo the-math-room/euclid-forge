@@ -1,23 +1,15 @@
-import type {
-  EvaluatedGeometry,
-  EvaluatedPoint,
-} from "../../evaluation/evaluated";
+import type { EvaluatedPoint } from "../../evaluation/evaluated";
 import { GeometryEvaluationIssueError } from "../../evaluation/evaluationIssue";
 import {
   curveIntersectionNode,
   type NodeId,
 } from "../../representation/node";
+import { curveIntersectionCandidatesForValues } from "../curveIntersectionCandidates";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitPointValue } from "../hitGeometry";
-import type {
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-import { curveIntersectionCandidatesForValues } from "../curveIntersectionCandidates";
 
 export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION"> =
   Object.freeze({
@@ -70,28 +62,6 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
         };
       },
     }),
-
-    interaction: Object.freeze({
-      hitClass: "POINT",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "POINT") {
-          return null;
-        }
-
-        const target = hitPointValue(value, context);
-
-        return target
-          ? {
-              hitClass: "POINT",
-              target,
-            }
-          : null;
-      },
-    }),
-
   });
 
 export function curveIntersectionConstructionNode(
@@ -103,7 +73,6 @@ export function curveIntersectionConstructionNode(
 ) {
   return curveIntersectionNode(id, curveA, curveB, branchKey, label);
 }
-
 
 function curveIntersectionIssueCode(
   issue: string,

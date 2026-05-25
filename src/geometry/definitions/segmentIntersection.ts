@@ -1,5 +1,4 @@
 import type {
-  EvaluatedGeometry,
   EvaluatedPoint,
 } from "../../evaluation/evaluated";
 import { GeometryEvaluationIssueError } from "../../evaluation/evaluationIssue";
@@ -15,12 +14,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitPointValue } from "../hitGeometry";
-import type {
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSECTION"> =
   Object.freeze({
     kind: "SEGMENT_INTERSECTION",
@@ -60,30 +53,7 @@ export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSEC
         };
       },
     }),
-
-    interaction: Object.freeze({
-      hitClass: "POINT",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "POINT") {
-          return null;
-        }
-
-        const target = hitPointValue(value, context);
-
-        return target
-          ? {
-              hitClass: "POINT",
-              target,
-            }
-          : null;
-      },
-    }),
-
-
-    construction: Object.freeze({
+construction: Object.freeze({
       factories: Object.freeze({
         segmentIntersection: (
           { graph }: ConstructionContext,

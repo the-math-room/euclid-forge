@@ -1,27 +1,67 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { Graph } from "../representation/graph";
-import type { NodeId } from "../representation/node";
+import type { GeometryNode, NodeId } from "../representation/node";
 import {
-  definitionForEvaluatedGeometry,
-  definitionForGeometryNode,
-} from "../geometry/geometryRegistry";
+  hitCircleValue,
+  hitPointValue,
+  hitSegmentValue,
+  hitTriangleValue,
+} from "./hitGeometry";
 import type {
   GeometryBodyDrag,
   GeometryHitCandidate,
   GeometryHitContext,
-} from "../geometry/interactionContext";
+} from "./geometryInteractionContext";
 
 export function hitGeometryValue(
   value: EvaluatedGeometry,
   context: GeometryHitContext,
 ): GeometryHitCandidate | null {
-  const interaction = definitionForEvaluatedGeometry(value).interaction;
+  switch (value.kind) {
+    case "POINT": {
+      const target = hitPointValue(value, context);
 
-  if (!interaction) {
-    return null;
+      return target
+        ? {
+            hitClass: "POINT",
+            target,
+          }
+        : null;
+    }
+
+    case "SEGMENT": {
+      const target = hitSegmentValue(value, context);
+
+      return target
+        ? {
+            hitClass: "LINEAR",
+            target,
+          }
+        : null;
+    }
+
+    case "CIRCLE": {
+      const target = hitCircleValue(value, context);
+
+      return target
+        ? {
+            hitClass: "AREA",
+            target,
+          }
+        : null;
+    }
+
+    case "TRIANGLE": {
+      const target = hitTriangleValue(value, context);
+
+      return target
+        ? {
+            hitClass: "AREA",
+            target,
+          }
+        : null;
+    }
   }
-
-  return interaction.hitTest(value, context);
 }
 
 export function bodyDragForGeometryNode(
@@ -34,23 +74,30 @@ export function bodyDragForGeometryNode(
     return null;
   }
 
-  const bodyDrag = definitionForGeometryNode(node).interaction?.bodyDrag;
+  const sourcePointIds = bodyDragSourcePointIds(node);
 
-  if (!bodyDrag) {
-    return null;
-  }
-
-  const sourcePointIds = bodyDrag.sourcePointIds(
-    node,
-    Object.freeze({
-      areFreePoints: (ids: readonly NodeId[]): boolean =>
-        ids.every((id) => graph.byId.get(id)?.kind === "FREE_POINT"),
-    }),
-  );
-
-  if (!sourcePointIds) {
+  if (!sourcePointIds || !areFreePoints(graph, sourcePointIds)) {
     return null;
   }
 
   return Object.freeze({ sourcePointIds });
+}
+
+function bodyDragSourcePointIds(
+  node: GeometryNode,
+): readonly NodeId[] | null {
+  switch (node.kind) {
+    case "CIRCLE":
+      return Object.freeze([node.center, node.through]);
+
+    case "TRIANGLE":
+      return Object.freeze([node.a, node.b, node.c]);
+
+    default:
+      return null;
+  }
+}
+
+function areFreePoints(graph: Graph, ids: readonly NodeId[]): boolean {
+  return ids.every((id) => graph.byId.get(id)?.kind === "FREE_POINT");
 }

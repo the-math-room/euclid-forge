@@ -5,13 +5,13 @@ import type {
   EvaluatedTriangle,
 } from "../evaluation/evaluated";
 import { screenToWorld, worldToScreen } from "../view/viewport";
-import type { GeometryHitContext } from "./interactionContext";
+import type { GeometryHitContext } from "./geometryInteractionContext";
 import type {
   CircleHit,
   PointHit,
   SegmentHit,
   TriangleHitTarget,
-} from "./interactionContext";
+} from "./geometryInteractionContext";
 
 export function hitPointValue(
   value: EvaluatedPoint,

@@ -1,5 +1,4 @@
 import type {
-  EvaluatedGeometry,
   EvaluatedPoint,
 } from "../../evaluation/evaluated";
 import { vec2 } from "../../meaning/vec2";
@@ -8,12 +7,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitPointValue } from "../hitGeometry";
-import type {
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
   Object.freeze({
     kind: "FREE_POINT",
@@ -36,26 +29,4 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
         role: "FREE",
       }),
     }),
-
-    interaction: Object.freeze({
-      hitClass: "POINT",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "POINT") {
-          return null;
-        }
-
-        const target = hitPointValue(value, context);
-
-        return target
-          ? {
-              hitClass: "POINT",
-              target,
-            }
-          : null;
-      },
-    }),
-
-  });
+});

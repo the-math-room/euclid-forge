@@ -1,5 +1,4 @@
 import type {
-  EvaluatedGeometry,
   EvaluatedTriangle,
 } from "../../evaluation/evaluated";
 import {
@@ -14,13 +13,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitTriangleValue } from "../hitGeometry";
-import type {
-  GeometryBodyDragContext,
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
   Object.freeze({
     kind: "TRIANGLE",
@@ -49,41 +41,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
         };
       },
     }),
-
-    interaction: Object.freeze({
-      hitClass: "AREA",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "TRIANGLE") {
-          return null;
-        }
-
-        const target = hitTriangleValue(value, context);
-
-        return target
-          ? {
-              hitClass: "AREA",
-              target,
-            }
-          : null;
-      },
-
-      bodyDrag: Object.freeze({
-        sourcePointIds: (
-          node: NodeByKind<"TRIANGLE">,
-          context: GeometryBodyDragContext,
-        ): readonly NodeId[] | null => {
-          const sourcePointIds = [node.a, node.b, node.c];
-
-          return context.areFreePoints(sourcePointIds) ? sourcePointIds : null;
-        },
-      }),
-    }),
-
-
-    construction: Object.freeze({
+construction: Object.freeze({
       factories: Object.freeze({
         triangle: (
           { graph }: ConstructionContext,

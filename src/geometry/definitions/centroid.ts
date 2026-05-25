@@ -1,5 +1,4 @@
 import type {
-  EvaluatedGeometry,
   EvaluatedPoint,
 } from "../../evaluation/evaluated";
 import { centroid } from "../../meaning/vec2";
@@ -14,12 +13,6 @@ import type {
   GeometryDefinition,
   NodeByKind,
 } from "../geometryDefinition";
-import { hitPointValue } from "../hitGeometry";
-import type {
-  GeometryHitCandidate,
-  GeometryHitContext,
-} from "../interactionContext";
-
 export const centroidDefinition: GeometryDefinition<"CENTROID"> =
   Object.freeze({
     kind: "CENTROID",
@@ -46,30 +39,7 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
         };
       },
     }),
-
-    interaction: Object.freeze({
-      hitClass: "POINT",
-      hitTest: (
-        value: EvaluatedGeometry,
-        context: GeometryHitContext,
-      ): GeometryHitCandidate | null => {
-        if (value.kind !== "POINT") {
-          return null;
-        }
-
-        const target = hitPointValue(value, context);
-
-        return target
-          ? {
-              hitClass: "POINT",
-              target,
-            }
-          : null;
-      },
-    }),
-
-
-    construction: Object.freeze({
+construction: Object.freeze({
       factories: Object.freeze({
         centroid: (
           { graph }: ConstructionContext,
