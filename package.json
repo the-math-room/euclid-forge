@@ -8,14 +8,16 @@
     "packages/core"
   ],
   "scripts": {
-    "check": "npm run check:boundaries && npm run check -w @euclid-forge/core && npm run check -w euclid-forge",
-    "check:boundaries": "node scripts/check-boundaries.mjs",
-    "check:core": "npm run check -w @euclid-forge/core",
-    "check:forge": "npm run check -w euclid-forge",
     "dev": "npm run dev -w euclid-forge",
     "build": "npm run build -w euclid-forge",
     "preview": "npm run preview -w euclid-forge",
+    "typecheck": "npm run typecheck -w @euclid-forge/core && npm run typecheck -w euclid-forge",
     "test": "npm run test -w @euclid-forge/core && npm run test -w euclid-forge",
+    "smoke": "npm run smoke -w euclid-forge",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:core": "npm run check -w @euclid-forge/core",
+    "check:forge": "npm run check -w euclid-forge",
+    "check": "npm run check:boundaries && npm run check:core && npm run check:forge",
     "format": "npm run format -w @euclid-forge/core && npm run format -w euclid-forge",
     "format:check": "npm run format:check -w @euclid-forge/core && npm run format:check -w euclid-forge"
   },

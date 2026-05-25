@@ -1,37 +1,41 @@
 # Euclid Core
 
-Headless geometry engine for Euclid Forge.
+This workspace contains the headless geometry engine for Euclid Forge.
 
-This package owns the semantic model, graph representation, evaluation pipeline, geometry registry, workspace serialization, diagnostics, fixtures, and view-space math used by the Euclid Forge editor.
+It owns:
 
-It deliberately does **not** contain browser UI, DOM code, Canvas rendering, pointer interaction, CSS, Playwright smoke tests, or editor commands.
+- geometric meaning
+- graph representation
+- construction factories
+- graph edits
+- evaluation
+- diagnostics
+- dependency inspection
+- workspace serialization/deserialization
+- public core API
 
-## Checks
+It must not depend on the forge app, DOM, canvas, or browser APIs.
 
-```sh
-npm run check
+## Commands
+
+From the repository root:
+
+```bash
+npm run check -w @euclid-forge/core
 ```
 
-`npm run check` should typecheck the package and run the core test suite.
+Or through the root alias:
 
-## Package layers
+```bash
+npm run check:core
+```
 
-- `src/meaning`: mathematical primitives and denotations.
-- `src/view`: viewport, screen, and world coordinate transforms.
-- `src/representation`: graph nodes, edits, dependencies, constructions, and delete policy.
-- `src/evaluation`: graph-to-scene evaluation and diagnostics.
-- `src/geometry`: geometry definitions and registry.
-- `src/core`: public package facade, workspace API, diagnostics, fixtures, and smoke-level core API tests.
+## Public API
 
-## Relationship to Euclid Forge
+The package name is:
 
-`euclid-core` is the source of truth for headless geometry behavior. The `euclid-forge` repository consumes this package and owns the editor-specific layers:
+```text
+@euclid-forge/core
+```
 
-- app/runtime/controller state
-- rendering
-- pointer interaction and hit testing
-- styles
-- browser workspace file handling
-- Playwright smoke tests
-
-Core features should be developed here first, then adapted in Forge once the headless API is stable.
+Forge should import core through package paths, not through relative paths into this workspace.
