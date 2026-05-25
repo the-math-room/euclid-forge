@@ -171,7 +171,7 @@ describe("app/toolSurface", () => {
       [...surface.root.querySelectorAll<HTMLButtonElement>("button")].map(
         (button) => button.textContent,
       ),
-    ).toEqual(["Move", "Point", "Segment", "Circle", "Triangle"]);
+    ).toEqual(["Move", "Point", "Segment", "Circle", "Triangle", "Delete"]);
 
     expect(
       surface.root.querySelector(".tool-surface__status")?.textContent,
@@ -182,6 +182,21 @@ describe("app/toolSurface", () => {
         .querySelector<HTMLButtonElement>('[data-tool="select"]')
         ?.getAttribute("aria-pressed"),
     ).toBe("true");
+  });
+
+  test("clicking the delete tool button emits delete mode", () => {
+    const document = fakeDocument();
+
+    const onToolChange = vi.fn();
+    const surface = installToolSurface(document, { onToolChange });
+
+    surface.root
+      .querySelector<HTMLButtonElement>('[data-tool="delete"]')
+      ?.click();
+
+    expect(onToolChange).toHaveBeenCalledWith({
+      kind: "delete",
+    });
   });
 
   test("clicking a tool button emits the selected active tool", () => {

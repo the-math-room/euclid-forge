@@ -8,7 +8,8 @@ export type ActiveToolKind =
   | "circle"
   | "triangle"
   | "midpoint"
-  | "intersection";
+  | "intersection"
+  | "delete";
 
 export type ConstructionToolKind = Exclude<ActiveToolKind, "select" | "point">;
 
@@ -18,6 +19,9 @@ export type ActiveTool = Readonly<
     }
   | {
       kind: "point";
+    }
+  | {
+      kind: "delete";
     }
   | {
       kind: ConstructionToolKind;
@@ -31,6 +35,10 @@ export function emptyActiveTool(): ActiveTool {
 
 export function pointTool(): ActiveTool {
   return { kind: "point" };
+}
+
+export function deleteTool(): ActiveTool {
+  return { kind: "delete" };
 }
 
 export function constructionTool(kind: ConstructionToolKind): ActiveTool {
@@ -48,6 +56,7 @@ export function activeToolRequiredInputCount(tool: ActiveTool): number {
   switch (tool.kind) {
     case "select":
     case "point":
+    case "delete":
       return 0;
 
     case "segment":
@@ -73,6 +82,7 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
 
     case "select":
     case "point":
+    case "delete":
     case "intersection":
       return false;
   }
@@ -126,6 +136,9 @@ export function activeToolStatusText(tool: ActiveTool): string {
 
     case "point":
       return "Point tool: click or tap empty canvas to create a point.";
+
+    case "delete":
+      return "Delete tool: click or tap geometry to delete it.";
 
     case "segment":
       return constructionStatus(tool, "Segment tool", "point");

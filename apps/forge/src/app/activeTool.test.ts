@@ -9,6 +9,7 @@ import {
   activeToolStatusText,
   appendActiveToolInput,
   constructionTool,
+  deleteTool,
   emptyActiveTool,
   pointTool,
   resetActiveToolInputs,
@@ -21,6 +22,16 @@ describe("app/activeTool", () => {
     expect(tool).toEqual({ kind: "select" });
     expect(activeToolInputCount(tool)).toBe(0);
     expect(activeToolStatusText(tool)).toBe("Select or drag geometry.");
+  });
+
+  test("delete tool has delete status", () => {
+    const tool = deleteTool();
+
+    expect(activeToolRequiredInputCount(tool)).toBe(0);
+    expect(activeToolIsReadyToCommit(tool)).toBe(false);
+    expect(activeToolStatusText(tool)).toBe(
+      "Delete tool: click or tap geometry to delete it.",
+    );
   });
 
   test("point tool does not collect inputs", () => {

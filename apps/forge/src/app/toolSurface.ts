@@ -1,6 +1,7 @@
 import {
   activeToolStatusText,
   constructionTool,
+  deleteTool,
   emptyActiveTool,
   pointTool,
   type ActiveTool,
@@ -53,6 +54,12 @@ const TOOL_BUTTONS: readonly ToolButtonSpec[] = [
     label: "Triangle",
     title: "Create a triangle from three points",
     tool: () => constructionTool("triangle"),
+  },
+  {
+    kind: "delete",
+    label: "Delete",
+    title: "Delete clicked geometry",
+    tool: deleteTool,
   },
 ];
 
