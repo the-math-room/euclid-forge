@@ -141,6 +141,73 @@ test("deletes an isolated point and undo restores it", async ({ page }) => {
   await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
 });
 
+test("creates a segment using the toolbar without Shift", async ({ page }) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  await page.getByRole("button", { name: "Segment" }).click();
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await expectYellowPointNear(frame.canvas, { x: 3, y: 2 });
+  await expectYellowPointNear(frame.canvas, { x: 4, y: 2 });
+  await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });
+});
+
+test("creates a triangle using the toolbar and empty-space clicks", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  await page.getByRole("button", { name: "Triangle" }).click();
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3, y: 3 });
+  await waitForAnimationFrame(page);
+
+  await expectYellowPointNear(frame.canvas, { x: 3, y: 2 });
+  await expectYellowPointNear(frame.canvas, { x: 4, y: 2 });
+  await expectYellowPointNear(frame.canvas, { x: 3, y: 3 });
+  await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });
+  await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2.5 });
+  await expectLightEdgeNear(frame.canvas, { x: 3, y: 2.5 });
+});
+
+test("delete mode deletes clicked geometry without preselecting", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 3 });
+  await waitForAnimationFrame(page);
+
+  await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
+
+  await page.getByRole("button", { name: "Delete" }).click();
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 3 });
+  await waitForAnimationFrame(page);
+
+  await expectNoYellowPointNear(frame.canvas, { x: 4, y: 3 });
+});
+
 test("creates a circle from two selected points", async ({ page }) => {
   await page.goto("/");
 
