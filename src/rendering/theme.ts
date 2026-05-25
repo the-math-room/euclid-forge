@@ -20,6 +20,10 @@ export const RENDER_THEME = Object.freeze({
         fill: "#60a5fa",
         radiusPx: 5,
       }),
+      INTERSECTION: Object.freeze({
+        fill: "#f472b6",
+        radiusPx: 5,
+      }),
     } satisfies Record<EvaluatedPointRole, PointStyle>),
 
     hoverStroke: "#94a3b8",

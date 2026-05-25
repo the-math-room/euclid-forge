@@ -92,6 +92,39 @@ export const requireSelectedFreePointTuple = requireSelectedConstructiblePointTu
 export const selectedFreePointVertices = selectedTriangleVertices;
 export const requireSelectedFreePointVertices = requireSelectedTriangleVertices;
 
+export function selectedSegmentTuple<const N extends number>(
+  state: AppState,
+  count: N,
+): TupleOf<NodeId, N> | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== count) {
+    return null;
+  }
+
+  for (const id of selected) {
+    if (state.graph.byId.get(id)?.kind !== "SEGMENT") {
+      return null;
+    }
+  }
+
+  return selected as TupleOf<NodeId, N>;
+}
+
+export function requireSelectedSegmentTuple<const N extends number>(
+  state: AppState,
+  count: N,
+  message: string,
+): TupleOf<NodeId, N> {
+  const tuple = selectedSegmentTuple(state, count);
+
+  if (!tuple) {
+    throw new Error(message);
+  }
+
+  return tuple;
+}
+
 export function selectedTriangle(state: AppState): NodeId | null {
   const selected = [...state.viewState.selectedNodeIds];
 

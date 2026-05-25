@@ -6,7 +6,8 @@ export type GeometryNode =
   | CircleNode
   | TriangleNode
   | MidpointNode
-  | CentroidNode;
+  | CentroidNode
+  | LineIntersectionNode;
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -55,6 +56,15 @@ export type CentroidNode = Readonly<{
   id: NodeId;
   zIndex?: number;
   triangle: NodeId;
+  label: string;
+}>;
+
+export type LineIntersectionNode = Readonly<{
+  kind: "LINE_INTERSECTION";
+  id: NodeId;
+  zIndex?: number;
+  lineA: NodeId;
+  lineB: NodeId;
   label: string;
 }>;
 
@@ -136,6 +146,21 @@ export function centroidNode(
     kind: "CENTROID",
     id,
     triangle,
+    label,
+  });
+}
+
+export function lineIntersectionNode(
+  id: NodeId,
+  lineA: NodeId,
+  lineB: NodeId,
+  label: string,
+): LineIntersectionNode {
+  return Object.freeze({
+    kind: "LINE_INTERSECTION",
+    id,
+    lineA,
+    lineB,
     label,
   });
 }

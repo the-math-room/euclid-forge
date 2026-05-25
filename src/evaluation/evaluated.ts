@@ -1,11 +1,15 @@
 import type { Vec2 } from "../meaning/vec2";
 import type { NodeId } from "../representation/node";
 
-export type EvaluatedPointRole = "FREE" | "MIDPOINT" | "CENTROID";
+export type EvaluatedPointRole =
+  | "FREE"
+  | "MIDPOINT"
+  | "CENTROID"
+  | "INTERSECTION";
 
 export type EvaluatedPoint = Readonly<{
   kind: "POINT";
-  sourceKind: "FREE_POINT" | "MIDPOINT" | "CENTROID";
+  sourceKind: "FREE_POINT" | "MIDPOINT" | "CENTROID" | "LINE_INTERSECTION";
   zIndex?: number;
   id: NodeId;
   point: Vec2;

@@ -1,6 +1,7 @@
 import {
   centroidConstruction,
   circleConstruction,
+  lineIntersectionConstruction,
   segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
@@ -22,6 +23,8 @@ import {
   requireSelectedTriangle,
   selectedCirclePoints,
   selectedSegmentEndpoints,
+  requireSelectedSegmentTuple,
+  selectedSegmentTuple,
   selectedFreePointVertices,
   selectedTriangle,
 } from "./selectionPredicates";
@@ -249,6 +252,30 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
     },
   }),
 
+
+  command({
+    id: "create-line-intersection",
+    keys: ["i"],
+    disabledReason: lineIntersectionDisabledReason,
+    run: (state) => {
+      const [lineA, lineB] = requireSelectedSegmentTuple(
+        state,
+        2,
+        "Cannot run create-line-intersection while disabled",
+      );
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes: lineIntersectionConstruction(state.graph, lineA, lineB),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
 
   command({
     id: "create-centroid",
@@ -488,6 +515,14 @@ function viewportPanStep(state: AppState): number {
   return 40 / state.viewState.viewportZoom;
 }
 
+
+function lineIntersectionDisabledReason(state: AppState): string | null {
+  if (selectedSegmentTuple(state, 2)) {
+    return null;
+  }
+
+  return "Select exactly two segment nodes to create an intersection. Triangle borders are not segments unless you create segment nodes for them.";
+}
 
 function selectedNodesDisabledReason(state: AppState): string | null {
   return state.viewState.selectedNodeIds.size > 0 ? null : "";

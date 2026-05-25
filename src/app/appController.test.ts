@@ -5,6 +5,7 @@ import {
   centroidNode,
   circleNode,
   freePoint,
+  lineIntersectionNode,
   midpointNode,
   segmentNode,
   triangleNode,
@@ -134,6 +135,54 @@ describe("app/appController", () => {
 
     expect(transition.state).toBe(state);
     expect(transition.shouldRender).toBe(false);
+  });
+
+
+  test("creates a line intersection from two selected segments with I", () => {
+    const graph = createGraph([
+      freePoint("A", -1, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, -1, "C"),
+      freePoint("D", 0, 1, "D"),
+      segmentNode("AB", "A", "B"),
+      segmentNode("CD", "C", "D"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "AB"),
+      "CD",
+    );
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "i",
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.get("X1")).toEqual(
+      lineIntersectionNode("X1", "AB", "CD", "X1"),
+    );
+    expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+  test("I explains that triangle borders are not segment selections", () => {
+    const graph = createGraph([
+      freePoint("A", -1, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "ABC");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "i",
+    });
+
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
+    expect(transition.effects).toContainEqual({
+      kind: "SHOW_STATUS",
+      message:
+        "Select exactly two segment nodes to create an intersection. Triangle borders are not segments unless you create segment nodes for them.",
+    });
   });
 
   test("creates a centroid for one selected triangle with G", () => {
