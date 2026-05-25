@@ -6,6 +6,7 @@ export {
 } from "./engine";
 
 export {
+  deserializeWorkspace,
   geometryWorkspaceFromJsonText,
   parseGeometryWorkspace,
   parseSerializedWorkspace,

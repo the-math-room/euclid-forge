@@ -2,7 +2,7 @@ import { appState, type AppState } from "./appState";
 import {
   deserializeWorkspace as deserializeCoreWorkspace,
   type SerializedWorkspace,
-} from "../core/workspace";
+} from "../core";
 
 export function deserializeWorkspace(
   workspace: SerializedWorkspace,
