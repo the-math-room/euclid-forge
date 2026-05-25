@@ -27,29 +27,8 @@ const IGNORED_DIRS = new Set([
   ".tmp",
 ]);
 
-const CORE_ROOT_CANDIDATES = [
-  "packages/core/src",
-  "src/core",
-  "src/meaning",
-  "src/representation",
-  "src/evaluation",
-];
-
-const FORGE_ROOT_CANDIDATES = [
-  "apps/forge/src",
-  "src/app",
-  "src/interaction",
-  "src/rendering",
-  "src/styles",
-];
-
-const FORGE_ONLY_PATH_PARTS = [
-  "/apps/forge/",
-  "/src/app/",
-  "/src/interaction/",
-  "/src/rendering/",
-  "/src/styles/",
-];
+const CORE_SRC_ROOT = "packages/core/src";
+const FORGE_SRC_ROOT = "apps/forge/src";
 
 const BROWSER_GLOBAL_PATTERNS = [
   /\bwindow\b/,
@@ -83,34 +62,47 @@ for (const file of walk(root)) {
 
   const text = fs.readFileSync(file, "utf8");
 
-  if (isCoreFile(rel)) {
-    checkCoreFile(rel, text);
+  if (isCoreSource(rel)) {
+    checkCoreBoundary(rel, text);
   }
 
-  checkLegacyLayerDirection(rel, text);
+  if (isForgeSource(rel)) {
+    checkForgeLayerBoundary(rel, text);
+  }
 }
 
 if (errors.length > 0) {
   console.error("Boundary check failed:\n");
+
   for (const error of errors) {
     console.error(`- ${error}`);
   }
+
   process.exit(1);
 }
 
 console.log("Boundary check passed.");
 
-function checkCoreFile(rel, text) {
+function checkCoreBoundary(rel, text) {
   for (const specifier of importSpecifiers(text)) {
-    if (isForgeImport(rel, specifier)) {
+    if (importsForge(rel, specifier)) {
       errors.push(
-        `${rel} imports forge-owned code (${specifier}). Core must remain headless and must not depend on forge.`,
+        `${rel} imports forge-owned code (${specifier}). Core must remain headless and must not depend on Forge.`,
       );
     }
   }
 
+  // Test files may use Node test infrastructure, but production core must stay
+  // browser-free. This keeps the architectural guarantee focused on shipped
+  // source while allowing tests to remain pragmatic.
+  if (isTestFile(rel)) {
+    return;
+  }
+
+  const stripped = stripCommentsAndStrings(text);
+
   for (const pattern of BROWSER_GLOBAL_PATTERNS) {
-    if (pattern.test(stripCommentsAndStrings(text))) {
+    if (pattern.test(stripped)) {
       errors.push(
         `${rel} appears to use browser/DOM API ${pattern}. Core must stay browser-free.`,
       );
@@ -118,25 +110,17 @@ function checkCoreFile(rel, text) {
   }
 }
 
-function checkLegacyLayerDirection(rel, text) {
-  // Compatibility check for the pre-monorepo app layout.
-  // This preserves the old local layer discipline while the tree is moving.
-  const layer = legacyLayerFor(rel);
+function checkForgeLayerBoundary(rel, text) {
+  const layer = forgeLayerFor(rel);
 
   if (!layer) {
     return;
   }
 
-  const allowed = {
-    app: new Set(["app", "interaction", "rendering", "styles", "core"]),
-    interaction: new Set(["interaction", "core"]),
-    rendering: new Set(["rendering", "core"]),
-    styles: new Set(["styles"]),
-    core: new Set(["core"]),
-  }[layer];
+  const allowed = allowedForgeTargets(layer);
 
   for (const specifier of importSpecifiers(text)) {
-    const targetLayer = legacyLayerForImport(rel, specifier);
+    const targetLayer = forgeLayerForImport(rel, specifier);
 
     if (!targetLayer) {
       continue;
@@ -150,19 +134,34 @@ function checkLegacyLayerDirection(rel, text) {
   }
 }
 
-function isCoreFile(rel) {
-  return CORE_ROOT_CANDIDATES.some(
-    (candidate) => rel === candidate || rel.startsWith(`${candidate}/`),
+function allowedForgeTargets(layer) {
+  return {
+    app: new Set(["app", "interaction", "rendering", "styles", "testHelpers", "core"]),
+    interaction: new Set(["interaction", "testHelpers", "core"]),
+    rendering: new Set(["rendering", "testHelpers", "core"]),
+    styles: new Set(["styles"]),
+    testHelpers: new Set(["testHelpers", "core"]),
+  }[layer] ?? new Set();
+}
+
+function isCoreSource(rel) {
+  return rel === CORE_SRC_ROOT || rel.startsWith(`${CORE_SRC_ROOT}/`);
+}
+
+function isForgeSource(rel) {
+  return rel === FORGE_SRC_ROOT || rel.startsWith(`${FORGE_SRC_ROOT}/`);
+}
+
+function isTestFile(rel) {
+  return (
+    rel.endsWith(".test.ts") ||
+    rel.endsWith(".test.tsx") ||
+    rel.endsWith(".spec.ts") ||
+    rel.endsWith(".spec.tsx")
   );
 }
 
-function isForgeFile(rel) {
-  return FORGE_ROOT_CANDIDATES.some(
-    (candidate) => rel === candidate || rel.startsWith(`${candidate}/`),
-  );
-}
-
-function isForgeImport(fromRel, specifier) {
+function importsForge(fromRel, specifier) {
   if (specifier.startsWith("@euclid-forge/forge")) {
     return true;
   }
@@ -175,35 +174,22 @@ function isForgeImport(fromRel, specifier) {
     return false;
   }
 
-  const fromDir = path.posix.dirname(fromRel);
-  const resolved = normalize(path.posix.normalize(path.posix.join(fromDir, specifier)));
-  const withSlashes = `/${resolved}/`;
+  const resolved = resolveRelativeSpecifier(fromRel, specifier);
 
-  if (isForgeFile(resolved)) {
-    return true;
-  }
-
-  return FORGE_ONLY_PATH_PARTS.some((part) => withSlashes.includes(part));
+  return resolved === FORGE_SRC_ROOT || resolved.startsWith(`${FORGE_SRC_ROOT}/`);
 }
 
-function legacyLayerFor(rel) {
-  if (rel.startsWith("src/app/")) return "app";
-  if (rel.startsWith("src/interaction/")) return "interaction";
-  if (rel.startsWith("src/rendering/")) return "rendering";
-  if (rel.startsWith("src/styles/")) return "styles";
-  if (
-    rel.startsWith("src/core/") ||
-    rel.startsWith("src/meaning/") ||
-    rel.startsWith("src/representation/") ||
-    rel.startsWith("src/evaluation/")
-  ) {
-    return "core";
-  }
+function forgeLayerFor(rel) {
+  if (rel.startsWith("apps/forge/src/app/")) return "app";
+  if (rel.startsWith("apps/forge/src/interaction/")) return "interaction";
+  if (rel.startsWith("apps/forge/src/rendering/")) return "rendering";
+  if (rel.startsWith("apps/forge/src/styles/")) return "styles";
+  if (rel.startsWith("apps/forge/src/testHelpers/")) return "testHelpers";
 
   return null;
 }
 
-function legacyLayerForImport(fromRel, specifier) {
+function forgeLayerForImport(fromRel, specifier) {
   if (specifier.startsWith("@euclid-forge/core")) {
     return "core";
   }
@@ -212,10 +198,14 @@ function legacyLayerForImport(fromRel, specifier) {
     return null;
   }
 
-  const fromDir = path.posix.dirname(fromRel);
-  const resolved = normalize(path.posix.normalize(path.posix.join(fromDir, specifier)));
+  const resolved = resolveRelativeSpecifier(fromRel, specifier);
 
-  return legacyLayerFor(resolved);
+  return forgeLayerFor(resolved);
+}
+
+function resolveRelativeSpecifier(fromRel, specifier) {
+  const fromDir = path.posix.dirname(fromRel);
+  return normalize(path.posix.normalize(path.posix.join(fromDir, specifier)));
 }
 
 function importSpecifiers(text) {
@@ -258,7 +248,10 @@ function* walk(dir) {
 
     if (entry.isDirectory()) {
       yield* walk(fullPath);
-    } else if (entry.isFile()) {
+      continue;
+    }
+
+    if (entry.isFile()) {
       yield fullPath;
     }
   }
