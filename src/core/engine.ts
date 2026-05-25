@@ -1,5 +1,8 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
-import type { EvaluatedScene } from "../evaluation/evaluateGraph";
+import type {
+  EvaluatedScene,
+  EvaluationIssue,
+} from "../evaluation/evaluateGraph";
 import { applyGraphEdit } from "../representation/edit";
 import type { GraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
@@ -17,6 +20,7 @@ export type GeometryEngineInput = Graph | AppState | SerializedWorkspace;
 export type GeometryEngine = Readonly<{
   graph: () => Graph;
   evaluate: () => EvaluatedScene;
+  diagnostics: () => readonly EvaluationIssue[];
   applyEdit: (edit: GraphEdit) => GeometryEngine;
   serialize: () => SerializedWorkspace;
 }>;
@@ -30,6 +34,8 @@ function engineFromState(state: AppState): GeometryEngine {
     graph: () => state.graph,
 
     evaluate: () => evaluateGraph(state.graph),
+
+    diagnostics: () => evaluateGraph(state.graph).issues,
 
     applyEdit: (edit: GraphEdit): GeometryEngine =>
       engineFromState(

@@ -63,6 +63,36 @@ describe("core/engine", () => {
     });
   });
 
+
+  test("exposes evaluation diagnostics directly", () => {
+    const engine = createGeometryEngine(
+      createGraph([
+        freePoint("A", 0, 0, "A"),
+        freePoint("B", 1, 0, "B"),
+        freePoint("C", 0, 1, "C"),
+        freePoint("D", 1, 1, "D"),
+        segmentNode("AB", "A", "B"),
+        segmentNode("CD", "C", "D"),
+        {
+          kind: "SEGMENT_INTERSECTION",
+          id: "X",
+          segmentA: "AB",
+          segmentB: "CD",
+          label: "X",
+        },
+      ]),
+    );
+
+    expect(engine.diagnostics()).toEqual([
+      {
+        nodeId: "X",
+        code: "UNDEFINED_GEOMETRY",
+        message:
+          "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
+      },
+    ]);
+  });
+
   test("parses, evaluates, and serializes the Euclid I.1 golden fixture", () => {
     const workspace = parseSerializedWorkspace(
       readFixture("euclid-i-1-equilateral.workspace.json"),
