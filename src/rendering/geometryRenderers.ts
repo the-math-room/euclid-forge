@@ -13,6 +13,7 @@ export function renderLayerForGeometry(value: EvaluatedGeometry): RenderLayer {
       return "AREA";
 
     case "SEGMENT":
+    case "LINE":
     case "CIRCLE":
       return "LINEAR";
 
@@ -32,6 +33,19 @@ export function renderEvaluatedGeometry(
 
     case "SEGMENT":
       renderSegment(context.ctx, context.viewport, value, context.options);
+      return;
+
+    case "LINE":
+      renderSegment(
+        context.ctx,
+        context.viewport,
+        {
+          ...value,
+          kind: "SEGMENT",
+          sourceKind: "SEGMENT",
+        },
+        context.options,
+      );
       return;
 
     case "CIRCLE":

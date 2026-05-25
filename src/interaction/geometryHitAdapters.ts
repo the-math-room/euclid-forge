@@ -40,6 +40,24 @@ export function hitGeometryValue(
         : null;
     }
 
+    case "LINE": {
+      const target = hitSegmentValue(
+        {
+          ...value,
+          kind: "SEGMENT",
+          sourceKind: "SEGMENT",
+        },
+        context,
+      );
+
+      return target
+        ? {
+            hitClass: "LINEAR",
+            target,
+          }
+        : null;
+    }
+
     case "CIRCLE": {
       const target = hitCircleValue(value, context);
 
@@ -87,6 +105,9 @@ function bodyDragSourcePointIds(
   node: GeometryNode,
 ): readonly NodeId[] | null {
   switch (node.kind) {
+    case "LINE":
+      return Object.freeze([node.a, node.b]);
+
     case "CIRCLE":
       return Object.freeze([node.center, node.through]);
 
