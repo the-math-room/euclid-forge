@@ -6,6 +6,7 @@ import { screenToWorld } from "@euclid-forge/core";
 import {
   circleConstruction,
   deleteNodesDisabledReason,
+  freePoint,
   isConstructiblePointNode,
   lineConstruction,
   segmentConstruction,
@@ -14,7 +15,7 @@ import {
 import { appCommandDisabledReason, appCommandForKey } from "./commands";
 import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
-import type { GeometryNode } from "@euclid-forge/core";
+import type { GeometryNode, Graph } from "@euclid-forge/core";
 import type { AppState } from "./appState";
 import {
   activeToolIsReadyToCommit,
@@ -343,40 +344,78 @@ function handlePointInputToolPointerDown(
   input: PointerInput,
 ): AppTransition {
   const hit = selectablePointerHit(state, input);
+  const pointInput =
+    hit === null
+      ? createFreePointInput(state, input)
+      : { graph: state.graph, id: hit };
 
-  if (!hit) {
-    return changed(state, "ignore", "Choose an existing point for this tool.");
-  }
-
-  const node = state.graph.byId.get(hit);
+  const node = pointInput.graph.byId.get(pointInput.id);
 
   if (!node || !isConstructiblePointNode(node)) {
     return changed(state, "ignore", "Choose a point for this tool.");
   }
 
-  const activeTool = appendActiveToolInput(state.activeTool, hit);
+  const stateWithPoint = appState(
+    pointInput.graph,
+    state.viewState,
+    null,
+    state.activeTool,
+  );
+  const activeTool = appendActiveToolInput(state.activeTool, pointInput.id);
 
   if (!activeToolIsReadyToCommit(activeTool)) {
     return changed(
-      appState(state.graph, state.viewState, null, activeTool),
-      "ignore",
+      appState(
+        stateWithPoint.graph,
+        stateWithPoint.viewState,
+        null,
+        activeTool,
+      ),
+      hit === null ? "commit" : "ignore",
     );
   }
 
-  const nodes = constructionNodesForPointTool(state, activeTool);
+  const nodes = constructionNodesForPointTool(stateWithPoint, activeTool);
 
   return changed(
     appState(
-      applyGraphEdit(state.graph, {
+      applyGraphEdit(stateWithPoint.graph, {
         kind: "ADD_NODES",
         nodes,
       }),
-      clearSelection(state.viewState),
+      clearSelection(stateWithPoint.viewState),
       null,
       resetActiveToolInputs(activeTool),
     ),
     "commit",
   );
+}
+
+function createFreePointInput(
+  state: AppState,
+  input: PointerInput,
+): { readonly graph: Graph; readonly id: NodeId } {
+  const point = screenToWorld(input.viewport, input.point);
+  const id = nextModalPointId(state.graph);
+  const node = freePoint(id, point.x, point.y, id);
+
+  return {
+    graph: applyGraphEdit(state.graph, {
+      kind: "ADD_NODES",
+      nodes: [node],
+    }),
+    id,
+  };
+}
+
+function nextModalPointId(graph: Graph): NodeId {
+  for (let index = 1; ; index += 1) {
+    const id = `P${index}`;
+
+    if (!graph.byId.has(id)) {
+      return id;
+    }
+  }
 }
 
 function constructionNodesForPointTool(
