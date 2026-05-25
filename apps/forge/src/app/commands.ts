@@ -4,6 +4,7 @@ import {
   centroidConstruction,
   circleConstruction,
   lineConstruction,
+  parallelSegmentConstruction,
   segmentIntersectionConstruction,
   segmentMidpointConstruction,
   segmentConstruction,
@@ -14,7 +15,7 @@ import { applyGraphEdit } from "@euclid-forge/core";
 import { curveIntersectionNode } from "@euclid-forge/core";
 import type { GeometryNode, NodeId } from "@euclid-forge/core";
 import { deleteNodesDisabledReason } from "@euclid-forge/core";
-import { nextPointLabels } from "@euclid-forge/core";
+import { isConstructiblePointNode, nextPointLabels } from "@euclid-forge/core";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
 import { clearEffectivelyHiddenSelection } from "./effectiveVisibility";
@@ -249,6 +250,31 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
             nodes: lineConstruction(state.graph, a, b),
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "create-parallel-segment",
+    keys: ["p"],
+    disabledReason: parallelSegmentDisabledReason,
+    run: (state) => {
+      const [reference, anchor] = requireSelectedParallelSegmentInputs(state);
+      const nodes = parallelSegmentConstruction(state.graph, reference, anchor);
+
+      if (nodes.length === 0) {
+        return ignore(state, "Parallel segment already exists.");
+      }
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes,
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -662,6 +688,69 @@ function nextCurveIntersectionId(
 
 function safeIdPart(value: string): string {
   return value.replace(/[^A-Za-z0-9_]+/g, "_");
+}
+
+function selectedParallelSegmentInputs(
+  state: AppState,
+): readonly [NodeId, NodeId] | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== 2) {
+    return null;
+  }
+
+  const [first, second] = selected;
+
+  if (!first || !second) {
+    return null;
+  }
+
+  return parallelInputsForIds(state, first, second);
+}
+
+function requireSelectedParallelSegmentInputs(
+  state: AppState,
+): readonly [NodeId, NodeId] {
+  const inputs = selectedParallelSegmentInputs(state);
+
+  if (!inputs) {
+    throw new Error("Cannot run create-parallel-segment while disabled");
+  }
+
+  return inputs;
+}
+
+function parallelInputsForIds(
+  state: AppState,
+  first: NodeId,
+  second: NodeId,
+): readonly [NodeId, NodeId] | null {
+  const firstNode = state.graph.byId.get(first);
+  const secondNode = state.graph.byId.get(second);
+
+  if (isLinearNode(firstNode) && isPointNode(secondNode)) {
+    return [first, second];
+  }
+
+  if (isPointNode(firstNode) && isLinearNode(secondNode)) {
+    return [second, first];
+  }
+
+  return null;
+}
+
+function parallelSegmentDisabledReason(state: AppState): string | null {
+  return selectedParallelSegmentInputs(state)
+    ? null
+    : "Select one segment or line and one point to create a parallel segment.";
+}
+
+function isLinearNode(node: GeometryNode | null | undefined): boolean {
+  return node?.kind === "SEGMENT" || node?.kind === "LINE";
+}
+
+function isPointNode(node: GeometryNode | null | undefined): boolean {
+  return !!node && isConstructiblePointNode(node);
 }
 
 function segmentIntersectionDisabledReason(state: AppState): string | null {

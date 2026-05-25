@@ -150,6 +150,23 @@ export function hitTestFreePoint(
   );
 }
 
+export function hitTestDraggablePointTarget(
+  graph: Graph,
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): PointHit | null {
+  const hit = bestHitForClass(
+    evaluated,
+    viewport,
+    screenPoint,
+    "POINT",
+    (value) => value.kind === "POINT" && isDraggablePoint(graph, value.id),
+  )?.target;
+
+  return hit?.kind === "POINT" ? hit : null;
+}
+
 export function hitTestSegmentTarget(
   evaluated: EvaluatedScene,
   viewport: Viewport,
@@ -319,6 +336,12 @@ function reverseVisualOrder<T>(values: readonly T[]): readonly T[] {
 
 function isFreePoint(graph: Graph, id: NodeId): boolean {
   return graph.byId.get(id)?.kind === "FREE_POINT";
+}
+
+function isDraggablePoint(graph: Graph, id: NodeId): boolean {
+  const node = graph.byId.get(id);
+
+  return node?.kind === "FREE_POINT" || node?.kind === "PARALLEL_POINT";
 }
 
 function isBodyDraggableTriangle(graph: Graph, id: NodeId): boolean {

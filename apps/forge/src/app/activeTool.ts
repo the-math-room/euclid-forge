@@ -6,6 +6,7 @@ export type ActiveToolKind =
   | "point"
   | "segment"
   | "line"
+  | "parallel"
   | "circle"
   | "triangle"
   | "midpoint"
@@ -15,12 +16,16 @@ export type ActiveToolKind =
 export type ConstructionToolKind =
   | "segment"
   | "line"
+  | "parallel"
   | "circle"
   | "triangle"
   | "midpoint"
   | "intersection";
 
-export type PointInputToolKind = Exclude<ConstructionToolKind, "intersection">;
+export type PointInputToolKind = Exclude<
+  ConstructionToolKind,
+  "intersection" | "parallel"
+>;
 
 export type SelectTool = Readonly<{
   kind: "select";
@@ -45,6 +50,11 @@ export type SegmentTool = Readonly<{
 
 export type LineTool = Readonly<{
   kind: "line";
+  inputs: readonly NodeId[];
+}>;
+
+export type ParallelTool = Readonly<{
+  kind: "parallel";
   inputs: readonly NodeId[];
 }>;
 
@@ -75,7 +85,7 @@ export type PointInputTool =
   | TriangleTool
   | MidpointTool;
 
-export type ConstructionTool = PointInputTool | IntersectionTool;
+export type ConstructionTool = PointInputTool | ParallelTool | IntersectionTool;
 
 export type ActiveTool =
   | SelectTool
@@ -121,6 +131,7 @@ export function activeToolRequiredInputCount(tool: ActiveTool): number {
 
     case "segment":
     case "line":
+    case "parallel":
     case "circle":
     case "midpoint":
     case "intersection":
@@ -135,6 +146,7 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
   switch (tool.kind) {
     case "segment":
     case "line":
+    case "parallel":
     case "circle":
     case "midpoint":
     case "triangle":
@@ -150,7 +162,7 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
 }
 
 export function activeToolAcceptsCurveInput(tool: ActiveTool): boolean {
-  return tool.kind === "intersection";
+  return tool.kind === "intersection" || tool.kind === "parallel";
 }
 
 export function activeToolIsReadyToCommit(tool: ActiveTool): boolean {
@@ -219,6 +231,13 @@ export function activeToolStatusText(tool: ActiveTool): string {
 
     case "line":
       return constructionStatus(tool, "Line tool", "point");
+
+    case "parallel":
+      if (tool.inputs.length === 0) {
+        return "Parallel tool: choose a reference segment or line.";
+      }
+
+      return "Parallel tool: choose an anchor point, or click empty canvas to create one.";
 
     case "circle":
       if (tool.inputs.length === 0) {

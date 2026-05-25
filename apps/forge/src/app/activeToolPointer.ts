@@ -5,6 +5,7 @@ import {
   isConstructiblePointNode,
   lineConstruction,
   midpointNode,
+  parallelSegmentConstruction,
   planFreePoint,
   screenToWorld,
   segmentConstruction,
@@ -19,7 +20,7 @@ import {
   appendActiveToolInput,
   resetActiveToolInputs,
 } from "./activeTool";
-import type { ActiveTool, PointInputTool } from "./activeTool";
+import type { ActiveTool, ParallelTool, PointInputTool } from "./activeTool";
 import { changed, preventOnly, transition, unchanged } from "./appTransition";
 import type { AppTransition } from "./appTransition";
 import type { PointerInput } from "./appController";
@@ -45,6 +46,9 @@ export function handleActiveToolPointerDown(
     case "triangle":
     case "midpoint":
       return handlePointInputToolPointerDown(state, input);
+
+    case "parallel":
+      return handleParallelToolPointerDown(state, input);
 
     case "intersection":
       return changed(
@@ -170,6 +174,127 @@ function handlePointInputToolPointerDown(
   );
 }
 
+function handleParallelToolPointerDown(
+  state: AppState,
+  input: PointerInput,
+): AppTransition {
+  if (state.activeTool.kind !== "parallel") {
+    return unchanged(state);
+  }
+
+  const hit = selectablePointerHit(state, input);
+  const existingInputs = state.activeTool.inputs;
+  const inputNode =
+    hit === null
+      ? createParallelAnchorPointInput(state, input, existingInputs)
+      : { graph: state.graph, id: hit, createdPoint: false };
+
+  if (!inputNode) {
+    return changed(
+      state,
+      "ignore",
+      "Choose a reference segment or line before creating the anchor point.",
+    );
+  }
+
+  const candidate = inputNode.graph.byId.get(inputNode.id);
+
+  if (!candidate || !isParallelToolCandidate(candidate)) {
+    return changed(
+      state,
+      "ignore",
+      "Choose one segment or line and one point for the parallel tool.",
+    );
+  }
+
+  const stateWithInput = appState(
+    inputNode.graph,
+    state.viewState,
+    null,
+    state.activeTool,
+  );
+  const activeTool = appendActiveToolInput(state.activeTool, inputNode.id);
+
+  if (!activeToolIsReadyToCommit(activeTool)) {
+    return changed(
+      appState(
+        stateWithInput.graph,
+        stateWithInput.viewState,
+        null,
+        activeTool,
+      ),
+      inputNode.createdPoint ? "commit" : "ignore",
+    );
+  }
+
+  if (activeTool.kind !== "parallel") {
+    return changed(
+      stateWithInput,
+      "ignore",
+      "Choose one segment or line and one point for the parallel tool.",
+    );
+  }
+
+  const parallelInputs = parallelToolInputs(stateWithInput.graph, activeTool);
+
+  if (!parallelInputs) {
+    return changed(
+      stateWithInput,
+      "ignore",
+      "Choose one segment or line and one point for the parallel tool.",
+    );
+  }
+
+  const [reference, anchor] = parallelInputs;
+  const nodes = parallelSegmentConstruction(
+    stateWithInput.graph,
+    reference,
+    anchor,
+  );
+
+  if (nodes.length === 0) {
+    return changed(
+      stateWithInput,
+      "ignore",
+      "Parallel segment already exists.",
+    );
+  }
+
+  return changed(
+    appState(
+      applyGraphEdit(stateWithInput.graph, {
+        kind: "ADD_NODES",
+        nodes,
+      }),
+      clearSelection(stateWithInput.viewState),
+      null,
+      resetActiveToolInputs(activeTool),
+    ),
+    "commit",
+  );
+}
+
+function createParallelAnchorPointInput(
+  state: AppState,
+  input: PointerInput,
+  existingInputs: readonly NodeId[],
+): {
+  readonly graph: Graph;
+  readonly id: NodeId;
+  readonly createdPoint: boolean;
+} | null {
+  if (!existingInputs.some((id) => isLinearNode(state.graph.byId.get(id)))) {
+    return null;
+  }
+
+  const created = createFreePointInput(state, input);
+
+  return {
+    ...created,
+    createdPoint: true,
+  };
+}
+
 function createFreePointInput(
   state: AppState,
   input: PointerInput,
@@ -242,6 +367,7 @@ function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
     case "midpoint":
       return true;
 
+    case "parallel":
     case "select":
     case "lasso":
     case "point":
@@ -249,6 +375,41 @@ function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
     case "intersection":
       return false;
   }
+}
+
+function parallelToolInputs(
+  graph: Graph,
+  tool: ParallelTool,
+): readonly [NodeId, NodeId] | null {
+  if (tool.inputs.length !== 2) {
+    return null;
+  }
+
+  const [first, second] = tool.inputs;
+  const firstNode = first ? graph.byId.get(first) : null;
+  const secondNode = second ? graph.byId.get(second) : null;
+
+  if (first && second && isLinearNode(firstNode) && isPointNode(secondNode)) {
+    return [first, second];
+  }
+
+  if (first && second && isPointNode(firstNode) && isLinearNode(secondNode)) {
+    return [second, first];
+  }
+
+  return null;
+}
+
+function isParallelToolCandidate(node: GeometryNode): boolean {
+  return isLinearNode(node) || isPointNode(node);
+}
+
+function isLinearNode(node: GeometryNode | null | undefined): boolean {
+  return node?.kind === "SEGMENT" || node?.kind === "LINE";
+}
+
+function isPointNode(node: GeometryNode | null | undefined): boolean {
+  return !!node && isConstructiblePointNode(node);
 }
 
 function requiredInputs(

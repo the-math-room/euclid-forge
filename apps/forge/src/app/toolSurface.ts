@@ -51,6 +51,12 @@ const TOOL_BUTTONS: readonly ToolButtonSpec[] = [
     tool: () => constructionTool("segment"),
   },
   {
+    kind: "parallel",
+    label: "Parallel",
+    title: "Create a finite segment parallel to a selected segment or line",
+    tool: () => constructionTool("parallel"),
+  },
+  {
     kind: "circle",
     label: "Circle",
     title: "Create a circle from center and radius points",

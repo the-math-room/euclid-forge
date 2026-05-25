@@ -232,19 +232,30 @@ export function handlePointerMove(
       );
     }
 
-    case "FREE_POINT":
+    case "FREE_POINT": {
+      const node = state.graph.byId.get(state.dragState.nodeId);
+      const edit =
+        node?.kind === "PARALLEL_POINT"
+          ? {
+              kind: "MOVE_CONSTRAINED_POINT" as const,
+              id: state.dragState.nodeId,
+              point: world,
+            }
+          : {
+              kind: "MOVE_FREE_POINT" as const,
+              id: state.dragState.nodeId,
+              point: world,
+            };
+
       return changed(
         appState(
-          applyGraphEdit(state.graph, {
-            kind: "MOVE_FREE_POINT",
-            id: state.dragState.nodeId,
-            point: world,
-          }),
+          applyGraphEdit(state.graph, edit),
           viewState,
           state.dragState,
           state.activeTool,
         ),
       );
+    }
 
     case "BODY": {
       const delta = deltaBetween(state.dragState.initialPointerWorld, world);

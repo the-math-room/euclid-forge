@@ -2,7 +2,7 @@ import { evaluateGraph } from "@euclid-forge/core";
 import { visibleEvaluatedScene } from "@euclid-forge/core";
 import {
   hitTestDraggableAreaBody,
-  hitTestFreePointTarget,
+  hitTestDraggablePointTarget,
   hitTestSelectionTarget,
 } from "../interaction/hitTest";
 import type { Vec2 } from "@euclid-forge/core";
@@ -64,17 +64,17 @@ export function pointerDownIntent(
     };
   }
 
-  const freePointHit = hitTestFreePointTarget(
+  const draggablePointHit = hitTestDraggablePointTarget(
     state.graph,
     evaluated,
     input.viewport,
     input.point,
   );
 
-  if (freePointHit) {
+  if (draggablePointHit) {
     return {
       kind: "DRAG_FREE_POINT",
-      id: freePointHit.id,
+      id: draggablePointHit.id,
     };
   }
 

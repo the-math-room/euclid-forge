@@ -94,6 +94,7 @@ export {
   curveIntersectionNode,
   freePoint,
   lineNode,
+  parallelPointNode,
   midpointNode,
   segmentIntersectionNode,
   segmentNode,
@@ -105,6 +106,7 @@ export {
   type GeometryNode,
   type LineNode,
   type MidpointNode,
+  type ParallelPointNode,
   type NodeId,
   type SegmentIntersectionNode,
   type SegmentNode,
@@ -153,3 +155,4 @@ export {
   nextPointLabel,
   nextPointLabels,
 } from "../representation/pointLabelPlanning";
+export { parallelSegmentConstruction } from "../representation/constructions";
