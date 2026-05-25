@@ -1,7 +1,7 @@
 import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import type { EvaluatedScene } from "../evaluation/evaluateGraph";
 import { intersectCurves } from "../meaning/curve";
-import type { IntersectionResult } from "../meaning/vec2";
+import type { IntersectionResult } from "../meaning/intersection";
 import type { NodeId } from "../representation/node";
 import { curveDenotationForGeometry } from "./curveDenotation";
 

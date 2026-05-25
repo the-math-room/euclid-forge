@@ -1,17 +1,13 @@
 import {
+  DEFAULT_INTERSECTION_POLICY,
+  intersectionIssue,
+  oneIntersectionCandidate,
+  type IntersectionCandidate,
+  type IntersectionPolicy,
   type IntersectionResult,
-  lineIntersectionWithParameters,
-  type Vec2,
-  vec2,
-} from "./vec2";
-
-export type IntersectionMultiplicity = "SIMPLE" | "TANGENT";
-
-export type IntersectionCandidate = Readonly<{
-  point: Vec2;
-  multiplicity: IntersectionMultiplicity;
-  branchKey: string;
-}>;
+} from "./intersection";
+import { lineIntersectionWithParameters } from "./line";
+import { type Vec2, vec2 } from "./vec2";
 
 export type CurveDomain =
   | Readonly<{ kind: "ALL" }>
@@ -37,14 +33,6 @@ export type CircleCurve = Readonly<{
 }>;
 
 export type Curve2 = LinearImplicitCurve | CircleCurve;
-
-export type IntersectionPolicy = Readonly<{
-  epsilon: number;
-}>;
-
-export const DEFAULT_INTERSECTION_POLICY: IntersectionPolicy = Object.freeze({
-  epsilon: 1e-9,
-});
 
 export function linearCurveFromSegment(
   start: Vec2,
@@ -449,17 +437,3 @@ function domainContainsPoint(
   return Object.freeze({ contains: true });
 }
 
-function oneIntersectionCandidate(
-  candidate: IntersectionCandidate,
-): IntersectionResult {
-  return Object.freeze({
-    candidates: Object.freeze([candidate]),
-  });
-}
-
-function intersectionIssue(message: string): IntersectionResult {
-  return Object.freeze({
-    candidates: Object.freeze([]),
-    issue: message,
-  });
-}

@@ -2,9 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   lineIntersection,
   lineIntersectionWithParameters,
-  segmentIntersection,
-  vec2,
-} from "./vec2";
+} from "./line";
+import { segmentIntersection, vec2 } from "./vec2";
 
 describe("meaning/intersection helpers", () => {
   test("computes the intersection of supporting lines", () => {
