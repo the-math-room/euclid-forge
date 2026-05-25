@@ -1,4 +1,6 @@
-import type { Vec2 } from "../meaning/vec2";
+import { evaluateGraph } from "../evaluation/evaluateGraph";
+import type { EvaluatedGeometry } from "../evaluation/evaluated";
+import { vec2, type Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
 import { freePoint, type GeometryNode, type NodeId } from "./node";
 import { canDeleteNodes, cascadingDeleteIds } from "./deletePolicy";
@@ -15,6 +17,11 @@ export type GraphEdit = Readonly<
     }
   | {
       kind: "MOVE_FREE_POINT";
+      id: NodeId;
+      point: Vec2;
+    }
+  | {
+      kind: "MOVE_CONSTRAINED_POINT";
       id: NodeId;
       point: Vec2;
     }
@@ -47,6 +54,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "MOVE_FREE_POINT":
       return moveFreePoint(graph, edit.id, edit.point);
+
+    case "MOVE_CONSTRAINED_POINT":
+      return moveConstrainedPoint(graph, edit.id, edit.point);
 
     case "TRANSLATE_FREE_POINTS":
       return translateFreePoints(graph, edit.ids, edit.delta);
@@ -96,6 +106,79 @@ function moveFreePoint(graph: Graph, id: NodeId, point: Vec2): Graph {
         : candidate,
     ),
   );
+}
+
+function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
+  const node = graph.byId.get(id);
+
+  if (!node) {
+    throw new Error(`Cannot move missing node: ${id}`);
+  }
+
+  if (node.kind !== "PARALLEL_POINT") {
+    throw new Error(`Cannot move non-constrained point: ${id}`);
+  }
+
+  const evaluated = evaluateGraph(graph);
+  const reference = evaluated.values.get(node.reference);
+  const anchor = evaluated.values.get(node.anchor);
+
+  if (!reference) {
+    throw new Error(
+      `Cannot move ${id}; missing evaluated reference: ${node.reference}`,
+    );
+  }
+
+  if (!anchor || anchor.kind !== "POINT") {
+    throw new Error(
+      `Cannot move ${id}; missing evaluated anchor: ${node.anchor}`,
+    );
+  }
+
+  const direction = unitDirectionForLinearGeometry(reference);
+
+  if (!direction) {
+    throw new Error(
+      `Cannot move ${id}; reference ${node.reference} is not a non-degenerate line or segment`,
+    );
+  }
+
+  const offset =
+    (point.x - anchor.point.x) * direction.x +
+    (point.y - anchor.point.y) * direction.y;
+
+  return createGraph(
+    graph.nodes.map((candidate) =>
+      candidate.id === id
+        ? {
+            ...node,
+            offset,
+          }
+        : candidate,
+    ),
+  );
+}
+
+function unitDirectionForLinearGeometry(value: EvaluatedGeometry): Vec2 | null {
+  switch (value.kind) {
+    case "SEGMENT":
+    case "LINE": {
+      const dx = value.b.x - value.a.x;
+      const dy = value.b.y - value.a.y;
+      const length = Math.hypot(dx, dy);
+
+      if (length <= 1e-9) {
+        return null;
+      }
+
+      return vec2(dx / length, dy / length);
+    }
+
+    case "POINT":
+    case "CIRCLE":
+    case "TRIANGLE":
+      return null;
+  }
 }
 
 function translateFreePoints(

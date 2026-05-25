@@ -14,7 +14,8 @@ export type EvaluatedPoint = Readonly<{
     | "MIDPOINT"
     | "CENTROID"
     | "SEGMENT_INTERSECTION"
-    | "CURVE_INTERSECTION";
+    | "CURVE_INTERSECTION"
+    | "PARALLEL_POINT";
   zIndex?: number;
   id: NodeId;
   point: Vec2;

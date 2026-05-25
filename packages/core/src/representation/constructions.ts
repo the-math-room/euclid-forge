@@ -1,5 +1,5 @@
 import { constructionFactoryForGeometryKind } from "../geometry/geometryRegistry";
-import { midpointNode, segmentNode } from "./node";
+import { midpointNode, parallelPointNode, segmentNode } from "./node";
 import type {
   GeometryNode,
   MidpointNode,
@@ -39,6 +39,98 @@ export function lineConstruction(
   b: NodeId,
 ): readonly GeometryNode[] {
   return constructionFactoryForGeometryKind("LINE", "line")({ graph }, a, b);
+}
+
+export function parallelSegmentConstruction(
+  graph: Graph,
+  reference: NodeId,
+  anchor: NodeId,
+  offset = 1,
+): readonly GeometryNode[] {
+  const referenceNode = graph.byId.get(reference);
+
+  if (!referenceNode) {
+    throw new Error(
+      `Cannot create parallel segment with missing reference: ${reference}`,
+    );
+  }
+
+  if (referenceNode.kind !== "SEGMENT" && referenceNode.kind !== "LINE") {
+    throw new Error(
+      `Cannot create parallel segment with non-linear reference: ${reference}`,
+    );
+  }
+
+  const anchorNode = graph.byId.get(anchor);
+
+  if (!anchorNode) {
+    throw new Error(
+      `Cannot create parallel segment with missing anchor: ${anchor}`,
+    );
+  }
+
+  if (
+    anchorNode.kind !== "FREE_POINT" &&
+    anchorNode.kind !== "MIDPOINT" &&
+    anchorNode.kind !== "CENTROID" &&
+    anchorNode.kind !== "SEGMENT_INTERSECTION" &&
+    anchorNode.kind !== "CURVE_INTERSECTION" &&
+    anchorNode.kind !== "PARALLEL_POINT"
+  ) {
+    throw new Error(
+      `Cannot create parallel segment with non-point anchor: ${anchor}`,
+    );
+  }
+
+  const existingEndpoint = graph.nodes.find(
+    (node) =>
+      node.kind === "PARALLEL_POINT" &&
+      node.reference === reference &&
+      node.anchor === anchor,
+  );
+
+  if (existingEndpoint) {
+    const existingSegment = graph.nodes.find(
+      (node) =>
+        node.kind === "SEGMENT" &&
+        ((node.a === anchor && node.b === existingEndpoint.id) ||
+          (node.a === existingEndpoint.id && node.b === anchor)),
+    );
+
+    return existingSegment
+      ? Object.freeze([])
+      : Object.freeze([
+          segmentNode(
+            nextSegmentId(graph.nodes, anchor, existingEndpoint.id),
+            anchor,
+            existingEndpoint.id,
+          ),
+        ]);
+  }
+
+  const endpointId = nextParallelPointId(graph.nodes, reference, anchor);
+  const endpoint = parallelPointNode(
+    endpointId,
+    reference,
+    anchor,
+    offset,
+    nextAlphabeticLabel(
+      new Set(
+        graph.nodes
+          .filter((candidate) => "label" in candidate)
+          .map((candidate) => candidate.label),
+      ),
+    ),
+  );
+
+  return Object.freeze([
+    endpoint,
+    segmentNode(
+      nextSegmentId([...graph.nodes, endpoint], anchor, endpointId),
+      anchor,
+      endpointId,
+    ),
+  ]);
 }
 
 export function circleConstruction(
@@ -192,6 +284,26 @@ function triangleEdges(
     [triangle.b, triangle.c],
     [triangle.c, triangle.a],
   ];
+}
+
+function nextParallelPointId(
+  nodes: readonly { id: NodeId }[],
+  reference: NodeId,
+  anchor: NodeId,
+): NodeId {
+  const base = `PP_${reference}_${anchor}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
 }
 
 function endpointKey(a: NodeId, b: NodeId): string {

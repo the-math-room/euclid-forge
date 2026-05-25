@@ -9,7 +9,8 @@ export type GeometryNode =
   | MidpointNode
   | CentroidNode
   | SegmentIntersectionNode
-  | CurveIntersectionNode;
+  | CurveIntersectionNode
+  | ParallelPointNode;
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -85,6 +86,16 @@ export type CurveIntersectionNode = Readonly<{
   curveA: NodeId;
   curveB: NodeId;
   branchKey: string;
+  label: string;
+}>;
+
+export type ParallelPointNode = Readonly<{
+  kind: "PARALLEL_POINT";
+  id: NodeId;
+  zIndex?: number;
+  reference: NodeId;
+  anchor: NodeId;
+  offset: number;
   label: string;
 }>;
 
@@ -203,6 +214,23 @@ export function curveIntersectionNode(
     curveA,
     curveB,
     branchKey,
+    label,
+  });
+}
+
+export function parallelPointNode(
+  id: NodeId,
+  reference: NodeId,
+  anchor: NodeId,
+  offset: number,
+  label: string,
+): ParallelPointNode {
+  return Object.freeze({
+    kind: "PARALLEL_POINT",
+    id,
+    reference,
+    anchor,
+    offset,
     label,
   });
 }
