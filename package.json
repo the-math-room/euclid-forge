@@ -19,7 +19,8 @@
     "check:forge": "npm run check -w euclid-forge",
     "check": "npm run check:boundaries && npm run check:core && npm run check:forge",
     "format": "npm run format -w @euclid-forge/core && npm run format -w euclid-forge",
-    "format:check": "npm run format:check -w @euclid-forge/core && npm run format:check -w euclid-forge"
+    "format:check": "npm run format:check -w @euclid-forge/core && npm run format:check -w euclid-forge",
+    "audit:core-imports": "node scripts/audit-core-imports.mjs"
   },
   "devDependencies": {}
 }
