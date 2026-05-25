@@ -1,0 +1,29 @@
+{
+  "name": "@euclid-forge/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/core/index.ts",
+    "./core": "./src/core/index.ts",
+    "./core/*": "./src/core/*.ts",
+    "./view/*": "./src/view/*.ts",
+    "./meaning/*": "./src/meaning/*.ts",
+    "./representation/*": "./src/representation/*.ts",
+    "./evaluation/*": "./src/evaluation/*.ts",
+    "./geometry/*": "./src/geometry/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run src",
+    "check": "npm run typecheck && npm test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.4",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.7"
+  }
+}

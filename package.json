@@ -1,27 +1,23 @@
 {
-  "name": "euclid-forge",
-  "private": true,
+  "name": "euclid-forge-monorepo",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/forge",
+    "packages/core"
+  ],
   "scripts": {
-    "dev": "vite",
-    "test": "vitest run src",
-    "test:watch": "vitest src",
-    "typecheck": "tsc --noEmit",
+    "check": "npm run check:boundaries && npm run check -w @euclid-forge/core && npm run check -w euclid-forge",
     "check:boundaries": "node scripts/check-boundaries.mjs",
-    "smoke": "playwright test --config=playwright.config.ts",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "check": "npm run typecheck && npm test && npm run check:boundaries && npm run smoke"
+    "check:core": "npm run check -w @euclid-forge/core",
+    "check:forge": "npm run check -w euclid-forge",
+    "dev": "npm run dev -w euclid-forge",
+    "build": "npm run build -w euclid-forge",
+    "preview": "npm run preview -w euclid-forge",
+    "test": "npm run test -w @euclid-forge/core && npm run test -w euclid-forge",
+    "format": "npm run format -w @euclid-forge/core && npm run format -w euclid-forge",
+    "format:check": "npm run format:check -w @euclid-forge/core && npm run format:check -w euclid-forge"
   },
-  "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "@types/node": "^25.9.1",
-    "typescript": "latest",
-    "vite": "latest",
-    "vitest": "latest"
-  },
-  "dependencies": {
-    "@euclid-forge/core": "file:../euclid-core"
-  }
+  "devDependencies": {}
 }
