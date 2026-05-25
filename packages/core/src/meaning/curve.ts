@@ -214,43 +214,23 @@ function intersectCircles(
   const height = Math.sqrt(heightSquared);
   const offsetX = (-dy / distance) * height;
   const offsetY = (dx / distance) * height;
-  const firstPoint = vec2(base.x + offsetX, base.y + offsetY);
-  const secondPoint = vec2(base.x - offsetX, base.y - offsetY);
-  const candidates = sortCircleCircleCandidates([
-    Object.freeze({
-      point: firstPoint,
-      multiplicity: "SIMPLE" as const,
-      branchKey: "circle-circle:0",
-    }),
-    Object.freeze({
-      point: secondPoint,
-      multiplicity: "SIMPLE" as const,
-      branchKey: "circle-circle:1",
-    }),
-  ]);
+  const positiveSidePoint = vec2(base.x + offsetX, base.y + offsetY);
+  const negativeSidePoint = vec2(base.x - offsetX, base.y - offsetY);
 
   return Object.freeze({
-    candidates: Object.freeze(candidates),
-  });
-}
-
-function sortCircleCircleCandidates(
-  candidates: readonly IntersectionCandidate[],
-): readonly IntersectionCandidate[] {
-  return [...candidates]
-    .sort((left, right) => {
-      if (left.point.y !== right.point.y) {
-        return left.point.y - right.point.y;
-      }
-
-      return left.point.x - right.point.x;
-    })
-    .map((candidate, index) =>
+    candidates: Object.freeze([
       Object.freeze({
-        ...candidate,
-        branchKey: `circle-circle:${index}`,
+        point: negativeSidePoint,
+        multiplicity: "SIMPLE" as const,
+        branchKey: "circle-circle:0",
       }),
-    );
+      Object.freeze({
+        point: positiveSidePoint,
+        multiplicity: "SIMPLE" as const,
+        branchKey: "circle-circle:1",
+      }),
+    ]),
+  });
 }
 
 function intersectLinearCircle(
