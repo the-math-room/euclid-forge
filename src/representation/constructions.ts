@@ -12,6 +12,18 @@ import type {
 } from "./node";
 import type { Graph } from "./graph";
 
+export function segmentConstruction(
+  graph: Graph,
+  a: NodeId,
+  b: NodeId,
+): readonly GeometryNode[] {
+  return constructionFactoryForGeometryKind("SEGMENT", "segment")(
+    { graph },
+    a,
+    b,
+  );
+}
+
 export function circleConstruction(
   graph: Graph,
   center: NodeId,

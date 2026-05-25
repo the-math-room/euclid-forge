@@ -5,9 +5,11 @@ import { appState } from "./appState";
 import {
   requireSelectedCirclePoints,
   requireSelectedFreePointVertices,
+  requireSelectedSegmentEndpoints,
   requireSelectedTriangle,
   selectedCirclePoints,
   selectedFreePointVertices,
+  selectedSegmentEndpoints,
   selectedTriangle,
 } from "./selectionPredicates";
 import { emptyViewState, toggleSelectedNode } from "./viewState";
@@ -29,6 +31,29 @@ function selectedState(ids: readonly string[]) {
 }
 
 describe("app/selectionPredicates", () => {
+
+  test("selects exactly two free points for segment construction", () => {
+    expect(selectedSegmentEndpoints(selectedState(["A", "B"]))).toEqual([
+      "A",
+      "B",
+    ]);
+
+    expect(selectedSegmentEndpoints(selectedState(["A"]))).toBeNull();
+    expect(selectedSegmentEndpoints(selectedState(["A", "ABC"]))).toBeNull();
+    expect(selectedSegmentEndpoints(selectedState(["A", "B", "C"]))).toBeNull();
+  });
+
+  test("requires segment construction endpoints", () => {
+    expect(requireSelectedSegmentEndpoints(selectedState(["A", "B"]))).toEqual([
+      "A",
+      "B",
+    ]);
+
+    expect(() => requireSelectedSegmentEndpoints(selectedState(["A"]))).toThrow(
+      "Cannot run create-segment while disabled",
+    );
+  });
+
   test("selects exactly two free points for circle construction", () => {
     expect(selectedCirclePoints(selectedState(["A", "B"]))).toEqual([
       "A",

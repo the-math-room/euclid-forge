@@ -62,7 +62,7 @@ test("clicks empty canvas to add a new draggable free point", async ({
   await expectYellowPointNear(frame.canvas, { x: 2, y: 2 });
 });
 
-test("shift-selects three free points and creates a triangle with T", async ({
+test("shift-selects three free points and creates a triangle with J", async ({
   page,
 }) => {
   await page.goto("/");
@@ -91,7 +91,7 @@ test("shift-selects three free points and creates a triangle with T", async ({
   await shiftClickWorld(page, frame, p3);
   await waitForAnimationFrame(page);
 
-  await page.keyboard.press("T");
+  await page.keyboard.press("J");
   await waitForAnimationFrame(page);
 
   await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });

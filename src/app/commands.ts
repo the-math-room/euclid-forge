@@ -1,6 +1,7 @@
 import {
   centroidConstruction,
   circleConstruction,
+  segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
 } from "../representation/constructions";
@@ -15,9 +16,12 @@ import {
 } from "./effectiveVisibility";
 import {
   requireSelectedCirclePoints,
+  requireSelectedSegmentEndpoints,
+  requireSelectedFreePointTuple,
   requireSelectedFreePointVertices,
   requireSelectedTriangle,
   selectedCirclePoints,
+  selectedSegmentEndpoints,
   selectedFreePointVertices,
   selectedTriangle,
 } from "./selectionPredicates";
@@ -185,24 +189,44 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   }),
 
   command({
-    id: "create-triangle",
-    keys: ["t"],
+    id: "join-selected-free-points",
+    keys: ["j"],
     disabledReason: (state) =>
-      selectedFreePointVertices(state) ? null : "",
-    run: (state) =>
-      commit(
+      selectedSegmentEndpoints(state) || selectedFreePointVertices(state)
+        ? null
+        : "",
+    run: (state) => {
+      const selectedCount = state.viewState.selectedNodeIds.size;
+      const nodes =
+        selectedCount === 2
+          ? segmentConstruction(
+              state.graph,
+              ...requireSelectedFreePointTuple(
+                state,
+                2,
+                "Cannot run join-selected-free-points while disabled",
+              ),
+            )
+          : triangleConstruction(
+              state.graph,
+              requireSelectedFreePointTuple(
+                state,
+                3,
+                "Cannot run join-selected-free-points while disabled",
+              ),
+            );
+
+      return commit(
         appState(
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
-            nodes: triangleConstruction(
-              state.graph,
-              requireSelectedFreePointVertices(state),
-            ),
+            nodes,
           }),
           clearSelection(state.viewState),
           state.dragState,
         ),
-      ),
+      );
+    },
   }),
 
   command({

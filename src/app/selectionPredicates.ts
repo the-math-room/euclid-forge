@@ -1,79 +1,85 @@
 import type { NodeId } from "../representation/node";
 import type { AppState } from "./appState";
 
+export function selectedFreePointTuple<const N extends number>(
+  state: AppState,
+  count: N,
+): TupleOf<NodeId, N> | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== count) {
+    return null;
+  }
+
+  for (const id of selected) {
+    if (state.graph.byId.get(id)?.kind !== "FREE_POINT") {
+      return null;
+    }
+  }
+
+  return selected as TupleOf<NodeId, N>;
+}
+
+export function requireSelectedFreePointTuple<const N extends number>(
+  state: AppState,
+  count: N,
+  message: string,
+): TupleOf<NodeId, N> {
+  const tuple = selectedFreePointTuple(state, count);
+
+  if (!tuple) {
+    throw new Error(message);
+  }
+
+  return tuple;
+}
+
+export function selectedSegmentEndpoints(
+  state: AppState,
+): readonly [NodeId, NodeId] | null {
+  return selectedFreePointTuple(state, 2);
+}
+
+export function requireSelectedSegmentEndpoints(
+  state: AppState,
+): readonly [NodeId, NodeId] {
+  return requireSelectedFreePointTuple(
+    state,
+    2,
+    "Cannot run create-segment while disabled",
+  );
+}
+
 export function selectedCirclePoints(
   state: AppState,
 ): readonly [NodeId, NodeId] | null {
-  const selected = [...state.viewState.selectedNodeIds];
-
-  if (selected.length !== 2) {
-    return null;
-  }
-
-  const [center, through] = selected;
-
-  if (!center || !through) {
-    return null;
-  }
-
-  if (
-    state.graph.byId.get(center)?.kind !== "FREE_POINT" ||
-    state.graph.byId.get(through)?.kind !== "FREE_POINT"
-  ) {
-    return null;
-  }
-
-  return [center, through];
+  return selectedFreePointTuple(state, 2);
 }
 
 export function requireSelectedCirclePoints(
   state: AppState,
 ): readonly [NodeId, NodeId] {
-  const points = selectedCirclePoints(state);
-
-  if (!points) {
-    throw new Error("Cannot run create-circle while disabled");
-  }
-
-  return points;
+  return requireSelectedFreePointTuple(
+    state,
+    2,
+    "Cannot run create-circle while disabled",
+  );
 }
 
 export function selectedFreePointVertices(
   state: AppState,
 ): readonly [NodeId, NodeId, NodeId] | null {
-  const selected = [...state.viewState.selectedNodeIds];
-
-  if (selected.length !== 3) {
-    return null;
-  }
-
-  const [a, b, c] = selected;
-
-  if (!a || !b || !c) {
-    return null;
-  }
-
-  if (
-    state.graph.byId.get(a)?.kind !== "FREE_POINT" ||
-    state.graph.byId.get(b)?.kind !== "FREE_POINT" ||
-    state.graph.byId.get(c)?.kind !== "FREE_POINT"
-  ) {
-    return null;
-  }
-
-  return [a, b, c];
+  return selectedFreePointTuple(state, 3);
 }
 
 export function requireSelectedFreePointVertices(
   state: AppState,
 ): readonly [NodeId, NodeId, NodeId] {
-  const vertices = selectedFreePointVertices(state);
-
-  if (!vertices) {
-    throw new Error("Cannot run create-triangle while disabled");
-  }
-
-  return vertices;
+  return requireSelectedFreePointTuple(
+    state,
+    3,
+    "Cannot run create-triangle while disabled",
+  );
 }
 
 export function selectedTriangle(state: AppState): NodeId | null {
@@ -101,3 +107,6 @@ export function requireSelectedTriangle(state: AppState): NodeId {
 
   return triangle;
 }
+
+type TupleOf<T, N extends number, R extends readonly T[] = readonly []> =
+  R["length"] extends N ? R : TupleOf<T, N, readonly [...R, T]>;

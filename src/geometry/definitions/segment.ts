@@ -2,7 +2,13 @@ import type {
   EvaluatedGeometry,
   EvaluatedSegment,
 } from "../../evaluation/evaluated";
+import {
+  segmentNode,
+  type GeometryNode,
+  type NodeId,
+} from "../../representation/node";
 import { renderSegment } from "../../rendering/segmentRenderer";
+import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type {
   GeometryDefinition,
@@ -77,4 +83,76 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
       renderSegment(context.ctx, context.viewport, value, context.options);
     },
   }),
+
+  construction: Object.freeze({
+    factories: Object.freeze({
+      segment: (
+        { graph }: ConstructionContext,
+        a: NodeId,
+        b: NodeId,
+      ): readonly GeometryNode[] => segmentConstructionNodes(graph, a, b),
+    }),
+  }),
 });
+
+function segmentConstructionNodes(
+  graph: Readonly<{
+    nodes: readonly GeometryNode[];
+    byId: ReadonlyMap<NodeId, GeometryNode>;
+  }>,
+  a: NodeId,
+  b: NodeId,
+): readonly GeometryNode[] {
+  if (a === b) {
+    throw new Error("Cannot create segment from duplicate endpoints");
+  }
+
+  for (const id of [a, b]) {
+    const node = graph.byId.get(id);
+
+    if (!node) {
+      throw new Error(`Cannot create segment with missing endpoint: ${id}`);
+    }
+
+    if (node.kind !== "FREE_POINT") {
+      throw new Error(`Cannot create segment with constrained endpoint: ${id}`);
+    }
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "SEGMENT" &&
+      ((candidate.a === a && candidate.b === b) ||
+        (candidate.a === b && candidate.b === a)),
+  );
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  return Object.freeze([segmentNode(nextSegmentId(graph, a, b), a, b)]);
+}
+
+function endpointKey(a: NodeId, b: NodeId): string {
+  return [a, b].sort().join("_");
+}
+
+function nextSegmentId(
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  a: NodeId,
+  b: NodeId,
+): NodeId {
+  const base = `S_${endpointKey(a, b)}`;
+
+  if (!graph.byId.has(base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (graph.byId.has(`${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
+}

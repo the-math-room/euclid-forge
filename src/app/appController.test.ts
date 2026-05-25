@@ -49,6 +49,28 @@ describe("app/appController", () => {
   });
 
 
+
+  test("joins two selected free points into a segment with J", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "j",
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.get("S_A_B")).toEqual(
+      segmentNode("S_A_B", "A", "B"),
+    );
+    expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
   test("creates a circle from two selected free points with C", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
@@ -70,7 +92,7 @@ describe("app/appController", () => {
     expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
   });
 
-  test("creates a triangle from three selected free points with T", () => {
+  test("joins three selected free points into a triangle with J", () => {
     const graph = createGraph([
       freePoint("P1", 0, 0, "P1"),
       freePoint("P2", 2, 0, "P2"),
@@ -83,7 +105,7 @@ describe("app/appController", () => {
     );
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
-      key: "T",
+      key: "J",
     });
 
     expect(transition.state.graph.byId.get("T1")).toEqual(
@@ -94,7 +116,7 @@ describe("app/appController", () => {
     expect(transition.shouldPreventDefault).toBe(true);
   });
 
-  test("ignores T unless exactly three selected nodes are free points", () => {
+  test("ignores J unless exactly two or three selected nodes are free points", () => {
     const graph = createGraph([
       freePoint("P1", 0, 0, "P1"),
       freePoint("P2", 2, 0, "P2"),
@@ -108,7 +130,7 @@ describe("app/appController", () => {
     );
 
     const state = appState(graph, viewState, null);
-    const transition = handleKeyDown(state, { key: "T" });
+    const transition = handleKeyDown(state, { key: "J" });
 
     expect(transition.state).toBe(state);
     expect(transition.shouldRender).toBe(false);
@@ -867,7 +889,7 @@ describe("app/appController", () => {
     );
 
     const transition = handleKeyDown(appState(graph, viewState, null), {
-      key: "T",
+      key: "J",
     });
 
     expect(transition.history).toBe("commit");

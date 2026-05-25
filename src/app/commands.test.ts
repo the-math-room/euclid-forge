@@ -28,8 +28,8 @@ describe("app/commands", () => {
   });
 
   test("looks up commands by normalized key", () => {
-    expect(appCommandForKey("T")?.id).toBe("create-triangle");
-    expect(appCommandForKey("t")?.id).toBe("create-triangle");
+    expect(appCommandForKey("J")?.id).toBe("join-selected-free-points");
+    expect(appCommandForKey("j")?.id).toBe("join-selected-free-points");
     expect(appCommandForKey("ArrowLeft")?.id).toBe("pan-viewport-left");
     expect(appCommandForKey("unknown")).toBeNull();
   });
@@ -42,6 +42,60 @@ describe("app/commands", () => {
 
     expect(result?.history).toBe("ignore");
     expect(result?.state.viewState.viewportCenter).toEqual(vec2(-0.5, 0));
+  });
+
+
+  test("joins two selected free points into a segment", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "A"),
+      "B",
+    );
+
+    const result = appCommandForKey("j")?.run(appState(graph, viewState, null));
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.get("S_A_B")).toEqual(
+      segmentNode("S_A_B", "A", "B"),
+    );
+    expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+  test("join selected free points is disabled unless two or three free points are selected", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    const command = appCommandForKey("j");
+
+    expect(
+      command &&
+        appCommandDisabledReason(
+          command,
+          appState(graph, toggleSelectedNode(emptyViewState(), "A"), null),
+        ),
+    ).toBe("");
+
+    expect(
+      command &&
+        appCommandDisabledReason(
+          command,
+          appState(
+            graph,
+            toggleSelectedNode(
+              toggleSelectedNode(emptyViewState(), "A"),
+              "ABC",
+            ),
+            null,
+          ),
+        ),
+    ).toBe("");
   });
 
   test("creates a circle from two selected free points", () => {
@@ -116,7 +170,7 @@ describe("app/commands", () => {
     ).toBe("");
   });
 
-  test("creates a triangle from three selected free points", () => {
+  test("joins three selected free points into a triangle", () => {
     const graph = createGraph([
       freePoint("P1", 0, 0, "P1"),
       freePoint("P2", 2, 0, "P2"),
@@ -128,7 +182,7 @@ describe("app/commands", () => {
       "P3",
     );
 
-    const result = appCommandForKey("t")?.run(
+    const result = appCommandForKey("j")?.run(
       appState(graph, viewState, null),
     );
 
@@ -152,7 +206,7 @@ describe("app/commands", () => {
       "T1",
     );
 
-    const command = appCommandForKey("t");
+    const command = appCommandForKey("j");
     const state = appState(graph, viewState, null);
 
     expect(command && appCommandDisabledReason(command, state)).toBe("");

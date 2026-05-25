@@ -11,6 +11,7 @@ import {
 import {
   centroidConstruction,
   circleConstruction,
+  segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
 } from "./constructions";
@@ -123,4 +124,44 @@ describe("representation/constructions", () => {
       midpointNode("M_S_A_C", "S_A_C", "M_S_A_C"),
     ]);
   });
+  test("creates a segment from two free points", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+    ]);
+
+    expect(segmentConstruction(graph, "A", "B")).toEqual([
+      segmentNode("S_A_B", "A", "B"),
+    ]);
+  });
+
+  test("does not duplicate an existing segment in reverse endpoint order", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      segmentNode("AB", "B", "A"),
+    ]);
+
+    expect(segmentConstruction(graph, "A", "B")).toEqual([]);
+  });
+
+  test("rejects invalid segment endpoints", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      triangleNode("ABC", "A", "B", "C"),
+    ]);
+
+    expect(() => segmentConstruction(graph, "A", "A")).toThrow(
+      "Cannot create segment from duplicate endpoints",
+    );
+    expect(() => segmentConstruction(graph, "A", "missing")).toThrow(
+      "Cannot create segment with missing endpoint: missing",
+    );
+    expect(() => segmentConstruction(graph, "A", "ABC")).toThrow(
+      "Cannot create segment with constrained endpoint: ABC",
+    );
+  });
+
 });
