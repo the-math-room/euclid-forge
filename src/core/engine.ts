@@ -15,13 +15,13 @@ import type { NodeId } from "../representation/node";
 import type { AppState } from "../app/appState";
 import { appState } from "../app/appState";
 import { emptyViewState } from "../app/viewState";
-import type { SerializedWorkspace } from "../app/workspace";
+import type { GeometryWorkspace } from "./workspace";
 import {
   deserializeWorkspace,
   serializeWorkspace,
 } from "../app/workspace";
 
-export type GeometryEngineInput = Graph | AppState | SerializedWorkspace;
+export type GeometryEngineInput = Graph | AppState | GeometryWorkspace;
 
 export type GeometryEngine = Readonly<{
   graph: () => Graph;
@@ -31,7 +31,7 @@ export type GeometryEngine = Readonly<{
   dependentsOf: (id: NodeId) => readonly NodeId[];
   transitiveDependentsOf: (ids: Iterable<NodeId>) => ReadonlySet<NodeId>;
   applyEdit: (edit: GraphEdit) => GeometryEngine;
-  serialize: () => SerializedWorkspace;
+  serialize: () => GeometryWorkspace;
 }>;
 
 export function createGeometryEngine(input: GeometryEngineInput): GeometryEngine {
