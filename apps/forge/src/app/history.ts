@@ -82,9 +82,6 @@ export function snapshotFromAppState(state: AppState): AppStateSnapshot {
   });
 }
 
-function snapshotsEqual(
-  a: AppStateSnapshot,
-  b: AppStateSnapshot,
-): boolean {
+function snapshotsEqual(a: AppStateSnapshot, b: AppStateSnapshot): boolean {
   return a.graph === b.graph && a.viewState === b.viewState;
 }

@@ -1,9 +1,7 @@
 import { vec2 } from "@euclid-forge/core";
 import type { Viewport } from "@euclid-forge/core";
 
-export function testViewport(
-  overrides: Partial<Viewport> = {},
-): Viewport {
+export function testViewport(overrides: Partial<Viewport> = {}): Viewport {
   return {
     width: 800,
     height: 600,

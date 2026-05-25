@@ -36,7 +36,6 @@ function evaluatedScene(values: readonly EvaluatedGeometry[]) {
   });
 }
 
-
 describe("interaction/hitTestPoint", () => {
   const viewport = testViewport();
 
@@ -164,11 +163,21 @@ describe("interaction/hitTestFreePoint", () => {
     const evaluated = evaluateGraph(graph);
 
     expect(
-      hitTestFreePoint(graph, evaluated, viewport, worldToScreen(viewport, vec2(0, -1))),
+      hitTestFreePoint(
+        graph,
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, -1)),
+      ),
     ).toBeNull();
 
     expect(
-      hitTestFreePoint(graph, evaluated, viewport, worldToScreen(viewport, vec2(0, 0))),
+      hitTestFreePoint(
+        graph,
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 0)),
+      ),
     ).toBeNull();
   });
 
@@ -181,7 +190,12 @@ describe("interaction/hitTestFreePoint", () => {
     const evaluated = evaluateGraph(graph);
 
     expect(
-      hitTestFreePoint(graph, evaluated, viewport, worldToScreen(viewport, vec2(0, 0))),
+      hitTestFreePoint(
+        graph,
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 0)),
+      ),
     ).toBe("B");
   });
 
@@ -199,7 +213,6 @@ describe("interaction/hitTestFreePoint", () => {
     ).toBeNull();
   });
 });
-
 
 describe("interaction/hitTestSegmentSelection", () => {
   const viewport = testViewport();
@@ -276,7 +289,11 @@ describe("interaction/hitTestTriangleSelection", () => {
     const evaluated = evaluateGraph(graph);
 
     expect(
-      hitTestTriangleSelection(evaluated, viewport, worldToScreen(viewport, vec2(0, 0))),
+      hitTestTriangleSelection(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 0)),
+      ),
     ).toEqual({ id: "ABC" });
   });
 
@@ -294,8 +311,9 @@ describe("interaction/hitTestTriangleSelection", () => {
     const constrainedOnly = {
       values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
       ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
-    
-  issues: [],};
+
+      issues: [],
+    };
 
     expect(
       hitTestTriangleSelection(
@@ -340,7 +358,11 @@ describe("interaction/hitTestTriangleSelection", () => {
     const evaluated = evaluateGraph(graph);
 
     expect(
-      hitTestTriangleSelection(evaluated, viewport, worldToScreen(viewport, vec2(3, 3))),
+      hitTestTriangleSelection(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(3, 3)),
+      ),
     ).toBeNull();
   });
 });
@@ -359,10 +381,12 @@ describe("interaction/hitTestTriangleInterior", () => {
     const evaluated = evaluateGraph(graph);
     const screen = worldToScreen(viewport, vec2(0, 0));
 
-    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toEqual({
-      id: "ABC",
-      vertexIds: ["A", "B", "C"],
-    });
+    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toEqual(
+      {
+        id: "ABC",
+        vertexIds: ["A", "B", "C"],
+      },
+    );
   });
 
   test("does not hit a triangle with a constrained vertex", () => {
@@ -378,10 +402,12 @@ describe("interaction/hitTestTriangleInterior", () => {
     const evaluated = evaluateGraph(graph);
     const screen = worldToScreen(viewport, vec2(0, -0.5));
 
-    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toEqual({
-      id: "ABC",
-      vertexIds: ["A", "B", "C"],
-    });
+    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toEqual(
+      {
+        id: "ABC",
+        vertexIds: ["A", "B", "C"],
+      },
+    );
   });
 
   test("drags the later-rendered overlapping triangle", () => {
@@ -427,8 +453,9 @@ describe("interaction/hitTestTriangleInterior", () => {
     const constrainedOnly = {
       values: new Map([...evaluated.values].filter(([id]) => id === "ABG")),
       ordered: [...evaluated.ordered].filter((value) => value.id === "ABG"),
-    
-  issues: [],};
+
+      issues: [],
+    };
 
     expect(
       hitTestTriangleInterior(graph, constrainedOnly, viewport, screen),
@@ -446,7 +473,9 @@ describe("interaction/hitTestTriangleInterior", () => {
     const evaluated = evaluateGraph(graph);
     const screen = worldToScreen(viewport, vec2(3, 3));
 
-    expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toBeNull();
+    expect(
+      hitTestTriangleInterior(graph, evaluated, viewport, screen),
+    ).toBeNull();
   });
   test("uses z-index to choose among overlapping area hits", () => {
     const evaluated = evaluatedScene([
@@ -513,5 +542,4 @@ describe("interaction/hitTestTriangleInterior", () => {
       distancePx: 0,
     });
   });
-
 });

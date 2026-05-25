@@ -35,11 +35,7 @@ export function applyTransition(input: ApplyTransitionInput): void {
   }
 }
 
-
-function applyAppEffect(
-  input: ApplyTransitionInput,
-  effect: AppEffect,
-): void {
+function applyAppEffect(input: ApplyTransitionInput, effect: AppEffect): void {
   switch (effect.kind) {
     case "SHOW_STATUS":
       input.showStatusMessage(effect.message);

@@ -38,18 +38,19 @@ describe("app/appController", () => {
     ]);
     const viewport = testViewport();
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0.25, 0.25)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0.25, 0.25)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect(transition.state.viewState.selectedNodeIds.has("circle")).toBe(true);
     expect(transition.history).toBe("commit");
   });
-
-
 
   test("joins two selected free points into a segment with J", () => {
     const graph = createGraph([
@@ -137,7 +138,6 @@ describe("app/appController", () => {
     expect(transition.shouldRender).toBe(false);
   });
 
-
   test("creates a segment intersection from two selected segments with I", () => {
     const graph = createGraph([
       freePoint("A", -1, 0, "A"),
@@ -184,7 +184,6 @@ describe("app/appController", () => {
         "Select exactly two curve nodes, such as segments or circles, to create an intersection.",
     });
   });
-
 
   test("I creates curve intersections for selected non-segment curve pairs", () => {
     const graph = createGraph([
@@ -300,12 +299,15 @@ describe("app/appController", () => {
       centroidNode("G", "ABC", "G"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual(["G"]);
     expect(transition.shouldRender).toBe(true);
@@ -318,12 +320,15 @@ describe("app/appController", () => {
       segmentNode("AB", "A", "B"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, -1)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, -1)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual(["AB"]);
     expect(transition.shouldRender).toBe(true);
@@ -332,12 +337,15 @@ describe("app/appController", () => {
   test("pointerdown on a free point begins point drag", () => {
     const graph = createGraph([freePoint("A", -2, -1, "A")]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState).toEqual({
       kind: "FREE_POINT",
@@ -391,12 +399,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "A"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState).toBeNull();
     expect(transition.effects).not.toContainEqual(
@@ -416,12 +427,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "A"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
     expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["A"]);
@@ -440,12 +454,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "AB"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, -1)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, -1)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
     expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["AB"]);
@@ -465,12 +482,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "ABC"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
     expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["ABC"]);
@@ -490,12 +510,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "ABC"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState).toBeNull();
     expect(transition.effects).not.toContainEqual(
@@ -521,12 +544,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "ABC"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
     expect([...transition.state.viewState.hiddenNodeIds]).toEqual(["ABC"]);
@@ -546,12 +572,15 @@ describe("app/appController", () => {
       toggleSelectedNode(emptyViewState(), "A"),
     );
 
-    const transition = handlePointerDown(appState(graph, hiddenViewState, null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, hiddenViewState, null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState).toBeNull();
     expect(transition.effects).not.toContainEqual(
@@ -686,12 +715,15 @@ describe("app/appController", () => {
       triangleNode("ABC", "A", "B", "C"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState?.kind).toBe("BODY");
 
@@ -700,13 +732,13 @@ describe("app/appController", () => {
     }
 
     expect(transition.state.dragState.initialPointerWorld).toEqual(vec2(0, 0));
-    expect(
-      [...transition.state.dragState.initialSourcePointPositions],
-    ).toEqual([
-      ["A", vec2(-2, -1)],
-      ["B", vec2(2, -1)],
-      ["C", vec2(0, 2)],
-    ]);
+    expect([...transition.state.dragState.initialSourcePointPositions]).toEqual(
+      [
+        ["A", vec2(-2, -1)],
+        ["B", vec2(2, -1)],
+        ["C", vec2(0, 2)],
+      ],
+    );
   });
 
   test("triangle drag computes positions from the drag start rather than previous frame", () => {
@@ -743,15 +775,9 @@ describe("app/appController", () => {
       shiftKey: false,
     });
 
-    expect(second.state.graph.byId.get("A")).toEqual(
-      freePoint("A", 0, 2, "A"),
-    );
-    expect(second.state.graph.byId.get("B")).toEqual(
-      freePoint("B", 4, 2, "B"),
-    );
-    expect(second.state.graph.byId.get("C")).toEqual(
-      freePoint("C", 2, 5, "C"),
-    );
+    expect(second.state.graph.byId.get("A")).toEqual(freePoint("A", 0, 2, "A"));
+    expect(second.state.graph.byId.get("B")).toEqual(freePoint("B", 4, 2, "B"));
+    expect(second.state.graph.byId.get("C")).toEqual(freePoint("C", 2, 5, "C"));
   });
 
   test("pointerdown drags the later-rendered overlapping triangle", () => {
@@ -766,12 +792,15 @@ describe("app/appController", () => {
       triangleNode("DEF", "D", "E", "F"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState?.kind).toBe("BODY");
 
@@ -794,12 +823,15 @@ describe("app/appController", () => {
       triangleNode("DEF", "D", "E", "F"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect([...transition.state.viewState.selectedNodeIds]).toEqual(["DEF"]);
   });
@@ -807,12 +839,15 @@ describe("app/appController", () => {
   test("pointermove with no drag hovers a free point", () => {
     const graph = createGraph([freePoint("A", -2, -1, "A")]);
 
-    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerMove(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.viewState.hoveredNodeId).toBe("A");
     expect(transition.shouldRender).toBe(true);
@@ -831,12 +866,15 @@ describe("app/appController", () => {
       triangleNode("DEF", "D", "E", "F"),
     ]);
 
-    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerMove(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.viewState.hoveredNodeId).toBe("DEF");
   });
@@ -848,12 +886,15 @@ describe("app/appController", () => {
       segmentNode("AB", "A", "B"),
     ]);
 
-    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0, -1)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerMove(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0, -1)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect(transition.state.viewState.hoveredNodeId).toBe("AB");
   });
@@ -995,12 +1036,15 @@ describe("app/appController", () => {
   test("selection changes request history commits", () => {
     const graph = createGraph([freePoint("A", -2, -1, "A")]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: true,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: true,
+      },
+    );
 
     expect(transition.history).toBe("commit");
   });
@@ -1008,12 +1052,15 @@ describe("app/appController", () => {
   test("hover changes do not request history commits", () => {
     const graph = createGraph([freePoint("A", -2, -1, "A")]);
 
-    const transition = handlePointerMove(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(-2, -1)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerMove(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(-2, -1)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.history).toBe("ignore");
   });
@@ -1043,10 +1090,11 @@ describe("app/appController", () => {
 
     expect(transition.history).toBe("commit");
     expect(transition.state.graph.byId.has("A")).toBe(false);
-    expect(transition.state.graph.byId.get("B")).toEqual(freePoint("B", 1, 1, "B"));
+    expect(transition.state.graph.byId.get("B")).toEqual(
+      freePoint("B", 1, 1, "B"),
+    );
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
   });
-
 
   test("delete key explains why selected nodes cannot be deleted", () => {
     const graph = createGraph([
@@ -1078,12 +1126,15 @@ describe("app/appController", () => {
       circleNode("circle", "A", "B"),
     ]);
 
-    const transition = handlePointerDown(appState(graph, emptyViewState(), null), {
-      pointerId: 1,
-      point: worldToScreen(viewport, vec2(0.5, 0)),
-      viewport,
-      shiftKey: false,
-    });
+    const transition = handlePointerDown(
+      appState(graph, emptyViewState(), null),
+      {
+        pointerId: 1,
+        point: worldToScreen(viewport, vec2(0.5, 0)),
+        viewport,
+        shiftKey: false,
+      },
+    );
 
     expect(transition.state.dragState?.kind).toBe("BODY");
 
@@ -1093,12 +1144,12 @@ describe("app/appController", () => {
 
     expect(transition.state.dragState.nodeId).toBe("circle");
     expect(transition.state.dragState.sourcePointIds).toEqual(["A", "B"]);
-    expect(
-      [...transition.state.dragState.initialSourcePointPositions],
-    ).toEqual([
-      ["A", vec2(0, 0)],
-      ["B", vec2(2, 0)],
-    ]);
+    expect([...transition.state.dragState.initialSourcePointPositions]).toEqual(
+      [
+        ["A", vec2(0, 0)],
+        ["B", vec2(2, 0)],
+      ],
+    );
   });
 
   test("circle body drag translates center and through points", () => {
@@ -1153,5 +1204,4 @@ describe("app/appController", () => {
       zIndex: 2,
     });
   });
-
 });

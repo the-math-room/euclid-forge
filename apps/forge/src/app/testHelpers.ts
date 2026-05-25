@@ -1,9 +1,7 @@
 import { vec2 } from "@euclid-forge/core";
 import type { ViewState } from "./viewState";
 
-export function testViewState(
-  overrides: Partial<ViewState> = {},
-): ViewState {
+export function testViewState(overrides: Partial<ViewState> = {}): ViewState {
   return {
     selectedNodeIds: new Set(),
     hiddenNodeIds: new Set(),

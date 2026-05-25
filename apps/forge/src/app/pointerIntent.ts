@@ -99,10 +99,7 @@ export function pointerDownIntent(
   };
 }
 
-export function hoverIntent(
-  state: AppState,
-  input: PointerInput,
-): HoverIntent {
+export function hoverIntent(state: AppState, input: PointerInput): HoverIntent {
   const intent = pointerDownIntent(state, input);
 
   switch (intent.kind) {

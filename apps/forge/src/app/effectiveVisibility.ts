@@ -49,4 +49,3 @@ export function clearEffectivelyHiddenSelection(
     selectedNodeIds,
   });
 }
-

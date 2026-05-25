@@ -41,9 +41,6 @@ function selectedState(ids: readonly string[]) {
 }
 
 describe("app/selectionPredicates", () => {
-
-
-
   test("selects exactly two constructible curve nodes", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
@@ -141,10 +138,7 @@ describe("app/selectionPredicates", () => {
   });
 
   test("selects exactly two free points for circle construction", () => {
-    expect(selectedCirclePoints(selectedState(["A", "B"]))).toEqual([
-      "A",
-      "B",
-    ]);
+    expect(selectedCirclePoints(selectedState(["A", "B"]))).toEqual(["A", "B"]);
 
     expect(selectedCirclePoints(selectedState(["A"]))).toBeNull();
     expect(selectedCirclePoints(selectedState(["A", "ABC"]))).toBeNull();

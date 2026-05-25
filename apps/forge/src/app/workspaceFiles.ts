@@ -52,9 +52,7 @@ export function downloadWorkspaceJson(
   }
 }
 
-export function chooseWorkspaceFile(
-  document: Document,
-): Promise<File | null> {
+export function chooseWorkspaceFile(document: Document): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
 

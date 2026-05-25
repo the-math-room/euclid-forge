@@ -11,10 +11,7 @@ import {
 import { worldToScreen } from "@euclid-forge/core";
 import { testViewport } from "../testHelpers/viewport";
 import { appState } from "./appState";
-import {
-  hoverIntent,
-  pointerDownIntent,
-} from "./pointerIntent";
+import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import {
   emptyViewState,
   hideSelectedNodes,
@@ -45,7 +42,6 @@ describe("app/pointerIntent", () => {
       id: "circle",
     });
   });
-
 
   test("normal pointerdown drags a free point before triangle interiors", () => {
     const graph = createGraph([
@@ -267,5 +263,4 @@ describe("app/pointerIntent", () => {
       sourcePointIds: ["A", "B"],
     });
   });
-
 });

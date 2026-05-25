@@ -12,14 +12,10 @@ import {
 import { applyGraphEdit } from "@euclid-forge/core";
 import { curveIntersectionNode } from "@euclid-forge/core";
 import type { GeometryNode, NodeId } from "@euclid-forge/core";
-import {
-  deleteNodesDisabledReason,
-} from "@euclid-forge/core";
+import { deleteNodesDisabledReason } from "@euclid-forge/core";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
-import {
-  clearEffectivelyHiddenSelection,
-} from "./effectiveVisibility";
+import { clearEffectivelyHiddenSelection } from "./effectiveVisibility";
 import {
   requireSelectedCirclePoints,
   requireSelectedConstructibleCurveTuple,
@@ -150,11 +146,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
     keys: ["0"],
     run: (state) =>
       ignore(
-        appState(
-          state.graph,
-          resetViewport(state.viewState),
-          state.dragState,
-        ),
+        appState(state.graph, resetViewport(state.viewState), state.dragState),
       ),
   }),
 
@@ -281,7 +273,6 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       );
     },
   }),
-
 
   command({
     id: "create-segment-intersection",
@@ -483,11 +474,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
       state.viewState.hiddenNodeIds.size > 0 ? null : "",
     run: (state) =>
       commit(
-        appState(
-          state.graph,
-          unhideAllNodes(state.viewState),
-          state.dragState,
-        ),
+        appState(state.graph, unhideAllNodes(state.viewState), state.dragState),
       ),
   }),
 ]);
@@ -548,10 +535,7 @@ function commit(state: AppState): AppCommandResult {
   });
 }
 
-function ignore(
-  state: AppState,
-  statusMessage?: string,
-): AppCommandResult {
+function ignore(state: AppState, statusMessage?: string): AppCommandResult {
   return Object.freeze({
     state,
     history: "ignore",
@@ -562,8 +546,6 @@ function ignore(
 function viewportPanStep(state: AppState): number {
   return 40 / state.viewState.viewportZoom;
 }
-
-
 
 function curveIntersectionConstruction(
   state: AppState,
@@ -628,9 +610,7 @@ function sameUnorderedPair(
   );
 }
 
-function nextCurveIntersectionLabel(
-  nodes: readonly GeometryNode[],
-): string {
+function nextCurveIntersectionLabel(nodes: readonly GeometryNode[]): string {
   let index = 1;
 
   while (
@@ -671,7 +651,6 @@ function nextCurveIntersectionId(
 function safeIdPart(value: string): string {
   return value.replace(/[^A-Za-z0-9_]+/g, "_");
 }
-
 
 function segmentIntersectionDisabledReason(state: AppState): string | null {
   if (selectedConstructibleCurveTuple(state, 2)) {

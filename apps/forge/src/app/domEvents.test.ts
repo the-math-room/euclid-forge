@@ -241,5 +241,4 @@ describe("app/domEvents", () => {
       expect.objectContaining({}),
     );
   });
-
 });

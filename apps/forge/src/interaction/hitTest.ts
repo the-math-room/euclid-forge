@@ -17,13 +17,7 @@ import type { Graph } from "@euclid-forge/core";
 import type { NodeId } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
 
-export type {
-  CircleHit,
-  HitTarget,
-  PointHit,
-  SegmentHit,
-  TriangleHitTarget,
-};
+export type { CircleHit, HitTarget, PointHit, SegmentHit, TriangleHitTarget };
 
 export type TriangleSelectionHit = Readonly<{
   id: NodeId;
@@ -45,7 +39,9 @@ export function hitTestTargetByClass(
   screenPoint: ScreenPoint,
   hitClass: GeometryHitClass,
 ): HitTarget | null {
-  return bestHitForClass(evaluated, viewport, screenPoint, hitClass)?.target ?? null;
+  return (
+    bestHitForClass(evaluated, viewport, screenPoint, hitClass)?.target ?? null
+  );
 }
 
 export function hitTestSelectionTarget(
@@ -149,7 +145,9 @@ export function hitTestFreePoint(
   viewport: Viewport,
   screenPoint: ScreenPoint,
 ): NodeId | null {
-  return hitTestFreePointTarget(graph, evaluated, viewport, screenPoint)?.id ?? null;
+  return (
+    hitTestFreePointTarget(graph, evaluated, viewport, screenPoint)?.id ?? null
+  );
 }
 
 export function hitTestSegmentTarget(

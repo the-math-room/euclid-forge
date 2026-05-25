@@ -36,14 +36,10 @@ describe("app/history", () => {
 
   test("snapshot clears hover and excludes drag state", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
-    const state = appState(
-      graph,
-      setHoveredNode(emptyViewState(), "A"),
-      {
-        kind: "FREE_POINT",
-        nodeId: "A",
-      },
-    );
+    const state = appState(graph, setHoveredNode(emptyViewState(), "A"), {
+      kind: "FREE_POINT",
+      nodeId: "A",
+    });
 
     const snapshot = snapshotFromAppState(state);
 

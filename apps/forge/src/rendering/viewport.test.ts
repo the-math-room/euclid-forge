@@ -164,7 +164,6 @@ describe("rendering/viewport", () => {
 
     expect(rotatedAngle).toBeCloseTo(unrotatedAngle);
   });
-
 });
 
 function distance(

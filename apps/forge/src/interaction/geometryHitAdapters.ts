@@ -95,9 +95,7 @@ export function bodyDragForGeometryNode(
   return Object.freeze({ sourcePointIds });
 }
 
-function bodyDragSourcePointIds(
-  node: GeometryNode,
-): readonly NodeId[] | null {
+function bodyDragSourcePointIds(node: GeometryNode): readonly NodeId[] | null {
   switch (node.kind) {
     case "LINE":
       return Object.freeze([node.a, node.b]);

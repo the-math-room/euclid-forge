@@ -182,10 +182,7 @@ describe("app/viewState", () => {
   test("resets the viewport while preserving selection and hidden state", () => {
     const viewState = hideSelectedNodes(
       toggleSelectedNode(
-        setViewportZoom(
-          setViewportCenter(emptyViewState(), vec2(3, -4)),
-          120,
-        ),
+        setViewportZoom(setViewportCenter(emptyViewState(), vec2(3, -4)), 120),
         "A",
       ),
     );
@@ -263,10 +260,7 @@ describe("app/viewState", () => {
 
   test("resets viewport rotation without changing center or zoom", () => {
     const viewState = setViewportRotation(
-      setViewportZoom(
-        setViewportCenter(emptyViewState(), vec2(2, 3)),
-        120,
-      ),
+      setViewportZoom(setViewportCenter(emptyViewState(), vec2(2, 3)), 120),
       Math.PI / 2,
     );
 
@@ -276,5 +270,4 @@ describe("app/viewState", () => {
     expect(next.viewportZoom).toBe(120);
     expect(next.viewportRotation).toBe(0);
   });
-
 });

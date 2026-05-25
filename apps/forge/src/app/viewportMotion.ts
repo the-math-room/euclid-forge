@@ -50,9 +50,7 @@ export function stopViewportRotation(
   return emptyViewportMotionState();
 }
 
-export function isViewportMotionActive(
-  motion: ViewportMotionState,
-): boolean {
+export function isViewportMotionActive(motion: ViewportMotionState): boolean {
   return motion.rotateDirection !== 0;
 }
 

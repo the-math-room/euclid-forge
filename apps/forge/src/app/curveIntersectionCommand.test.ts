@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createGraph } from "@euclid-forge/core";
-import {
-  circleNode,
-  freePoint,
-} from "@euclid-forge/core";
+import { circleNode, freePoint } from "@euclid-forge/core";
 import { appState } from "./appState";
 import { appCommandForKey } from "./commands";
 import { emptyViewState, toggleSelectedNode } from "./viewState";
@@ -44,8 +41,7 @@ describe("app curve intersection command", () => {
     ]);
     expect(
       curveIntersections.every(
-        (node) =>
-          node.curveA === "circleA" && node.curveB === "circleB",
+        (node) => node.curveA === "circleA" && node.curveB === "circleB",
       ),
     ).toBe(true);
   });
@@ -69,7 +65,8 @@ describe("app curve intersection command", () => {
     expect(result).toEqual({
       state: appState(graph, viewState, null),
       history: "ignore",
-      statusMessage: "No currently defined curve intersection candidates to create.",
+      statusMessage:
+        "No currently defined curve intersection candidates to create.",
     });
   });
 });

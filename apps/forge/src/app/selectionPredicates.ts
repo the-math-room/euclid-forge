@@ -89,7 +89,8 @@ export function requireSelectedTriangleVertices(
 // Backward-compatible aliases for existing command/test code. These are now
 // construction-input predicates, not editability predicates.
 export const selectedFreePointTuple = selectedConstructiblePointTuple;
-export const requireSelectedFreePointTuple = requireSelectedConstructiblePointTuple;
+export const requireSelectedFreePointTuple =
+  requireSelectedConstructiblePointTuple;
 export const selectedFreePointVertices = selectedTriangleVertices;
 export const requireSelectedFreePointVertices = requireSelectedTriangleVertices;
 
@@ -187,5 +188,8 @@ export function requireSelectedTriangle(state: AppState): NodeId {
   return triangle;
 }
 
-type TupleOf<T, N extends number, R extends readonly T[] = readonly []> =
-  R["length"] extends N ? R : TupleOf<T, N, readonly [...R, T]>;
+type TupleOf<
+  T,
+  N extends number,
+  R extends readonly T[] = readonly [],
+> = R["length"] extends N ? R : TupleOf<T, N, readonly [...R, T]>;

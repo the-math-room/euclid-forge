@@ -46,9 +46,7 @@ export async function openWorkspace(input: OpenWorkspaceInput): Promise<void> {
   } catch (error) {
     input.environment.consoleError(error);
     input.environment.alert(
-      error instanceof Error
-        ? error.message
-        : "Could not open workspace file",
+      error instanceof Error ? error.message : "Could not open workspace file",
     );
   }
 }

@@ -12,7 +12,11 @@ import {
   effectiveHiddenNodeIds,
 } from "./effectiveVisibility";
 import { testViewState } from "./testHelpers";
-import { emptyViewState, hideSelectedNodes, toggleSelectedNode } from "./viewState";
+import {
+  emptyViewState,
+  hideSelectedNodes,
+  toggleSelectedNode,
+} from "./viewState";
 
 describe("app/effectiveHiddenNodeIds", () => {
   test("returns the explicit hidden set when nothing is hidden", () => {
@@ -79,10 +83,7 @@ describe("app/effectiveHiddenNodeIds", () => {
     ]);
 
     const viewState = hideSelectedNodes(
-      toggleSelectedNode(
-        toggleSelectedNode(emptyViewState(), "ABC"),
-        "D",
-      ),
+      toggleSelectedNode(toggleSelectedNode(emptyViewState(), "ABC"), "D"),
     );
 
     expect([...effectiveHiddenNodeIds(graph, viewState)].sort()).toEqual([
@@ -115,9 +116,7 @@ describe("app/clearEffectivelyHiddenSelection", () => {
       "G",
     );
 
-    const hidden = hideSelectedNodes(
-      toggleSelectedNode(selected, "ABC"),
-    );
+    const hidden = hideSelectedNodes(toggleSelectedNode(selected, "ABC"));
 
     const next = clearEffectivelyHiddenSelection(graph, hidden);
 

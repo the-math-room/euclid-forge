@@ -24,8 +24,20 @@ describe("app command status results", () => {
 
     // This test documents the result shape; actual command-table mutation is
     // intentionally avoided because APP_COMMANDS is frozen.
-    expect(injected.run(appState(createGraph([freePoint("A", 0, 0, "A")]), emptyViewState(), null))).toEqual({
-      state: appState(createGraph([freePoint("A", 0, 0, "A")]), emptyViewState(), null),
+    expect(
+      injected.run(
+        appState(
+          createGraph([freePoint("A", 0, 0, "A")]),
+          emptyViewState(),
+          null,
+        ),
+      ),
+    ).toEqual({
+      state: appState(
+        createGraph([freePoint("A", 0, 0, "A")]),
+        emptyViewState(),
+        null,
+      ),
       history: "ignore",
       statusMessage: "Command status message",
     });

@@ -141,7 +141,9 @@ test("deletes an isolated point and undo restores it", async ({ page }) => {
 
   await expectNoYellowPointNear(frame.canvas, { x: 4, y: 3 });
 
-  await page.keyboard.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z");
+  await page.keyboard.press(
+    process.platform === "darwin" ? "Meta+Z" : "Control+Z",
+  );
   await waitForAnimationFrame(page);
 
   await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
@@ -172,4 +174,3 @@ test("creates a circle from two selected points", async ({ page }) => {
 
   await expectLightEdgeNear(frame.canvas, { x: 3, y: 3 });
 });
-

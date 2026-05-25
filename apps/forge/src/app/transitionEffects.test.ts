@@ -9,9 +9,7 @@ import {
 } from "./transitionEffects";
 import { emptyViewState } from "./viewState";
 
-function transition(
-  overrides: Partial<AppTransition> = {},
-): AppTransition {
+function transition(overrides: Partial<AppTransition> = {}): AppTransition {
   return {
     state: appState(
       createGraph([freePoint("A", 0, 0, "A")]),

@@ -4,10 +4,7 @@ import { freePoint } from "@euclid-forge/core";
 import { appState } from "./appState";
 import { initialHistory } from "./history";
 import type { WorkspaceActionEnvironment } from "./workspaceActions";
-import {
-  openWorkspace,
-  saveWorkspace,
-} from "./workspaceActions";
+import { openWorkspace, saveWorkspace } from "./workspaceActions";
 import { emptyViewState } from "./viewState";
 
 function environmentWithDocument(
@@ -140,7 +137,9 @@ describe("app/workspaceActions", () => {
   });
 
   test("open workspace reports parse or validation failures without mutating state", async () => {
-    const environment = environmentWithDocument(documentWithChosenFile(fakeFile("{")));
+    const environment = environmentWithDocument(
+      documentWithChosenFile(fakeFile("{")),
+    );
     const setState = vi.fn();
     const setHistory = vi.fn();
     const requestRender = vi.fn();

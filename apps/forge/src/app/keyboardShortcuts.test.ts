@@ -72,10 +72,7 @@ describe("app/keyboardShortcuts", () => {
   });
 
   test("ignores editable keyboard targets", () => {
-    const target = (
-      tagName: string,
-      isContentEditable = false,
-    ): EventTarget =>
+    const target = (tagName: string, isContentEditable = false): EventTarget =>
       ({
         tagName,
         isContentEditable,

@@ -141,10 +141,7 @@ export function distanceToSegmentScreen(
     return Math.hypot(apx, apy);
   }
 
-  const t = Math.max(
-    0,
-    Math.min(1, (apx * abx + apy * aby) / abLengthSquared),
-  );
+  const t = Math.max(0, Math.min(1, (apx * abx + apy * aby) / abLengthSquared));
   const closest = {
     x: a.x + t * abx,
     y: a.y + t * aby,
@@ -209,12 +206,7 @@ function signedTriangleArea(
   b: Readonly<{ x: number; y: number }>,
   c: Readonly<{ x: number; y: number }>,
 ): number {
-  return (
-    (a.x * (b.y - c.y) +
-      b.x * (c.y - a.y) +
-      c.x * (a.y - b.y)) /
-    2
-  );
+  return (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2;
 }
 
 function sameSign(a: number, b: number): boolean {

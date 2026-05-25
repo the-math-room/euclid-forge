@@ -3,14 +3,8 @@ import { applyGraphEdit } from "@euclid-forge/core";
 import type { NodeId } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
 import { screenToWorld } from "@euclid-forge/core";
-import {
-  appCommandDisabledReason,
-  appCommandForKey,
-} from "./commands";
-import {
-  hoverIntent,
-  pointerDownIntent,
-} from "./pointerIntent";
+import { appCommandDisabledReason, appCommandForKey } from "./commands";
+import { hoverIntent, pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
 import {
@@ -69,10 +63,7 @@ export type PointerInput = Readonly<{
   shiftKey: boolean;
 }>;
 
-export function handleKeyDown(
-  state: AppState,
-  input: KeyInput,
-): AppTransition {
+export function handleKeyDown(state: AppState, input: KeyInput): AppTransition {
   const command = appCommandForKey(input.key, {
     shiftKey: input.shiftKey ?? false,
   });
@@ -107,11 +98,7 @@ export function handlePointerDown(
   switch (intent.kind) {
     case "SELECT_NODE":
       return changed(
-        appState(
-          state.graph,
-          toggleSelectedNode(viewState, intent.id),
-          null,
-        ),
+        appState(state.graph, toggleSelectedNode(viewState, intent.id), null),
         "commit",
       );
 
@@ -277,7 +264,6 @@ function hitTestHoverTarget(
       return null;
   }
 }
-
 
 function unchanged(state: AppState): AppTransition {
   return transition({

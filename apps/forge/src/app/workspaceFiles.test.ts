@@ -60,9 +60,9 @@ describe("app/workspaceFiles", () => {
   });
 
   test("creates deterministic default workspace file names", () => {
-    expect(
-      defaultWorkspaceFileName(new Date("2026-05-24T03:58:14.123Z")),
-    ).toBe("euclid-forge-2026-05-24T03-58-14Z.euclid-forge.json");
+    expect(defaultWorkspaceFileName(new Date("2026-05-24T03:58:14.123Z"))).toBe(
+      "euclid-forge-2026-05-24T03-58-14Z.euclid-forge.json",
+    );
   });
 
   test("downloads workspace JSON and revokes the object URL", () => {
@@ -97,12 +97,7 @@ describe("app/workspaceFiles", () => {
       revokeObjectURL: vi.fn(),
     };
 
-    downloadWorkspaceJson(
-      document,
-      urlApi,
-      state,
-      "test.euclid-forge.json",
-    );
+    downloadWorkspaceJson(document, urlApi, state, "test.euclid-forge.json");
 
     expect(urlApi.createObjectURL).toHaveBeenCalledOnce();
     expect(anchor.href).toBe("blob:test");

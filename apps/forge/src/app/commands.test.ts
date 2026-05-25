@@ -46,7 +46,6 @@ describe("app/commands", () => {
     expect(result?.state.viewState.viewportCenter).toEqual(vec2(-0.5, 0));
   });
 
-
   test("joins two selected free points into a segment", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
@@ -118,7 +117,6 @@ describe("app/commands", () => {
         ),
     ).toBe("");
   });
-
 
   test("joins derived point inputs", () => {
     const graph = createGraph([
@@ -222,7 +220,10 @@ describe("app/commands", () => {
           appState(
             graph,
             toggleSelectedNode(
-              toggleSelectedNode(toggleSelectedNode(emptyViewState(), "A"), "B"),
+              toggleSelectedNode(
+                toggleSelectedNode(emptyViewState(), "A"),
+                "B",
+              ),
               "C",
             ),
             null,
@@ -258,9 +259,7 @@ describe("app/commands", () => {
       "P3",
     );
 
-    const result = appCommandForKey("j")?.run(
-      appState(graph, viewState, null),
-    );
+    const result = appCommandForKey("j")?.run(appState(graph, viewState, null));
 
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.get("T1")).toEqual(
@@ -375,7 +374,9 @@ describe("app/commands", () => {
 
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.has("A")).toBe(false);
-    expect(result?.state.graph.byId.get("B")).toEqual(freePoint("B", 1, 1, "B"));
+    expect(result?.state.graph.byId.get("B")).toEqual(
+      freePoint("B", 1, 1, "B"),
+    );
     expect([...(result?.state.viewState.selectedNodeIds ?? [])]).toEqual([]);
   });
 
@@ -474,5 +475,4 @@ describe("app/commands", () => {
 
     expect(command && appCommandDisabledReason(command, state)).toBe("");
   });
-
 });

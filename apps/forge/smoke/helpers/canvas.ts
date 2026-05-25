@@ -214,6 +214,3 @@ async function countPixelsNearWorld(
     },
   );
 }
-
-
-

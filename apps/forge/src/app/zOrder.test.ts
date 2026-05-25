@@ -53,7 +53,9 @@ describe("app/zOrder", () => {
   });
 
   test("preserves relative order for multi-selection", () => {
-    expect(updatesToObject(bringNodesToFront(graphWithZ(), ["B", "C"]))).toEqual({
+    expect(
+      updatesToObject(bringNodesToFront(graphWithZ(), ["B", "C"])),
+    ).toEqual({
       D: 1,
       B: 2,
       C: 3,

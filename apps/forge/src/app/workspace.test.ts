@@ -34,14 +34,9 @@ describe("app/workspace", () => {
     ]);
 
     const selected = toggleSelectedNode(emptyViewState(), "ABC");
-    const hidden = hideSelectedNodes(
-      toggleSelectedNode(selected, "G"),
-    );
+    const hidden = hideSelectedNodes(toggleSelectedNode(selected, "G"));
     const viewState = setViewportRotation(
-      setViewportZoom(
-        setViewportCenter(hidden, vec2(3, -4)),
-        120,
-      ),
+      setViewportZoom(setViewportCenter(hidden, vec2(3, -4)), 120),
       Math.PI / 3,
     );
 
@@ -64,14 +59,10 @@ describe("app/workspace", () => {
 
   test("does not serialize hover or drag state", () => {
     const graph = createGraph([freePoint("A", 0, 0, "A")]);
-    const state = appState(
-      graph,
-      setHoveredNode(emptyViewState(), "A"),
-      {
-        kind: "FREE_POINT",
-        nodeId: "A",
-      },
-    );
+    const state = appState(graph, setHoveredNode(emptyViewState(), "A"), {
+      kind: "FREE_POINT",
+      nodeId: "A",
+    });
 
     const workspace = serializeWorkspace(state);
     const restored = deserializeWorkspace(workspace);

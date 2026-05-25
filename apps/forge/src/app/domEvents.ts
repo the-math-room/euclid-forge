@@ -7,10 +7,7 @@ import {
   handlePointerUp,
 } from "./appController";
 import type { AppRuntime } from "./appRuntime";
-import {
-  eventPoint,
-  viewportForCanvas,
-} from "./canvasSurface";
+import { eventPoint, viewportForCanvas } from "./canvasSurface";
 import {
   isOpenShortcut,
   isRedoShortcut,
@@ -20,14 +17,8 @@ import {
   viewportRotationDirectionForKey,
 } from "./keyboardShortcuts";
 import type { WorkspaceActionEnvironment } from "./workspaceActions";
-import {
-  openWorkspace,
-  saveWorkspace,
-} from "./workspaceActions";
-import {
-  startViewportRotation,
-  stopViewportRotation,
-} from "./viewportMotion";
+import { openWorkspace, saveWorkspace } from "./workspaceActions";
+import { startViewportRotation, stopViewportRotation } from "./viewportMotion";
 import type { ViewportMotionState } from "./viewportMotion";
 
 export type DomEventBindingsInput = Readonly<{

@@ -74,7 +74,11 @@ function main(): void {
       viewportMotionFrame = null;
 
       const currentState = runtime.getState();
-      const step = stepViewportMotion(currentState, viewportMotion, timestampMs);
+      const step = stepViewportMotion(
+        currentState,
+        viewportMotion,
+        timestampMs,
+      );
       viewportMotion = step.motion;
 
       if (step.state !== currentState) {
