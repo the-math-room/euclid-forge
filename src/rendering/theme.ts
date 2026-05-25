@@ -44,6 +44,9 @@ export const RENDER_THEME = Object.freeze({
 
     hoverStroke: "#94a3b8",
     hoverLineWidthPx: 5,
+
+    selectedStroke: "#f8fafc",
+    selectedLineWidthPx: 6,
   }),
 
   triangle: Object.freeze({

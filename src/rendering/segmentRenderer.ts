@@ -5,6 +5,7 @@ import { worldToScreen } from "./viewport";
 
 export type SegmentRenderOptions = Readonly<{
   hoveredNodeId?: string | null;
+  selectedNodeIds?: ReadonlySet<string>;
 }>;
 
 export function renderSegment(
@@ -17,8 +18,19 @@ export function renderSegment(
   const b = worldToScreen(viewport, segment.b);
 
   const hovered = options.hoveredNodeId === segment.id;
+  const selected = options.selectedNodeIds?.has(segment.id) ?? false;
 
   ctx.save();
+
+  if (selected) {
+    ctx.strokeStyle = RENDER_THEME.segment.selectedStroke;
+    ctx.lineWidth = RENDER_THEME.segment.selectedLineWidthPx;
+
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
 
   if (hovered) {
     ctx.strokeStyle = RENDER_THEME.segment.hoverStroke;
