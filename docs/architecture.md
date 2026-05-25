@@ -28,7 +28,7 @@ styles/           CSS
 
 ## `meaning/`
 
-Pure math. No graph, rendering, or DOM.
+Pure math. No graph, rendering, DOM, or app state.
 
 Examples:
 
@@ -66,6 +66,23 @@ delete selected nodes only when no unselected node depends on them
 
 Blocked deletes produce a reason. The app layer may show that reason, but representation owns the dependency rule.
 
+### Graph edits
+
+Graph edits are the mutation language for durable construction state.
+
+Important current edits:
+
+```txt
+ADD_FREE_POINT
+ADD_NODES
+MOVE_FREE_POINT
+TRANSLATE_FREE_POINTS
+SET_FREE_POINT_POSITIONS
+DELETE_NODES
+```
+
+Body dragging ultimately resolves to moving free source points, usually through `SET_FREE_POINT_POSITIONS`.
+
 ## `evaluation/`
 
 Gives meaning to a validated graph.
@@ -90,6 +107,80 @@ getSegment(id)
 getTriangle(id)
 ```
 
+Evaluated geometry carries two related but distinct ideas:
+
+```txt
+kind        evaluated shape category: POINT / SEGMENT / CIRCLE / TRIANGLE
+sourceKind  source node kind: FREE_POINT / MIDPOINT / CENTROID / SEGMENT / CIRCLE / TRIANGLE
+```
+
+`sourceKind` lets registry dispatch remain explicit without reverse-inferring node kind from evaluated point role.
+
+## `geometry/`
+
+The `geometry/` directory is the controlled cross-layer seam for shape-specific behavior.
+
+A geometry definition may own:
+
+```txt
+representation.dependencies
+evaluation.evaluate
+rendering.layer
+rendering.render
+interaction.hitClass
+interaction.hitTest
+interaction.bodyDrag
+construction.factories
+```
+
+This keeps shape-specific behavior close together while preserving the closed core unions for now.
+
+### Registry responsibilities
+
+The registry provides dispatch for:
+
+```txt
+dependenciesForGeometryNode
+evaluateGeometryNode
+renderGeometryValue
+renderLayerForGeometryValue
+hitGeometryValue
+bodyDragForGeometryNode
+constructionFactoryForGeometryKind
+```
+
+Layer code should use these registry seams rather than open-coding shape switches.
+
+### Body-drag metadata
+
+Body dragging is opt-in per geometry definition.
+
+The registry concept is:
+
+```txt
+interaction.bodyDrag.sourcePointIds(node, context) → readonly NodeId[] | null
+```
+
+A shape is body-draggable only when its definition can name a finite set of free source points whose translation preserves the represented geometry.
+
+Examples:
+
+```txt
+TRIANGLE
+  source points: a, b, c
+  draggable when all three are FREE_POINT nodes
+
+CIRCLE
+  source points: center, through
+  draggable when both are FREE_POINT nodes
+
+MIDPOINT / CENTROID
+  no bodyDrag metadata
+  not directly draggable because inverse semantics are ambiguous
+```
+
+The app layer does not know triangle or circle internals. It asks the registry for body-drag sources and translates those free points.
+
 ## `rendering/`
 
 Draws evaluated geometry.
@@ -98,16 +189,15 @@ Draws evaluated geometry.
 EvaluatedScene + Viewport + render options → canvas pixels
 ```
 
-Global painter order is still centralized in `renderScene.ts`:
+Global painter order is layer-based:
 
 ```txt
-triangles
-circles
-segments
-points
+AREA → LINEAR → POINT
 ```
 
-Within each bucket, actual drawing dispatches through the geometry registry:
+Within each render layer, `zIndex` orders overlapping geometry. This keeps points visually above areas while allowing same-layer shapes such as circles and triangles to stack predictably.
+
+Actual drawing dispatches through the geometry registry:
 
 ```txt
 renderScene
@@ -115,216 +205,131 @@ renderScene
 → geometry definition rendering section
 ```
 
-Rendering may respect selection, hover, and hidden nodes. It does not edit constructions.
+Shape-specific renderer files remain in `rendering/` for canvas drawing mechanics.
 
 ## `interaction/`
 
-Pure hit testing.
+Pure hit testing. No DOM and no app state mutation.
 
-Geometry-specific hit testing is dispatched through the registry:
-
-```txt
-hitTest.ts
-→ hitGeometryValue
-→ geometry definition interaction section
-```
-
-Current hit classes:
+Hit testing uses broad class priority:
 
 ```txt
-POINT
-LINEAR
-AREA
+POINT → LINEAR → AREA
 ```
 
-Selection priority is explicit:
+Within a hit class, `zIndex` decides overlapping winners, with distance as a tie-breaker where applicable.
+
+Generic selection uses:
 
 ```txt
-POINT > LINEAR > AREA
+hitTestSelectionTarget
 ```
 
-Within a class, closest-distance hits win when distance is available; exact ties preserve reverse visual order.
-
-Pointer policy remains app-level:
+Generic body dragging uses:
 
 ```txt
-normal click:
-  free point → triangle body → add point
-
-shift-click:
-  selectable geometry by hit class priority
+hitTestDraggableAreaBody
 ```
 
-Triangles are area-hit by interior. Circles are area-hit by disk, not only circumference.
-
-## `geometry/`
-
-`geometry/` is the intentional cross-sectional seam.
-
-It centralizes per-kind behavior that would otherwise become shotgun surgery across representation, evaluation, rendering, interaction, and construction.
-
-Each geometry definition can include:
-
-```txt
-representation.dependencies
-evaluation.evaluate
-rendering.render
-interaction.hitClass
-interaction.hitTest
-construction.factories
-```
-
-The registry is closed but centralized:
-
-```txt
-GeometryNode remains a closed union.
-Each kind has one definition file.
-geometryRegistry.ts erases definition-specific types at the seam.
-Core loops dispatch through the registry.
-```
-
-This avoids a runtime plugin system and preserves TypeScript exhaustiveness in the canonical node union.
-
-### Registry dispatch points
-
-```txt
-representation/dependencies.ts
-  dependenciesOf(node)
-  → dependenciesForGeometryNode(node)
-
-evaluation/evaluateGraph.ts
-  evaluateGraph(graph)
-  → evaluateGeometryNode(node, context)
-
-rendering/renderScene.ts
-  renderScene(...)
-  → renderGeometryValue(value, context)
-
-interaction/hitTest.ts
-  hit testing helpers
-  → hitGeometryValue(value, context)
-
-representation/constructions.ts
-  thin construction wrappers
-  → constructionFactoryForGeometryKind(kind, name)
-```
-
-### Construction factories
-
-Single-kind construction factories live on definitions:
-
-```txt
-circleConstruction   → CIRCLE definition
-triangleConstruction → TRIANGLE definition
-centroidConstruction → CENTROID definition
-```
-
-Compound constructions may remain outside a single shape definition when they create or coordinate multiple kinds.
-
-Current example:
-
-```txt
-triangleSideMidpointConstruction
-→ creates/reuses SEGMENT nodes
-→ creates MIDPOINT nodes
-```
-
-That function remains in `representation/constructions.ts` because it is a cross-kind construction rather than a pure TRIANGLE factory.
+That function chooses a draggable area body through registry body-drag metadata rather than hardcoding triangle or circle behavior.
 
 ## `app/`
 
-Browser shell and user transitions.
+Browser shell and user intent.
+
+Owns:
 
 ```txt
-main.ts                  app composition
-domEvents.ts             DOM listener wiring
-appRuntime.ts            state/history/render/status coordinator
-appController.ts         pointer and key input → AppTransition
-commands.ts              keyboard command definitions and eligibility
-appState.ts              Graph + ViewState + DragState
-viewState.ts             view state helpers
-dragState.ts             active drag description
-history.ts               linear undo/redo snapshots
-workspace.ts             pure workspace serialization
-workspaceFiles.ts        file/JSON primitives
-workspaceActions.ts      save/open orchestration
-keyboardShortcuts.ts     keyboard shortcut classification
-transitionEffects.ts     AppTransition effect interpreter
-statusSurface.ts         status message DOM surface
-viewportMotion.ts        smooth transient viewport rotation
-effectiveVisibility.ts   graph-aware view projections
-canvasSurface.ts         canvas/viewport DOM utilities
-renderScheduler.ts       requestAnimationFrame coalescing
-pointerIntent.ts         pointer hit-policy seam
+AppState
+ViewState
+DragState
+AppTransition
+AppRuntime
+commands
+pointer intent
+DOM event wiring
+history
+workspace save/open
+status effects
 ```
 
-The app layer decides when user intent should trigger a construction, selection, drag, delete, history commit, status message, or DOM effect.
+The app layer interprets user input into transitions. Transitions may update graph state, view state, drag state, history, render scheduling, pointer capture, and status messages.
 
-The geometry registry knows how a shape behaves. The app layer decides when to use that behavior.
+### Pointer intent
 
-## Core rules
+Pointer intent separates user gesture interpretation from mutation.
+
+Current shape:
 
 ```txt
-Derived geometry is never directly mutated.
-User effects become GraphEdit values or ViewState changes.
-GraphEdit values produce new validated Graphs.
-Selection, visibility, hover, and viewport intent are view state.
-Rendering consumes evaluated geometry.
-DOM effects stay at the app edge.
+shift pointer down
+  → generic selection hit testing
+
+ordinary pointer down
+  → free point drag if a free point is hit
+  → draggable area body if registry exposes body-drag source points
+  → add free point otherwise
 ```
 
-## App transition protocol
+Free-point drag priority is preserved so points remain easy to grab even inside area geometry.
 
-`AppTransition` is the app protocol between controller logic and the runtime/effects layer.
+Area body drag uses topmost draggable area by z-index.
 
-It carries:
+### Drag state
+
+There are two main drag modes:
 
 ```txt
-next AppState
-whether to render
-whether to prevent default
-history policy
-AppEffect[]
+FREE_POINT
+  directly moves one free point
+
+BODY
+  translates a captured set of free source points
 ```
 
-`AppEffect[]` currently includes:
+`BODY` drag stores:
 
 ```txt
-SET_POINTER_CAPTURE
-RELEASE_POINTER_CAPTURE
-SHOW_STATUS
+nodeId
+sourcePointIds
+initialPointerWorld
+initialSourcePointPositions
 ```
 
-Effects are app-edge instructions. They are not graph state, view state, workspace state, or history state.
+The reusable free-point drag helpers capture initial positions and translate them by pointer delta.
+
+## Selection predicates
+
+Command eligibility lives in focused selection predicate helpers rather than directly in the command table.
+
+Examples:
+
+```txt
+selectedCirclePoints
+selectedFreePointVertices
+selectedTriangle
+requireSelectedCirclePoints
+requireSelectedFreePointVertices
+requireSelectedTriangle
+```
+
+This keeps `commands.ts` focused on command registration and execution.
 
 ## Visibility
 
-There are two visibility concepts:
+View state stores explicitly hidden nodes.
+
+Effective visibility is derived by including transitive dependents:
 
 ```txt
-explicitly hidden nodes   nodes the user directly hid
-effectively hidden nodes  explicitly hidden nodes plus graph dependents
+hidden node → dependent geometry also effectively hidden
 ```
 
-`ViewState.hiddenNodeIds` stores explicit user intent. `effectiveHiddenNodeIds(graph, viewState)` computes dependency-aware visibility.
-
-Rendering and interaction should consume the same effective visibility projection. Hidden or effectively hidden objects should not be visible, selectable, or draggable.
-
-## Dragging
-
-Free points are directly draggable.
-
-Triangle body dragging translates its free vertices. It stores the initial pointer world position and initial vertex positions, then computes absolute positions from the drag start.
-
-Circles are currently selectable and deletable, but not draggable as a body. Adding circle dragging should be an explicit interaction/edit feature.
+Rendering and interaction consume the effective hidden set so hidden or dependent-hidden objects are not drawn or hit.
 
 ## History
 
-Undo/redo is a linear timeline.
-
-```txt
-past ← present → future
-```
+History stores durable snapshots.
 
 A snapshot contains:
 
@@ -382,3 +387,18 @@ interaction → geometry
 ```
 
 `app/` should not depend on `geometry/` directly. It should go through the normal layer APIs.
+
+## Current architectural stance
+
+Keep the core unions closed for now:
+
+```txt
+GeometryNode
+EvaluatedGeometry
+```
+
+Put per-shape behavior in `src/geometry/definitions/*` where possible.
+
+Keep compound constructions outside a single shape definition when they coordinate multiple node kinds.
+
+Avoid adding a generalized tool system until user-facing interaction pressure requires it.

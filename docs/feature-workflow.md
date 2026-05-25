@@ -6,11 +6,11 @@ Keep the pipeline intact:
 
 ```txt
 user input
-→ AppController / Command
+→ AppController / Command / PointerIntent
 → AppTransition
 → AppRuntime
-→ GraphEdit/ViewState
-→ Graph/EvaluatedScene
+→ GraphEdit / ViewState / DragState
+→ Graph / EvaluatedScene
 → render
 ```
 
@@ -34,23 +34,39 @@ docs only
 
 If a patch touches more than three layers, split it unless there is a strong reason not to.
 
+For source-dump-driven edits, prefer either:
+
+```txt
+small, context-anchored patches
+```
+
+or:
+
+```txt
+full replacement files for high-churn definition/docs files
+```
+
+Avoid broad regex edits across files when the same token has different meanings in different contexts.
+
 ## Add a new geometry kind
 
 Start with the registry.
 
 1. Add node syntax in `representation/node.ts`.
 2. Add evaluated syntax in `evaluation/evaluated.ts`, if needed.
-3. Add a new file in `src/geometry/definitions/`.
-4. Implement the relevant definition sections:
+3. Ensure evaluated values carry the correct `sourceKind`.
+4. Add a new file in `src/geometry/definitions/`.
+5. Implement the relevant definition sections:
    - `representation.dependencies`
    - `evaluation.evaluate`
-   - `rendering.render`, if visible
+   - `rendering.layer` and `rendering.render`, if visible
    - `interaction.hitClass` and `interaction.hitTest`, if selectable/hoverable
+   - `interaction.bodyDrag`, only if body translation has principled free source points
    - `construction.factories`, if users can create it by command/tool
-5. Register the definition in `geometryRegistry.ts`.
-6. Add focused unit tests.
-7. Add app command or pointer behavior only when user intent exists.
-8. Add smoke coverage only for browser-visible behavior.
+6. Register the definition in `geometryRegistry.ts`.
+7. Add focused unit tests.
+8. Add app command or pointer behavior only when user intent exists.
+9. Add smoke coverage only for browser-visible behavior.
 
 The goal is that most shape-specific behavior lives in one definition file.
 
@@ -61,9 +77,12 @@ A definition may answer:
 ```txt
 What dependencies does this node have?
 How does this node evaluate?
+What sourceKind does the evaluated value carry?
+What render layer does this shape belong to?
 How does this evaluated value render?
 What hit class does this shape belong to?
 How does this evaluated value hit-test?
+Can its body be dragged by translating free source points?
 What construction factories create this shape?
 ```
 
@@ -83,6 +102,15 @@ CIRCLE
   evaluation
   rendering
   interaction
+  bodyDrag
+  construction
+
+TRIANGLE
+  dependencies
+  evaluation
+  rendering
+  interaction
+  bodyDrag
   construction
 
 CENTROID
@@ -92,6 +120,48 @@ CENTROID
   interaction
   construction
 ```
+
+## Add body dragging for a shape
+
+Do not add shape-specific drag branches in `pointerIntent.ts` unless there is no better semantic model.
+
+Prefer registry-owned body-drag metadata:
+
+```txt
+interaction.bodyDrag.sourcePointIds(node, context)
+```
+
+Return source point IDs only when translating those points preserves the represented shape.
+
+Good candidates:
+
+```txt
+triangle body
+→ translate a, b, c
+→ valid only when all three are free points
+
+circle body
+→ translate center and through
+→ valid only when both are free points
+```
+
+Poor candidates without a more explicit inverse-edit design:
+
+```txt
+midpoint
+centroid
+other constrained/derived points
+```
+
+Those shapes may be selectable and hoverable without being body-draggable.
+
+When adding body drag support:
+
+1. Add `interaction.bodyDrag` to the geometry definition.
+2. Add registry tests for body-drag source resolution.
+3. Add hit-test tests if z-index or overlap matters.
+4. Add app/pointer tests only if user-visible drag behavior changes.
+5. Keep free-point drag priority above body drag.
 
 ## Add a construction
 
@@ -117,240 +187,163 @@ triangle side midpoints
 
 Command code should usually call stable wrappers from `representation/constructions.ts`, not reach directly into registry details.
 
-## Add a keyboard command
+## Add a command
 
-1. Add or update a command in `app/commands.ts`.
-2. Give it a stable `id`.
-3. Define shortcut keys.
-4. Define `disabledReason(state)`.
-5. Return `history: "commit"` only for durable editor changes.
-6. Add command tests.
-7. Let `appController.ts` handle command eligibility and status feedback.
-
-Use disabled reasons intentionally:
+A command should usually include:
 
 ```txt
-null      enabled
-""        disabled silently
-message   disabled with user-facing feedback
+command id
+keyboard keys
+disabledReason
+run implementation
+unit tests
 ```
 
-## Add a pointer interaction
+Use selection predicates for command eligibility rather than embedding selection scans directly into the command table.
 
-1. Decide the user intent.
-2. Keep geometry-specific hit testing in geometry definitions.
-3. Keep hit selection helpers in `interaction/hitTest.ts`.
-4. Put pointer policy in `app/pointerIntent.ts`.
-5. Add or update transition behavior in `appController.ts`.
-6. Emit `AppEffect[]` for app-edge effects.
-7. Keep graph mutations in `representation/edit.ts`.
-8. Add controller and pointer-intent tests.
-
-Pointer gestures do not need to be forced into the keyboard command abstraction.
-
-## Add hit testing for a shape
-
-Add the interaction section to the shape definition:
+Examples:
 
 ```txt
-interaction.hitClass
-interaction.hitTest
+selectedCirclePoints
+selectedFreePointVertices
+selectedTriangle
 ```
 
-Current hit classes:
+Command results should make history policy explicit:
 
 ```txt
-POINT
-LINEAR
-AREA
+commit   durable graph/view changes
+ignore   transient navigation or blocked command status
 ```
 
-Selection priority is:
+## Add z-order behavior
+
+The project uses two broad priority systems:
 
 ```txt
-POINT > LINEAR > AREA
+render layer: AREA → LINEAR → POINT
+hit class:    POINT → LINEAR → AREA
 ```
 
-Within a class, closest-distance hits win when distance is available; exact ties preserve reverse visual order.
+`zIndex` only decides conflicts within a render layer or hit class. Do not let a high-z area block point dragging or point selection.
 
-Use `interaction/hitTest.ts` for shared policy and compatibility helper exports.
-
-## Add rendering for a shape
-
-Prefer a small renderer in `rendering/` and call it from the shape definition's `rendering.render`.
-
-Keep global painter order in `rendering/renderScene.ts`.
-
-Current painter order:
+When adding user-facing z-order commands, preserve that distinction:
 
 ```txt
-triangles
-circles
-segments
-points
+selected points reorder relative to points
+selected areas reorder relative to areas
+broad point/linear/area priority remains intact
 ```
 
-If a new kind needs a new global render bucket, change `renderScene.ts` deliberately and add tests/smoke coverage as appropriate.
-
-## Add view state
-
-View state is not graph state.
-
-Good examples:
+Suggested future command shapes:
 
 ```txt
-selected nodes
-hidden nodes
-hovered node
-active tool
-viewport center
-viewport zoom
-viewport rotation
+bring selected forward
+send selected backward
+bring selected to front
+send selected to back
 ```
 
-Only durable view state should be serialized or captured in history.
+Prefer computing concrete node z-index updates in app/command code and applying them through a graph edit.
 
-Durable view state:
+## Add pointer behavior
+
+Pointer behavior should usually flow through `pointerIntent.ts`.
+
+Keep this order unless there is a deliberate UX reason to change it:
 
 ```txt
-selected node IDs
+shift pointer down
+  → generic selection target
+
+ordinary pointer down
+  → free point drag
+  → draggable area body
+  → add free point
+```
+
+Hover should follow pointer intent where possible, so hover previews the same object that ordinary pointer down would act on.
+
+## Add rendering behavior
+
+Rendering should stay value-driven.
+
+1. Add or update evaluated geometry shape.
+2. Add a renderer function if canvas drawing is shape-specific.
+3. Add rendering metadata to the geometry definition.
+4. Let `renderScene` dispatch through the registry.
+5. Add tests around ordering or options when behavior is non-trivial.
+
+Do not make rendering mutate graph or view state.
+
+## Add hit testing behavior
+
+Hit testing should stay pure.
+
+1. Add shape-specific hit math in `geometry/hitGeometry.ts` when reusable.
+2. Wire it through `interaction.hitTest` in the shape definition.
+3. Assign the correct `interaction.hitClass`.
+4. Add interaction tests for overlap and z-index if applicable.
+
+Hit testing identifies targets. It should not decide graph edits.
+
+## Add workspace fields
+
+Workspace state should remain durable and intentional.
+
+Good workspace fields:
+
+```txt
+graph nodes
 hidden node IDs
-viewport center
-viewport zoom
-viewport rotation
+selected node IDs
+viewport state
 ```
 
-Transient state:
+Do not serialize:
 
 ```txt
-hover
+hovered node
 drag state
 pointer capture
-smooth viewport motion
-status messages
-```
-
-## Add visibility behavior
-
-Keep explicit user intent separate from graph-aware projections.
-
-Good:
-
-```txt
-ViewState.hiddenNodeIds
-effectiveHiddenNodeIds(graph, viewState)
-```
-
-Rendering and hit testing should use the same effective hidden set. Invisible geometry should not be selectable or draggable.
-
-## Add circle dragging
-
-Circle creation, rendering, selection, and deletion exist. Circle body dragging does not.
-
-A conservative circle drag feature would likely:
-
-1. Add a circle drag intent in `pointerIntent.ts`.
-2. Add a `CIRCLE` drag state with source point IDs and initial positions.
-3. Translate the free center and through points when both are free.
-4. Refuse or ignore constrained circle dragging until inverse edits are designed.
-5. Add unit tests before smoke coverage.
-
-This should be treated as an explicit interaction feature, not a registry cleanup.
-
-## Add deletion
-
-Conservative policy:
-
-```txt
-delete selected nodes only if no unselected node depends on them
-```
-
-Blocked delete:
-
-```txt
-does not mutate graph
-does not commit history
-emits SHOW_STATUS
-```
-
-Successful delete:
-
-```txt
-removes selected nodes
-clears selection
-commits history
-can be undone
-```
-
-Do not silently cascade.
-
-## Tests
-
-Use unit tests for:
-
-```txt
-math
-graph validation
-graph edits
-delete policy
-evaluation
-geometry registry dispatch
-visibility projections
-hit testing
-viewport transforms
-viewport motion
-view state
 history
-workspace serialization
-commands and eligibility
-app transitions
-runtime coordination
-DOM event wiring
-render scheduling
-app-edge side effects
-status surface
+status messages
+animation state
 ```
 
-Use smoke tests for:
+If a graph node field becomes durable, it is naturally serialized through `nodes`. Make sure parse/validation behavior still makes sense.
+
+## Testing checklist
+
+For each patch, consider the smallest useful set:
 
 ```txt
-browser wiring
-canvas rendering
-real pointer/keyboard interactions
-status feedback
-delete + undo
-file flows only when needed
+type-level coverage via tsc
+unit tests for pure functions
+app-controller tests for transitions
+pointer-intent tests for gesture meaning
+render/hit tests for ordering
+smoke tests for browser-visible flows
 ```
 
-Smoke helpers live in `smoke/helpers/`.
+Run:
 
-## Formatting and linting
+```bash
+npm run check
+```
 
-The current project relies on:
+before handoff.
+
+## Commit-message style
+
+Use a concise imperative subject and explain the architectural reason in the body.
+
+Example:
 
 ```txt
-TypeScript strictness
-unit tests
-boundary checker
-smoke tests
-small patches
-manual cleanup
+Add registry-driven body dragging
+
+Allow geometry definitions to expose the free source points that can be
+translated for body dragging. Rewire area body dragging through the geometry
+registry instead of hardcoding triangle-specific behavior in pointer intent.
 ```
-
-If formatting becomes noisy, add Prettier in a separate commit.
-
-Do not mix formatter adoption with architecture changes. First add config and a one-time format commit; only then consider adding `format:check` to CI.
-
-If linting is added, prefer narrow rules that catch bugs rather than broad style churn.
-
-Good first candidates:
-
-```txt
-unused imports
-no-floating-promises
-consistent type-only imports
-```
-
-## Comments
-
-Comment why, not what.

@@ -5,10 +5,10 @@ An experimental 2D geometry construction editor.
 Core shape:
 
 ```txt
-construction syntax → validated graph → evaluated geometry → rendering
+construction syntax → validated graph → evaluated geometry → rendering / interaction
 ```
 
-User interactions produce graph edits or view-state changes. They do not mutate evaluated geometry.
+User interactions produce graph edits or view-state changes. They do not mutate evaluated geometry directly.
 
 ## Quick start
 
@@ -50,6 +50,7 @@ npm run build
 click empty canvas         add free point
 drag free point            move free point
 drag triangle body         translate free vertices
+drag circle body           translate center and through points
 hover object               preview hit target
 
 shift-click point          toggle point selection
@@ -85,77 +86,32 @@ Three points do not automatically imply a triangle. A triangle is created only b
 
 Two points do not automatically imply a circle. A circle is created only by explicit user intent.
 
-Delete is conservative. It does not cascade. If selected nodes have unselected dependents, deletion is blocked and the app shows a status message explaining why.
+## Geometry behavior
 
-Undo restores successful deletes.
+Euclid Forge keeps shape-specific behavior behind the `src/geometry/` registry seam. Geometry definitions own dependencies, evaluation, rendering, hit testing, construction factories, and opt-in body-drag source semantics.
 
-## Architecture
+Dragging a body is intentionally not a generic inverse-constraint solve. A geometry definition must declare the free source points that can be translated to preserve the shape. Triangles expose their three vertices when all are free points. Circles expose their center and through points when both are free points. Constrained points, midpoints, and centroids do not become body-draggable by accident.
 
-The app is layered:
+## Ordering model
 
-```txt
-meaning
-→ representation
-→ evaluation
-→ rendering
-→ interaction
-→ app
-```
-
-`src/geometry` is the intentional cross-sectional seam. It contains per-kind geometry definitions for dependencies, evaluation, rendering, hit testing, and construction factories.
-
-This keeps the normal layers disciplined while reducing shape-related shotgun surgery.
-
-## Durable vs transient state
-
-Durable project state:
+Rendering keeps the broad layer order:
 
 ```txt
-Graph
-selected node IDs
-hidden node IDs
-viewport center
-viewport zoom
-viewport rotation
+AREA → LINEAR → POINT
 ```
 
-Transient runtime state:
+Hit testing keeps the broad interaction priority:
 
 ```txt
-hover
-drag state
-pointer capture
-smooth viewport motion
-undo/redo stacks
-status messages
+POINT → LINEAR → AREA
 ```
 
-Workspace save/load stores durable project state only.
+Within a render layer or hit class, `zIndex` decides which overlapping geometry is visually or interactively on top. This means a point remains easy to grab even when it sits inside a high-z area shape, while overlapping areas such as circles and triangles can be ordered consistently.
 
-## Runtime seams
+## Design notes
 
-```txt
-main.ts          app composition
-domEvents.ts     DOM listener wiring
-appRuntime.ts    state/history/render/status coordinator
-AppTransition    state/render/history/effects protocol
-AppEffect[]      app-edge effects such as pointer capture and status feedback
-```
+The graph is the durable construction document. Evaluated geometry is derived from it.
 
-Commands have explicit eligibility:
+Workspace files store durable state: graph nodes, selected/hidden node IDs, and viewport information. They do not store hover, drag state, pointer capture, animation state, history, or status messages.
 
-```txt
-command.disabledReason(state)
-command.run(state)
-```
-
-This supports keyboard shortcuts now and future menus, toolbars, and command palettes later.
-
-## Docs
-
-See:
-
-```txt
-docs/architecture.md
-docs/feature-workflow.md
-```
+Run `npm run check` before handing off a patch.
