@@ -11,6 +11,7 @@ const layers = [
   "rendering",
   "interaction",
   "geometry",
+  "core",
   "app",
   "styles",
 ];
@@ -22,7 +23,8 @@ const allowedImports = {
   rendering: ["meaning", "evaluation", "geometry"],
   interaction: ["meaning", "representation", "evaluation", "rendering", "geometry"],
   geometry: ["meaning", "representation", "evaluation", "rendering"],
-  app: ["meaning", "representation", "evaluation", "rendering", "interaction", "styles"],
+  core: ["meaning", "representation", "evaluation"],
+  app: ["meaning", "representation", "evaluation", "rendering", "interaction", "core", "styles"],
   styles: [],
 };
 

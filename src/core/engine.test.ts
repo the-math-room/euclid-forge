@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { createGeometryEngine } from "./engine";
-import { parseSerializedWorkspace } from "../app/workspace";
+import { parseGeometryWorkspace } from "./workspace";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
@@ -116,7 +116,7 @@ describe("core/engine", () => {
   });
 
   test("parses, evaluates, and serializes the Euclid I.1 golden fixture", () => {
-    const workspace = parseSerializedWorkspace(
+    const workspace = parseGeometryWorkspace(
       readFixture("euclid-i-1-equilateral.workspace.json"),
     );
     const engine = createGeometryEngine(workspace);
