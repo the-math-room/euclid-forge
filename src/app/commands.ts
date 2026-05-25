@@ -258,7 +258,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
     keys: ["i"],
     disabledReason: segmentIntersectionDisabledReason,
     run: (state) => {
-      const [lineA, lineB] = requireSelectedSegmentTuple(
+      const [segmentA, segmentB] = requireSelectedSegmentTuple(
         state,
         2,
         "Cannot run create-segment-intersection while disabled",
@@ -268,7 +268,11 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
         appState(
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
-            nodes: segmentIntersectionConstruction(state.graph, lineA, lineB),
+            nodes: segmentIntersectionConstruction(
+              state.graph,
+              segmentA,
+              segmentB,
+            ),
           }),
           clearSelection(state.viewState),
           state.dragState,

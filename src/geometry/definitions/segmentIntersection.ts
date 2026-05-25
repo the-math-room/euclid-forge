@@ -146,12 +146,12 @@ function segmentIntersectionConstructionNodes(
     return Object.freeze([]);
   }
 
-  const id = nextLineIntersectionId(graph);
+  const id = nextSegmentIntersectionId(graph);
 
   return Object.freeze([segmentIntersectionNode(id, segmentA, segmentB, id)]);
 }
 
-function nextLineIntersectionId(
+function nextSegmentIntersectionId(
   graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
 ): NodeId {
   let index = 1;
