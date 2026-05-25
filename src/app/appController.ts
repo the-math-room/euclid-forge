@@ -1,4 +1,4 @@
-import { deltaBetween, vec2 } from "../meaning/vec2";
+import { deltaBetween } from "../meaning/vec2";
 import { applyGraphEdit } from "../representation/edit";
 import type { NodeId } from "../representation/node";
 import type { ScreenPoint, Viewport } from "../rendering/viewport";
@@ -18,6 +18,10 @@ import {
   setHoveredNode,
   toggleSelectedNode,
 } from "./viewState";
+import {
+  initialFreePointPositions,
+  translatedFreePointPositions,
+} from "./freePointDrag";
 
 export type PointerCaptureEffect = Readonly<
   | {
@@ -130,9 +134,10 @@ export function handlePointerDown(
           kind: "TRIANGLE",
           vertexIds: intent.vertexIds,
           initialPointerWorld: screenToWorld(input.viewport, input.point),
-          initialVertexPositions: initialVertexPositions(
+          initialVertexPositions: initialFreePointPositions(
             state.graph,
             intent.vertexIds,
+            "triangle drag",
           ),
         }),
         shouldRender: false,
@@ -202,7 +207,7 @@ export function handlePointerMove(
         appState(
           applyGraphEdit(state.graph, {
             kind: "SET_FREE_POINT_POSITIONS",
-            positions: translatedVertexPositions(
+            positions: translatedFreePointPositions(
               state.dragState.initialVertexPositions,
               delta,
             ),
@@ -269,43 +274,6 @@ function hitTestHoverTarget(
   }
 }
 
-function initialVertexPositions(
-  graph: AppState["graph"],
-  vertexIds: readonly NodeId[],
-): ReadonlyMap<NodeId, ReturnType<typeof vec2>> {
-  const positions = new Map<NodeId, ReturnType<typeof vec2>>();
-
-  for (const id of vertexIds) {
-    const node = graph.byId.get(id);
-
-    if (!node) {
-      throw new Error(`Cannot start triangle drag with missing vertex: ${id}`);
-    }
-
-    if (node.kind !== "FREE_POINT") {
-      throw new Error(
-        `Cannot start triangle drag with constrained vertex: ${id}`,
-      );
-    }
-
-    positions.set(id, vec2(node.x, node.y));
-  }
-
-  return positions;
-}
-
-function translatedVertexPositions(
-  initialPositions: ReadonlyMap<NodeId, ReturnType<typeof vec2>>,
-  delta: ReturnType<typeof vec2>,
-): ReadonlyMap<NodeId, ReturnType<typeof vec2>> {
-  const positions = new Map<NodeId, ReturnType<typeof vec2>>();
-
-  for (const [id, point] of initialPositions) {
-    positions.set(id, vec2(point.x + delta.x, point.y + delta.y));
-  }
-
-  return positions;
-}
 
 function unchanged(state: AppState): AppTransition {
   return transition({
