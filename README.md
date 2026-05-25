@@ -2,7 +2,9 @@
 
 An experimental 2D geometry construction editor.
 
-Euclid Forge is intentionally small and architecture-heavy. The core model is a validated construction graph; evaluation derives geometric meaning; rendering and interaction project that meaning into a canvas UI.
+Euclid Forge is intentionally small and architecture-heavy. The core model is a
+validated construction graph; evaluation derives geometric meaning; rendering and
+interaction project that meaning into a canvas UI.
 
 ## Current capabilities
 
@@ -14,10 +16,17 @@ Euclid Forge is intentionally small and architecture-heavy. The core model is a 
   - three selected constructible points create a triangle
 - Construct circles from two selected constructible points interpreted as center and through point.
 - Construct bounded segment intersections from two selected segment nodes.
+- Construct persisted curve intersections from selected segment/circle and circle/circle curve pairs.
 - Construct a centroid from a selected triangle.
 - Construct side midpoints from a selected triangle.
-- Use derived points as downstream construction inputs: midpoints, centroids, and segment intersections.
-- Drag area bodies when their definitions expose free source points.
+- Use derived points as downstream construction inputs:
+  - midpoints
+  - centroids
+  - segment intersections
+  - curve intersections
+- Drag area bodies when their definitions expose free source points:
+  - triangles drag by translating their three free vertices
+  - circles drag by translating their center and through points
 - Hide selected nodes and automatically hide their dependents.
 - Delete selected nodes only when no unselected dependents would be left dangling.
 - Save and open workspace JSON files.
@@ -35,7 +44,7 @@ Euclid Forge is intentionally small and architecture-heavy. The core model is a 
 | Select / toggle selection | Shift-click geometry |
 | Join selected constructible points | `J` |
 | Circle from center/through points | `C` |
-| Segment intersection from two selected segments | `I` |
+| Intersection from two selected curves | `I` |
 | Centroid of selected triangle | `G` |
 | Side midpoints of selected triangle | `M` |
 | Delete selected nodes | `Delete` / `Backspace` |
@@ -48,22 +57,40 @@ Euclid Forge is intentionally small and architecture-heavy. The core model is a 
 | Pan viewport | Arrow keys |
 | Zoom viewport | `+` / `-` |
 | Rotate viewport | `[` / `]` |
-| Reset viewport rotation | `\\` |
+| Reset viewport rotation | `\` |
 | Reset viewport | `0` |
 | Save workspace | `Ctrl/Cmd+S` |
 | Open workspace | `Ctrl/Cmd+O` |
 | Undo | `Ctrl/Cmd+Z` |
 | Redo | `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` |
 
-`J` is the boundary-construction command. With two selected constructible points it creates a segment; with three selected constructible points it creates a triangle. `C` stays separate because its two selected points mean center and through point rather than unordered endpoints.
+`J` is the boundary-construction command. With two selected constructible points
+it creates a segment; with three selected constructible points it creates a
+triangle. `C` stays separate because its two selected points mean center and
+through point rather than unordered endpoints.
 
-`I` creates a bounded finite-segment intersection from two selected segment nodes. Triangle borders are not segment nodes unless explicit segments have been constructed.
+`I` creates intersections from selected curve nodes. Segment + segment still
+creates the legacy bounded `SEGMENT_INTERSECTION` point. Segment + circle and
+circle + circle create branch-specific `CURVE_INTERSECTION` points for each
+currently defined candidate.
+
+Triangle borders are not segment nodes unless explicit segments have been
+constructed.
 
 ## Dynamic derived geometry
 
-Derived constructions are dynamic. A construction node records how to compute an object when its dependencies currently define one. It does not force dependencies to remain in a valid configuration.
+Derived constructions are dynamic. A construction node records how to compute an
+object when its dependencies currently define one. It does not force dependencies
+to remain in a valid configuration.
 
-If a derived construction becomes undefined, Euclid Forge omits that evaluated geometry and records an evaluation issue. Dependents of undefined geometry are also omitted. The graph still remembers the construction, so if dependencies become valid again the derived geometry reappears.
+Curve intersections are persisted as branch-specific point nodes. Their internal
+IDs encode the source curves and branch key, while their display labels remain
+short (`X1`, `X2`, ...).
+
+If a derived construction becomes undefined, Euclid Forge omits that evaluated
+geometry and records an evaluation issue. Dependents of undefined geometry are
+also omitted. The graph still remembers the construction, so if dependencies
+become valid again the derived geometry reappears.
 
 Example:
 
@@ -72,7 +99,19 @@ segment AB ∩ segment CD → X
 J(X, E) → segment XE
 ```
 
-If `AB` and `CD` no longer intersect as finite segments, `X` disappears and `XE` disappears too. If the segments cross again, both can reappear.
+If `AB` and `CD` no longer intersect as finite segments, `X` disappears and
+`XE` disappears too. If the segments cross again, both can reappear.
+
+For a general curve intersection:
+
+```txt
+circle C1 ∩ circle C2 → X1, X2
+J(P, X1) → segment PX1
+```
+
+If the circles stop intersecting, `X1` and `X2` disappear, and constructions
+depending on them disappear too. If the circles intersect again with the same
+branch keys, those points and dependents can reappear.
 
 ## Architecture at a glance
 
@@ -85,24 +124,34 @@ meaning
 → app
 ```
 
-The deliberate exception is `src/geometry/`, which acts as the controlled cross-layer seam for per-shape behavior. Shape definitions centralize dependencies, evaluation, rendering, hit testing, construction factories, and body-drag source metadata.
+The deliberate exception is `src/geometry/`, which acts as the controlled
+cross-layer seam for per-shape behavior. Shape definitions centralize
+dependencies, evaluation, rendering, hit testing, construction factories, and
+body-drag source metadata.
 
-The graph remains the construction document. Derived coordinates are evaluated from the graph, not stored separately.
+The graph remains the construction document. Derived coordinates are evaluated
+from the graph, not stored separately.
 
 ## Denotational direction
 
-Geometry nodes should denote mathematical objects. Evaluation is an interpretation of those denotations into numeric canvas geometry.
+Geometry nodes should denote mathematical objects. Evaluation is an
+interpretation of those denotations into numeric canvas geometry.
 
-For future curve/intersection work, prefer abstractions over curve denotations and point sets rather than a combinatorial family of pair-specific graph concepts. The current segment-intersection feature is a concrete construction, but the intended direction is:
+For curve/intersection work, prefer abstractions over curve denotations and point
+sets rather than a combinatorial family of pair-specific graph concepts. The
+current general representation is `CURVE_INTERSECTION`:
 
 ```txt
-curve denotation
-→ intersection operation over denotations
-→ numeric evaluator / solver
-→ classified intersection candidates
+source curve A
+source curve B
+branch key
+→ point
 ```
 
-Specialized numeric solvers may exist underneath, but app and representation concepts should avoid leaking a pairwise explosion such as `SEGMENT_CIRCLE_INTERSECTION`, `CIRCLE_CIRCLE_INTERSECTION`, and so on unless a separate user-facing meaning truly requires it.
+Specialized numeric solvers may exist underneath, but app and representation
+concepts should avoid leaking a pairwise explosion such as
+`SEGMENT_CIRCLE_INTERSECTION`, `CIRCLE_CIRCLE_INTERSECTION`, and so on unless a
+separate user-facing meaning truly requires it.
 
 ## Ordering model
 
@@ -113,7 +162,8 @@ Render layers: AREA → LINEAR → POINT
 Hit priority:  POINT → LINEAR → AREA
 ```
 
-`zIndex` resolves conflicts within a render layer or hit class. It does not let an area block direct point interaction.
+`zIndex` resolves conflicts within a render layer or hit class. It does not let
+an area block direct point interaction.
 
 ## Validation
 
@@ -123,4 +173,5 @@ Run the full project check with:
 npm run check
 ```
 
-That command runs TypeScript, unit tests, boundary checks, and Playwright smoke tests.
+That command runs TypeScript, unit tests, boundary checks, and Playwright smoke
+tests.

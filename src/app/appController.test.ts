@@ -209,6 +209,10 @@ describe("app/appController", () => {
       (node) => node.kind === "CURVE_INTERSECTION",
     );
 
+    expect(curveIntersections.map((node) => node.label).sort()).toEqual([
+      "X1",
+      "X2",
+    ]);
     expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
       "linear-circle:0",
       "linear-circle:1",

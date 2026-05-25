@@ -578,7 +578,13 @@ function curveIntersectionConstruction(
     );
 
     additions.push(
-      curveIntersectionNode(id, curveA, curveB, candidate.branchKey, id),
+      curveIntersectionNode(
+        id,
+        curveA,
+        curveB,
+        candidate.branchKey,
+        nextCurveIntersectionLabel([...state.graph.nodes, ...additions]),
+      ),
     );
   }
 
@@ -595,6 +601,25 @@ function sameUnorderedPair(
     (leftA === rightA && leftB === rightB) ||
     (leftA === rightB && leftB === rightA)
   );
+}
+
+function nextCurveIntersectionLabel(
+  nodes: readonly GeometryNode[],
+): string {
+  let index = 1;
+
+  while (
+    nodes.some(
+      (node) =>
+        "label" in node &&
+        typeof node.label === "string" &&
+        node.label === `X${index}`,
+    )
+  ) {
+    index += 1;
+  }
+
+  return `X${index}`;
 }
 
 function nextCurveIntersectionId(

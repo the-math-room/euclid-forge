@@ -1,6 +1,7 @@
 # Denotational Geometry Direction
 
-This note records the intended direction for Euclid Forge's curve and intersection architecture.
+This note records the intended direction for Euclid Forge's curve and
+intersection architecture.
 
 ## Core principle
 
@@ -10,7 +11,9 @@ Geometry nodes should denote mathematical objects.
 graph syntax → mathematical denotation → numeric evaluation
 ```
 
-The graph is not a cache of rendered coordinates. It is construction syntax. Evaluation is an interpretation of that syntax into numeric geometry for the canvas.
+The graph is not a cache of rendered coordinates. It is construction syntax.
+Evaluation is an interpretation of that syntax into numeric geometry for the
+canvas.
 
 ## Current model
 
@@ -24,15 +27,20 @@ TRIANGLE
 MIDPOINT
 CENTROID
 SEGMENT_INTERSECTION
+CURVE_INTERSECTION
 ```
 
-`SEGMENT_INTERSECTION` is currently a bounded finite-segment intersection. It is defined only when two selected segment nodes have a unique intersection point on both finite segments.
+`SEGMENT_INTERSECTION` is currently a bounded finite-segment intersection. It is
+defined only when two selected segment nodes have a unique intersection point on
+both finite segments.
 
-If the source segments become parallel, coincident, or no longer cross within their finite extents, the intersection point becomes undefined. It is omitted from the evaluated scene and an evaluation issue is recorded. The graph still remembers the construction, so the point can reappear if the source segments become valid again.
+`CURVE_INTERSECTION` is the general persisted curve-intersection node. It
+records two curve-valued source nodes and one `branchKey`.
 
 ## Dynamic construction, not constraint solving
 
-A construction node says how to compute something when defined. It does not force its dependencies to remain in a configuration where it is defined.
+A construction node says how to compute something when defined. It does not force
+its dependencies to remain in a configuration where it is defined.
 
 For example:
 
@@ -50,11 +58,59 @@ the graph still contains X and Y
 both can reappear if AB and CD intersect again
 ```
 
-Refusing a drag, clamping motion, or moving other points to preserve the intersection would be constraint solving. That may be a future mode, but it is not the current evaluator.
+For curve intersections:
+
+```txt
+X1 = intersection(C1, C2, "circle-circle:0")
+X2 = intersection(C1, C2, "circle-circle:1")
+```
+
+If `C1` and `C2` stop intersecting, both nodes become temporarily undefined. If
+the circles intersect again and the same branches are available, the points can
+reappear.
+
+Refusing a drag, clamping motion, or moving other points to preserve an
+intersection would be constraint solving. That may be a future mode, but it is
+not the current evaluator.
+
+## Persisted curve intersections
+
+Euclid Forge has a general persisted `CURVE_INTERSECTION` node:
+
+```txt
+CURVE_INTERSECTION(curveA, curveB, branchKey)
+```
+
+The node denotes one selected branch of the intersection of two curve-valued
+source nodes. Evaluation computes the current curve candidates and selects the
+candidate matching `branchKey`.
+
+This keeps the representation denotational:
+
+```txt
+source nodes denote curves
+intersection computes candidate points
+branchKey selects one candidate
+the resulting node denotes a point
+```
+
+The representation does not introduce one graph kind per shape pair. Segment +
+circle and circle + circle intersections share the same graph node kind. The
+legacy `SEGMENT_INTERSECTION` node remains for bounded segment intersections
+until that path is migrated or intentionally preserved.
+
+Generated IDs are descriptive and branch-stable. Display labels should remain
+human-scale:
+
+```txt
+id:    X_C2_C1_circle_circle_1
+label: X2
+```
 
 ## Future curve/intersection direction
 
-Avoid designing future curve intersections as a combinatorial family of graph concepts:
+Avoid designing future curve intersections as a combinatorial family of graph
+concepts:
 
 ```txt
 SEGMENT_CIRCLE_INTERSECTION
@@ -91,7 +147,7 @@ one graph kind per pair of source shapes
 
 ## Result classification
 
-Intersection evaluation should use a shared result contract.
+Intersection evaluation uses a shared result contract.
 
 ```txt
 candidate point
@@ -109,7 +165,8 @@ This supports cases such as:
 2 SIMPLE candidates
 ```
 
-Tangency and branch choice are semantic issues, not just implementation details. They should be explicit in the result model.
+Tangency and branch choice are semantic issues, not just implementation details.
+They should be explicit in the result model.
 
 ## Tangent snapping
 
@@ -135,7 +192,8 @@ evaluation-time policy:
 
 ## Implementation stance
 
-Specialized algorithms may still exist internally. The important constraint is where they show up.
+Specialized algorithms may still exist internally. The important constraint is
+where they show up.
 
 Good:
 
@@ -157,4 +215,5 @@ representation/app:
   one user-visible graph concept per shape pair
 ```
 
-This keeps the project aligned with a denotational architecture while still allowing pragmatic numeric implementation.
+This keeps the project aligned with a denotational architecture while still
+allowing pragmatic numeric implementation.
