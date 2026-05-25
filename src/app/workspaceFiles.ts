@@ -1,9 +1,9 @@
-import { geometryWorkspaceFromJsonText } from "../core/workspace";
-import type { SerializedWorkspace } from "../core/workspace";
+import { geometryWorkspaceFromJsonText } from "../core";
+import type { SerializedWorkspace } from "../core";
 import {
   parseSerializedWorkspace,
   serializeWorkspace,
-} from "../core/workspace";
+} from "../core";
 import type { AppState } from "./appState";
 
 export const WORKSPACE_FILE_EXTENSION = ".euclid-forge.json";

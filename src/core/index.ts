@@ -8,7 +8,11 @@ export {
 export {
   geometryWorkspaceFromJsonText,
   parseGeometryWorkspace,
+  parseSerializedWorkspace,
+  serializeWorkspace,
   type GeometryWorkspace,
+  type SerializedWorkspace,
+  type WorkspaceState,
 } from "./workspace";
 
 export type {
