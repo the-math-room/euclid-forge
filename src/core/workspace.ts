@@ -162,5 +162,13 @@ export function parseGeometryWorkspace(value: unknown): GeometryWorkspace {
 }
 
 export function geometryWorkspaceFromJsonText(text: string): GeometryWorkspace {
-  return parseGeometryWorkspace(JSON.parse(text));
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Workspace file must contain valid JSON");
+  }
+
+  return parseGeometryWorkspace(parsed);
 }

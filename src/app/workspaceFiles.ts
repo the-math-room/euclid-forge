@@ -13,18 +13,8 @@ export function workspaceJsonFromState(state: AppState): string {
   return `${JSON.stringify(serializeWorkspace(state), null, 2)}\n`;
 }
 
-export function workspaceFromJsonText(text: string): SerializedWorkspace {
-  let parsed: unknown;
-
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    throw new Error("Workspace file must contain valid JSON", {
-      cause: error,
-    });
-  }
-
-  return parseSerializedWorkspace(parsed);
+export function workspaceFromJsonText(text: string) {
+  return geometryWorkspaceFromJsonText(text);
 }
 
 export function defaultWorkspaceFileName(date = new Date()): string {
