@@ -43,6 +43,7 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
       return {
         kind: "CIRCLE",
         sourceKind: node.kind,
+        ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
         id: node.id,
         center: center.point,
         radius,

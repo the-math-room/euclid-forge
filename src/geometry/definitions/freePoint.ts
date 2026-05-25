@@ -31,6 +31,7 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
       ): EvaluatedPoint => ({
         kind: "POINT",
         sourceKind: node.kind,
+        ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
         id: node.id,
         point: vec2(node.x, node.y),
         label: node.label,

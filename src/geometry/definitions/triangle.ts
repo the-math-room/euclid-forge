@@ -41,6 +41,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> =
         return {
           kind: "TRIANGLE",
         sourceKind: node.kind,
+        ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
           id: node.id,
           a: a.point,
           b: b.point,

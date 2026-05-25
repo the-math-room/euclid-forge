@@ -43,6 +43,11 @@ function renderOrderedValues(
   return [...values].sort(
     (a, b) =>
       RENDER_LAYER_ORDER[renderLayerForGeometryValue(a)] -
-      RENDER_LAYER_ORDER[renderLayerForGeometryValue(b)],
+        RENDER_LAYER_ORDER[renderLayerForGeometryValue(b)] ||
+      zIndexOf(a) - zIndexOf(b),
   );
+}
+
+function zIndexOf(value: EvaluatedGeometry): number {
+  return value.zIndex ?? 0;
 }

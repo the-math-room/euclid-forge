@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
@@ -24,7 +25,16 @@ import {
   hitTestTriangleInterior,
   hitTestTriangleSelection,
   hitTestTriangleTarget,
+  hitTestSelectionTarget,
 } from "./hitTest";
+
+function evaluatedScene(values: readonly EvaluatedGeometry[]) {
+  return Object.freeze({
+    values: new Map(values.map((value) => [value.id, value])),
+    ordered: Object.freeze([...values]),
+  });
+}
+
 
 describe("interaction/hitTestPoint", () => {
   const viewport = testViewport();
@@ -435,4 +445,70 @@ describe("interaction/hitTestTriangleInterior", () => {
 
     expect(hitTestTriangleInterior(graph, evaluated, viewport, screen)).toBeNull();
   });
+  test("uses z-index to choose among overlapping area hits", () => {
+    const evaluated = evaluatedScene([
+      {
+        kind: "TRIANGLE",
+        sourceKind: "TRIANGLE",
+        zIndex: 0,
+        id: "low",
+        a: vec2(-1, -1),
+        b: vec2(1, -1),
+        c: vec2(0, 1),
+      },
+      {
+        kind: "TRIANGLE",
+        sourceKind: "TRIANGLE",
+        zIndex: 10,
+        id: "high",
+        a: vec2(-1, -1),
+        b: vec2(1, -1),
+        c: vec2(0, 1),
+      },
+    ]);
+
+    expect(
+      hitTestTriangleSelection(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 0)),
+      ),
+    ).toEqual({ id: "high" });
+  });
+
+  test("point hit priority still beats higher z-index area hits", () => {
+    const evaluated = evaluatedScene([
+      {
+        kind: "TRIANGLE",
+        sourceKind: "TRIANGLE",
+        zIndex: 100,
+        id: "area",
+        a: vec2(-1, -1),
+        b: vec2(1, -1),
+        c: vec2(0, 1),
+      },
+      {
+        kind: "POINT",
+        sourceKind: "FREE_POINT",
+        zIndex: 0,
+        id: "point",
+        point: vec2(0, 0),
+        label: "P",
+        role: "FREE",
+      },
+    ]);
+
+    expect(
+      hitTestSelectionTarget(
+        evaluated,
+        viewport,
+        worldToScreen(viewport, vec2(0, 0)),
+      ),
+    ).toEqual({
+      kind: "POINT",
+      id: "point",
+      distancePx: 0,
+    });
+  });
+
 });

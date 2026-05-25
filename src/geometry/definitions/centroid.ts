@@ -40,6 +40,7 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> =
         return {
           kind: "POINT",
         sourceKind: node.kind,
+        ...(node.zIndex === undefined ? {} : { zIndex: node.zIndex }),
           id: node.id,
           point: centroid(triangle.a, triangle.b, triangle.c),
           label: node.label,

@@ -11,6 +11,7 @@ export type GeometryNode =
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
   id: NodeId;
+  zIndex?: number;
   x: number;
   y: number;
   label: string;
@@ -19,6 +20,7 @@ export type FreePointNode = Readonly<{
 export type SegmentNode = Readonly<{
   kind: "SEGMENT";
   id: NodeId;
+  zIndex?: number;
   a: NodeId;
   b: NodeId;
 }>;
@@ -26,6 +28,7 @@ export type SegmentNode = Readonly<{
 export type CircleNode = Readonly<{
   kind: "CIRCLE";
   id: NodeId;
+  zIndex?: number;
   center: NodeId;
   through: NodeId;
 }>;
@@ -33,6 +36,7 @@ export type CircleNode = Readonly<{
 export type TriangleNode = Readonly<{
   kind: "TRIANGLE";
   id: NodeId;
+  zIndex?: number;
   a: NodeId;
   b: NodeId;
   c: NodeId;
@@ -41,6 +45,7 @@ export type TriangleNode = Readonly<{
 export type MidpointNode = Readonly<{
   kind: "MIDPOINT";
   id: NodeId;
+  zIndex?: number;
   segment: NodeId;
   label: string;
 }>;
@@ -48,6 +53,7 @@ export type MidpointNode = Readonly<{
 export type CentroidNode = Readonly<{
   kind: "CENTROID";
   id: NodeId;
+  zIndex?: number;
   triangle: NodeId;
   label: string;
 }>;

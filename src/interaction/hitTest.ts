@@ -202,7 +202,10 @@ function bestHitForClass(
   hitClass: GeometryHitClass,
   includeValue: (value: EvaluatedGeometry) => boolean = () => true,
 ): GeometryHitCandidate | null {
-  let best: GeometryHitCandidate | null = null;
+  let best: Readonly<{
+    value: EvaluatedGeometry;
+    candidate: GeometryHitCandidate;
+  }> | null = null;
 
   for (const value of reverseVisualOrder(evaluated.ordered)) {
     if (!includeValue(value)) {
@@ -218,20 +221,42 @@ function bestHitForClass(
       continue;
     }
 
-    if (!best || isBetterHit(candidate.target, best.target)) {
-      best = candidate;
+    if (
+      !best ||
+      isBetterHit(value, candidate.target, best.value, best.candidate.target)
+    ) {
+      best = {
+        value,
+        candidate,
+      };
     }
   }
 
-  return best;
+  return best?.candidate ?? null;
 }
 
-function isBetterHit(candidate: HitTarget, current: HitTarget): boolean {
+function isBetterHit(
+  candidateValue: EvaluatedGeometry,
+  candidate: HitTarget,
+  currentValue: EvaluatedGeometry,
+  current: HitTarget,
+): boolean {
+  const candidateZIndex = zIndexOf(candidateValue);
+  const currentZIndex = zIndexOf(currentValue);
+
+  if (candidateZIndex !== currentZIndex) {
+    return candidateZIndex > currentZIndex;
+  }
+
   if ("distancePx" in candidate && "distancePx" in current) {
     return candidate.distancePx < current.distancePx;
   }
 
   return false;
+}
+
+function zIndexOf(value: EvaluatedGeometry): number {
+  return value.zIndex ?? 0;
 }
 
 function reverseVisualOrder<T>(values: readonly T[]): readonly T[] {
