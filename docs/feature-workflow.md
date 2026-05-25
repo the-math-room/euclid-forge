@@ -1,7 +1,6 @@
 # Feature Workflow
 
-This document describes how to add features without weakening Euclid Forge's
-architecture.
+This document describes how to add features without weakening Euclid Forge's architecture.
 
 ## Default workflow
 
@@ -34,100 +33,98 @@ tests
 docs
 ```
 
-The core unions are closed for now. Add the new kind deliberately to the relevant
-unions rather than trying to make an open plugin system.
+The core unions are closed for now. Add the new kind deliberately to the relevant unions rather than trying to make an open plugin system.
 
 ## Geometry definition checklist
 
-Each shape definition should answer the applicable questions.
-
-### Representation
+Each shape definition should answer:
 
 ```txt
 What node kind is this?
 What graph dependencies does it have?
+Does it denote a mathematical object or a UI convenience?
+What evaluated geometry does it produce when defined?
+Can it become undefined for some valid graph configurations?
+What evaluation issue should be recorded when undefined?
+Does it render and hit-test?
+Is it constructible?
+Can it body-drag through free source points?
 ```
 
-### Evaluation
+## Constructible inputs
+
+Use constructible-point predicates for construction inputs. Do not use free-point predicates unless the operation specifically requires editability.
 
 ```txt
-What evaluated geometry does it produce?
-What sourceKind should the evaluated value carry?
+constructible point ≠ directly draggable point
 ```
 
-### Rendering
+Current constructible point-valued nodes include:
 
 ```txt
-Does it render?
-Which render layer?
-How does it draw?
+FREE_POINT
+MIDPOINT
+CENTROID
+SEGMENT_INTERSECTION
 ```
 
-Render layers are:
+Dragging should still require free points or registry-declared free source points.
 
-```txt
-AREA → LINEAR → POINT
-```
+## Dynamic undefined constructions
 
-### Interaction
-
-```txt
-Is it hittable/selectable?
-Which hit class?
-What geometric hit test applies?
-```
-
-Hit class priority is:
-
-```txt
-POINT → LINEAR → AREA
-```
-
-### Body drag
-
-Only add body-drag metadata when translation of declared free source points
-preserves the represented shape.
-
-```txt
-interaction.bodyDrag.sourcePointIds(node, context)
-```
-
-Good examples:
-
-```txt
-triangle → its three free vertices
-circle   → its free center and through points
-```
-
-Bad examples without more design:
-
-```txt
-midpoint → dragging would require inverse segment/source edits
-centroid → dragging would require ambiguous inverse triangle edits
-```
-
-Do not use a plain `draggable: true` flag. The app needs the source point IDs,
-not just a capability bit.
-
-### Construction
-
-Use definition-local construction factories for single-shape construction.
-
-Keep compound constructions outside a single shape definition when they create or
-reuse multiple kinds of nodes.
+A construction node may be valid graph syntax but undefined in the current numeric configuration.
 
 Examples:
 
 ```txt
-segment from two free points → segment definition factory
-circle from two free points → circle definition factory
-triangle from three free points → triangle definition factory
-side midpoints of triangle → compound construction wrapper
+parallel segment intersection
+coincident segment intersection
+bounded segment intersection outside the finite segment extents
+dependent construction whose input point is currently unavailable
 ```
 
-Do not assume every same-arity construction belongs to the same command family.
-Segment and triangle are boundary constructions; circle is a center-through
-metric construction.
+Undefined evaluated geometry should be omitted from the scene and recorded as an evaluation issue. Dependents should also be omitted when their evaluated dependencies are unavailable.
+
+Do not turn ordinary derived constructions into constraints. Refusing, clamping, or projecting drags belongs to a future constraint-solver design, not to the current dynamic-construction evaluator.
+
+## Intersections and future curve work
+
+Prefer denotational abstractions over shape-pair graph explosions.
+
+The guiding model is:
+
+```txt
+geometry node → mathematical denotation
+curve denotation → point set / implicit equation / parameterized carrier / domain
+intersection → operation over denotations
+evaluation → numeric interpretation that returns classified candidates or issues
+```
+
+Avoid introducing graph concepts like these unless there is a specific user-facing meaning that requires them:
+
+```txt
+SEGMENT_CIRCLE_INTERSECTION
+CIRCLE_CIRCLE_INTERSECTION
+CIRCLE_PARABOLA_INTERSECTION
+PARABOLA_PARABOLA_INTERSECTION
+```
+
+Instead, aim toward shared curve-intersection machinery with a common result contract:
+
+```txt
+candidates: intersection points with branch identity
+multiplicity: SIMPLE or TANGENT
+issue: undefined / degenerate reason
+```
+
+Specialized algorithms can exist internally, but they should be hidden behind denotational/capability-level APIs when possible.
+
+When tangent snapping is added, keep the distinction clear:
+
+```txt
+construction-time interaction policy may use viewport/hit-radius tolerance
+evaluation-time numeric policy should remain deterministic from graph state
+```
 
 ## Adding a command
 
@@ -140,32 +137,34 @@ disabledReason
 run
 ```
 
-Use selection predicate helpers instead of growing local command-specific query
-logic.
+Use selection predicate helpers instead of growing local command-specific query logic.
 
-Durable graph/view changes should return `history: "commit"`. Pure viewport
-navigation and hover-like changes usually ignore history.
+Durable graph/view changes should return `history: "commit"`. Pure viewport navigation and hover-like changes usually ignore history.
 
 ### Boundary construction command
 
-`J` joins selected free points:
+`J` joins selected constructible points:
 
 ```txt
-2 selected free points → segment
-3 selected free points → triangle
+2 selected constructible points → segment
+3 selected constructible points → triangle
 ```
-
-This is intentionally limited to two and three points for now. Four or more
-points require an ordering story before polygon construction should be added.
 
 Circle construction remains on `C`:
 
 ```txt
-2 selected free points → circle from center and through point
+2 selected constructible points → circle from center and through point
 ```
 
-Even though circle also consumes two selected free points, it should keep a
-semantic wrapper separate from segment endpoints.
+### Intersection command
+
+`I` creates a bounded segment intersection:
+
+```txt
+2 selected segment nodes → SEGMENT_INTERSECTION point
+```
+
+Triangle borders are not segment nodes unless explicit segments were created. The selected-segment visual affordance should remain strong enough that users can tell whether both segments are selected.
 
 ## Adding pointer behavior
 
@@ -180,17 +179,11 @@ draggable area body hit → body drag
 empty canvas → add point
 ```
 
-Free-point dragging should continue to beat area-body dragging. Otherwise large
-areas become frustrating to work over.
-
-If a new shape should drag as a body, prefer registry body-drag metadata over
-hardcoding the shape in pointer intent.
+Free-point dragging should continue to beat area-body dragging.
 
 ## Adding z-order behavior
 
 Z-order is represented as node `zIndex`.
-
-User-facing commands:
 
 ```txt
 PageUp              bring selected forward
@@ -199,23 +192,7 @@ Shift+PageUp        bring selected to front
 Shift+PageDown      send selected to back
 ```
 
-`zIndex` only resolves conflicts within the same render layer or hit class. It
-must not collapse the distinct render and hit priority models.
-
-When changing z-order behavior, test both:
-
-```txt
-render/hit winner among same-class overlaps
-point priority over high-z areas
-```
-
-## Adding workspace-visible metadata
-
-If metadata lives on graph nodes, workspace serialization will usually preserve
-it naturally because nodes are serialized as graph nodes.
-
-Still test compatibility when changing required fields. Prefer optional metadata
-or parser defaults unless a migration is intentionally being introduced.
+`zIndex` only resolves conflicts within the same render layer or hit class. It must not collapse the distinct render and hit priority models.
 
 ## Documentation checklist
 
@@ -229,6 +206,9 @@ render/hit ordering
 keyboard shortcuts
 workspace format expectations
 feature workflow for new shapes
+intersection semantics
+undefined-construction behavior
+denotational curve/intersection direction
 ```
 
 Docs should explain why the architecture works, not merely list files.
