@@ -12,8 +12,8 @@ import { applyGraphEdit } from "../representation/edit";
 import type { GraphEdit } from "../representation/edit";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
-import type { ViewState } from "../app/viewState";
-import { emptyViewState } from "../app/viewState";
+import type { ViewState } from "./viewState";
+import { emptyViewState } from "./viewState";
 import type { GeometryWorkspace } from "./workspace";
 import {
   deserializeWorkspace,

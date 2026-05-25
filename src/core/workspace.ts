@@ -1,4 +1,4 @@
-import type { ViewState } from "../app/viewState";
+import type { ViewState } from "./viewState";
 import type { Graph } from "../representation/graph";
 import { createGraph } from "../representation/graph";
 import type { GeometryNode, NodeId } from "../representation/node";
