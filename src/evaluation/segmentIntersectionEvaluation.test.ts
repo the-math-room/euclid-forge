@@ -52,6 +52,7 @@ describe("evaluation/segment intersection", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "X",
+        code: "UNDEFINED_GEOMETRY",
         message:
           "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
       },
@@ -77,6 +78,7 @@ describe("evaluation/segment intersection", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "X",
+        code: "UNDEFINED_GEOMETRY",
         message:
           "Cannot evaluate X; segments AB and CD do not have a unique bounded intersection",
       },

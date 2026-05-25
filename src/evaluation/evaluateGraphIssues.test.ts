@@ -44,6 +44,7 @@ describe("evaluation/evaluateGraph partial issues", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "A",
+        code: "UNDEFINED_GEOMETRY",
         message: "A is undefined",
       },
     ]);
@@ -64,10 +65,12 @@ describe("evaluation/evaluateGraph partial issues", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "A",
+        code: "UNDEFINED_GEOMETRY",
         message: "A is undefined",
       },
       {
         nodeId: "AB",
+        code: "MISSING_DEPENDENCY",
         message: "Cannot evaluate AB; Missing evaluated dependency: A",
       },
     ]);

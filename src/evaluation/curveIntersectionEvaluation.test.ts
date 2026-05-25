@@ -94,6 +94,7 @@ describe("evaluation/curve intersection", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "X",
+        code: "UNDEFINED_GEOMETRY",
         message: "Cannot evaluate X; Circles do not intersect",
       },
     ]);
@@ -122,6 +123,7 @@ describe("evaluation/curve intersection", () => {
     expect(evaluated.issues).toEqual([
       {
         nodeId: "X",
+        code: "UNDEFINED_GEOMETRY",
         message:
           "Cannot evaluate X; branch circle-circle:0 is not currently defined",
       },

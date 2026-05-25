@@ -3,10 +3,12 @@ import { evaluateGeometryNode } from "../geometry/geometryRegistry";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
 import type { EvaluatedGeometry } from "./evaluated";
+import type { EvaluationIssueCode } from "./evaluationIssue";
 import { GeometryEvaluationIssueError } from "./evaluationIssue";
 
 export type EvaluationIssue = Readonly<{
   nodeId: NodeId;
+  code: EvaluationIssueCode;
   message: string;
 }>;
 
@@ -55,6 +57,7 @@ function evaluationIssueForError(
   if (error instanceof GeometryEvaluationIssueError) {
     return Object.freeze({
       nodeId: error.nodeId,
+      code: error.code,
       message: error.message,
     });
   }
@@ -65,6 +68,7 @@ function evaluationIssueForError(
   ) {
     return Object.freeze({
       nodeId,
+      code: "MISSING_DEPENDENCY",
       message: `Cannot evaluate ${nodeId}; ${error.message}`,
     });
   }
