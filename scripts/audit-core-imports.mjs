@@ -8,16 +8,17 @@ const forgeSrc = path.join(root, "apps/forge/src");
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 
-const APPROVED_PREFIXES = [
-  "@euclid-forge/core/core",
+const APPROVED_SPECIFIERS = new Set([
+  "@euclid-forge/core/evaluation/evaluated",
+]);
+
+const DISCOURAGED_PREFIXES = [
+  "@euclid-forge/core/geometry/",
+  "@euclid-forge/core/core/",
   "@euclid-forge/core/view/",
   "@euclid-forge/core/meaning/",
   "@euclid-forge/core/representation/",
   "@euclid-forge/core/evaluation/",
-];
-
-const DISCOURAGED_PREFIXES = [
-  "@euclid-forge/core/geometry/",
 ];
 
 const results = {
@@ -63,16 +64,13 @@ function classify(file, specifier) {
     return;
   }
 
-  if (DISCOURAGED_PREFIXES.some((prefix) => specifier.startsWith(prefix))) {
-    results.discouraged.push(entry);
+  if (APPROVED_SPECIFIERS.has(specifier)) {
+    results.approved.push(entry);
     return;
   }
 
-  if (
-    specifier === "@euclid-forge/core/core" ||
-    APPROVED_PREFIXES.some((prefix) => specifier.startsWith(prefix))
-  ) {
-    results.approved.push(entry);
+  if (DISCOURAGED_PREFIXES.some((prefix) => specifier.startsWith(prefix))) {
+    results.discouraged.push(entry);
     return;
   }
 
@@ -85,7 +83,7 @@ function printReport() {
   console.log();
 
   printGroup("Root facade imports", results.root);
-  printGroup("Approved family subpath imports", results.approved);
+  printGroup("Blessed family subpath imports", results.approved);
   printGroup("Discouraged/internal imports", results.discouraged);
   printGroup("Unknown core imports", results.unknown);
 
