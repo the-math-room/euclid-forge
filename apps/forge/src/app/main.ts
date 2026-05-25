@@ -5,7 +5,7 @@ import { appState } from "./appState";
 import { installToolSurface } from "./toolSurface";
 import {
   installDisplayThemeSurface,
-  type CanvasDisplayMode,
+  type CanvasDisplaySettings,
 } from "./displayThemeSurface";
 
 import { evaluateGraph } from "@euclid-forge/core";
@@ -27,6 +27,7 @@ import { renderScene } from "../rendering/renderScene";
 import {
   HIGH_CONTRAST_RENDER_THEME,
   RENDER_THEME,
+  scaledRenderTheme,
   type RenderTheme,
 } from "../rendering/theme";
 import { installPrintSurface } from "./printSurface";
@@ -87,13 +88,16 @@ function main(): void {
   const workspaceEnvironment = browserWorkspaceActionEnvironment();
 
   const initialState = initialAppState();
-  let canvasDisplayMode: CanvasDisplayMode = "dark";
+  let canvasDisplaySettings: CanvasDisplaySettings = {
+    mode: "dark",
+    scale: "normal",
+  };
   const requestRender = createRenderScheduler(() => {
     render(
       canvas,
       ctx,
       runtime.getState(),
-      renderThemeForDisplayMode(canvasDisplayMode),
+      renderThemeForDisplaySettings(canvasDisplaySettings),
     );
   });
   const runtime = createAppRuntime({
@@ -155,19 +159,26 @@ function main(): void {
   });
 
   const displayThemeSurface = installDisplayThemeSurface(document, {
-    onModeChange(mode) {
-      canvasDisplayMode = mode;
-      displayThemeSurface.update(mode);
+    onSettingsChange(settings) {
+      canvasDisplaySettings = settings;
+      displayThemeSurface.update(settings);
       runtime.requestRender();
     },
   });
-  displayThemeSurface.update(canvasDisplayMode);
+  displayThemeSurface.update(canvasDisplaySettings);
 
   runtime.requestRender();
 }
 
-function renderThemeForDisplayMode(mode: CanvasDisplayMode): RenderTheme {
-  return mode === "high-contrast" ? HIGH_CONTRAST_RENDER_THEME : RENDER_THEME;
+function renderThemeForDisplaySettings(
+  settings: CanvasDisplaySettings,
+): RenderTheme {
+  const theme =
+    settings.mode === "high-contrast"
+      ? HIGH_CONTRAST_RENDER_THEME
+      : RENDER_THEME;
+
+  return scaledRenderTheme(theme, settings.scale);
 }
 
 main();

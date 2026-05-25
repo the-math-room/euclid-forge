@@ -328,4 +328,93 @@ export const PRINT_RENDER_THEME: RenderTheme = Object.freeze({
   }),
 });
 
+export type RenderThemeScale = "normal" | "large" | "extra-large";
+
+export function scaledRenderTheme(
+  theme: RenderTheme,
+  scale: RenderThemeScale,
+): RenderTheme {
+  const factor = scaleFactor(scale);
+
+  if (factor === 1) {
+    return theme;
+  }
+
+  return Object.freeze({
+    ...theme,
+    point: Object.freeze({
+      ...theme.point,
+      styles: Object.freeze({
+        FREE: scalePointStyle(theme.point.styles.FREE, factor),
+        MIDPOINT: scalePointStyle(theme.point.styles.MIDPOINT, factor),
+        CENTROID: scalePointStyle(theme.point.styles.CENTROID, factor),
+        INTERSECTION: scalePointStyle(theme.point.styles.INTERSECTION, factor),
+      }),
+      hoverRingOffsetPx: theme.point.hoverRingOffsetPx * factor,
+      selectedRingOffsetPx: theme.point.selectedRingOffsetPx * factor,
+      labelFont: scaledFont(theme.point.labelFont, factor),
+      labelOffsetX: theme.point.labelOffsetX * factor,
+      labelOffsetY: theme.point.labelOffsetY * factor,
+      labelPill: Object.freeze({
+        ...theme.point.labelPill,
+        strokeWidthPx: theme.point.labelPill.strokeWidthPx * factor,
+        paddingXPx: theme.point.labelPill.paddingXPx * factor,
+        paddingYPx: theme.point.labelPill.paddingYPx * factor,
+        radiusPx: theme.point.labelPill.radiusPx * factor,
+        fallbackAscentPx: theme.point.labelPill.fallbackAscentPx * factor,
+        fallbackDescentPx: theme.point.labelPill.fallbackDescentPx * factor,
+      }),
+    }),
+    segment: scaleLinearTheme(theme.segment, factor),
+    circle: Object.freeze({
+      ...theme.circle,
+      lineWidth: theme.circle.lineWidth * factor,
+      selectedLineWidth: theme.circle.selectedLineWidth * factor,
+      hoverLineWidth: theme.circle.hoverLineWidth * factor,
+    }),
+    line: Object.freeze({
+      ...theme.line,
+      lineWidth: theme.line.lineWidth * factor,
+      selectedLineWidth: theme.line.selectedLineWidth * factor,
+      hoverLineWidth: theme.line.hoverLineWidth * factor,
+    }),
+    triangle: scaleLinearTheme(theme.triangle, factor),
+  });
+}
+
+function scalePointStyle(style: PointStyle, factor: number): PointStyle {
+  return Object.freeze({
+    ...style,
+    radiusPx: style.radiusPx * factor,
+  });
+}
+
+function scaleLinearTheme(theme: LinearTheme, factor: number): LinearTheme {
+  return Object.freeze({
+    ...theme,
+    lineWidthPx: theme.lineWidthPx * factor,
+    hoverLineWidthPx: theme.hoverLineWidthPx * factor,
+    selectedLineWidthPx: theme.selectedLineWidthPx * factor,
+  });
+}
+
+function scaledFont(font: string, factor: number): string {
+  return font.replace(/(\d+(?:\.\d+)?)px/, (_match, size: string) => {
+    return `${Number(size) * factor}px`;
+  });
+}
+
+function scaleFactor(scale: RenderThemeScale): number {
+  switch (scale) {
+    case "normal":
+      return 1;
+
+    case "large":
+      return 1.35;
+
+    case "extra-large":
+      return 1.75;
+  }
+}
+
 export const RENDER_THEME = SCREEN_RENDER_THEME;
