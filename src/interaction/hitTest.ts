@@ -3,7 +3,7 @@ import type { EvaluatedScene } from "../evaluation/evaluateGraph";
 import {
   bodyDragForGeometryNode,
   hitGeometryValue,
-} from "../geometry/geometryRegistry";
+} from "./geometryHitAdapters";
 import type {
   CircleHit,
   GeometryHitCandidate,
