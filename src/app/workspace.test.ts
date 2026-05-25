@@ -2,15 +2,15 @@ import { describe, expect, test } from "vitest";
 import {
   parseSerializedWorkspace,
   serializeWorkspace,
-} from "../core";
-import { vec2 } from "../meaning/vec2";
-import { createGraph } from "../representation/graph";
+} from "@euclid-forge/core";
+import { vec2 } from "@euclid-forge/core/meaning/vec2";
+import { createGraph } from "@euclid-forge/core/representation/graph";
 import {
   centroidNode,
   freePoint,
   segmentNode,
   triangleNode,
-} from "../representation/node";
+} from "@euclid-forge/core/representation/node";
 import { appState } from "./appState";
 import { deserializeWorkspace } from "./workspace";
 import {

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import { createGraph } from "../representation/graph";
-import { freePoint } from "../representation/node";
+import { createGraph } from "@euclid-forge/core/representation/graph";
+import { freePoint } from "@euclid-forge/core/representation/node";
 import { appState } from "./appState";
 import { initialHistory } from "./history";
 import type { WorkspaceActionEnvironment } from "./workspaceActions";

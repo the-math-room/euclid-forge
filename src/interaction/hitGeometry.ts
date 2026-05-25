@@ -3,8 +3,8 @@ import type {
   EvaluatedPoint,
   EvaluatedSegment,
   EvaluatedTriangle,
-} from "../evaluation/evaluated";
-import { screenToWorld, worldToScreen } from "../view/viewport";
+} from "@euclid-forge/core/evaluation/evaluated";
+import { screenToWorld, worldToScreen } from "@euclid-forge/core/view/viewport";
 import type { GeometryHitContext } from "./geometryInteractionContext";
 import type {
   CircleHit,

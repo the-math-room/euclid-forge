@@ -2,7 +2,7 @@ import { appState, type AppState } from "./appState";
 import {
   deserializeWorkspace as deserializeCoreWorkspace,
   type SerializedWorkspace,
-} from "../core";
+} from "@euclid-forge/core";
 
 export function deserializeWorkspace(
   workspace: SerializedWorkspace,

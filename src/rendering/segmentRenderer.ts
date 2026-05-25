@@ -1,7 +1,7 @@
-import type { EvaluatedSegment } from "../evaluation/evaluated";
+import type { EvaluatedSegment } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
-import type { Viewport } from "../view/viewport";
-import { worldToScreen } from "../view/viewport";
+import type { Viewport } from "@euclid-forge/core/view/viewport";
+import { worldToScreen } from "@euclid-forge/core/view/viewport";
 
 export type SegmentRenderOptions = Readonly<{
   hoveredNodeId?: string | null;

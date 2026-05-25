@@ -1,6 +1,6 @@
 import { appState } from "./appState";
 import type { AppState } from "./appState";
-import type { Graph } from "../representation/graph";
+import type { Graph } from "@euclid-forge/core/representation/graph";
 import type { ViewState } from "./viewState";
 import { setHoveredNode } from "./viewState";
 

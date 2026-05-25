@@ -1,6 +1,6 @@
-import type { NodeId } from "../representation/node";
-import { isConstructibleCurveNode } from "../representation/curveNode";
-import { isConstructiblePointNode } from "../representation/pointNode";
+import type { NodeId } from "@euclid-forge/core/representation/node";
+import { isConstructibleCurveNode } from "@euclid-forge/core/representation/curveNode";
+import { isConstructiblePointNode } from "@euclid-forge/core/representation/pointNode";
 import type { AppState } from "./appState";
 
 export function selectedConstructiblePointTuple<const N extends number>(

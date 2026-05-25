@@ -1,1 +1,1 @@
-export * from "../core/viewState";
+export * from "@euclid-forge/core/core/viewState";

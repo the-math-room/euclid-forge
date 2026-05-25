@@ -1,6 +1,6 @@
-import type { Graph } from "../representation/graph";
-import type { NodeId } from "../representation/node";
-import { transitiveDependentsOf } from "../representation/dependencies";
+import type { Graph } from "@euclid-forge/core/representation/graph";
+import type { NodeId } from "@euclid-forge/core/representation/node";
+import { transitiveDependentsOf } from "@euclid-forge/core/representation/dependencies";
 import type { ViewState } from "./viewState";
 
 export function effectiveHiddenNodeIds(

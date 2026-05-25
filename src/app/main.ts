@@ -1,6 +1,6 @@
 import "../styles/app.css";
 
-import { evaluateGraph } from "../evaluation/evaluateGraph";
+import { evaluateGraph } from "@euclid-forge/core/evaluation/evaluateGraph";
 import { createAppRuntime } from "./appRuntime";
 import { initialAppState } from "./appState";
 import type { AppState } from "./appState";

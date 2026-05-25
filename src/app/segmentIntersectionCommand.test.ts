@@ -5,13 +5,13 @@ import {
   appCommandForKey,
 } from "./commands";
 import { emptyViewState, toggleSelectedNode } from "./viewState";
-import { createGraph } from "../representation/graph";
+import { createGraph } from "@euclid-forge/core/representation/graph";
 import {
   circleNode,
   freePoint,
   segmentIntersectionNode,
   segmentNode,
-} from "../representation/node";
+} from "@euclid-forge/core/representation/node";
 
 describe("app segment intersection command", () => {
   test("creates a segment intersection from two selected segments", () => {
