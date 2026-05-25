@@ -131,7 +131,7 @@ describe("app/domEvents", () => {
     expect(runtime.requestRender).toHaveBeenCalledOnce();
   });
 
-  test("ordinary keydown applies a key transition", () => {
+  test("ordinary non-motion keydown applies a key transition", () => {
     const windowTarget = windowTargetStub();
     const runtime = runtimeStub();
 
@@ -145,10 +145,33 @@ describe("app/domEvents", () => {
       requestViewportMotionFrame: vi.fn(),
     });
 
-    const event = keyEvent("ArrowLeft");
+    const event = keyEvent("j");
     windowTarget.listeners.get("keydown")?.(event);
 
     expect(runtime.applyTransition).toHaveBeenCalledOnce();
+  });
+
+  test("viewport motion keydown starts viewport motion instead of applying a key transition", () => {
+    const windowTarget = windowTargetStub();
+    const runtime = runtimeStub();
+    const requestViewportMotionFrame = vi.fn();
+
+    connectDomEvents({
+      windowTarget,
+      canvas: canvasStub(),
+      runtime,
+      workspaceEnvironment: workspaceEnvironmentStub(),
+      getViewportMotion: emptyViewportMotionState,
+      setViewportMotion: vi.fn(),
+      requestViewportMotionFrame,
+    });
+
+    const event = keyEvent("ArrowLeft");
+    windowTarget.listeners.get("keydown")?.(event);
+
+    expect(runtime.applyTransition).not.toHaveBeenCalled();
+    expect(requestViewportMotionFrame).toHaveBeenCalledOnce();
+    expect(event.preventDefault).toHaveBeenCalledOnce();
   });
 
   test("undo and redo shortcuts delegate to runtime", () => {

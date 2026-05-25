@@ -1,4 +1,25 @@
-export type ViewportRotationDirection = -1 | 1;
+export type ViewportMotionDirection = -1 | 1;
+
+export type ViewportMotionInput = Readonly<
+  | {
+      kind: "PAN_X";
+      direction: ViewportMotionDirection;
+    }
+  | {
+      kind: "PAN_Y";
+      direction: ViewportMotionDirection;
+    }
+  | {
+      kind: "ZOOM";
+      direction: ViewportMotionDirection;
+    }
+  | {
+      kind: "ROTATE";
+      direction: ViewportMotionDirection;
+    }
+>;
+
+export type ViewportRotationDirection = ViewportMotionDirection;
 
 export function isSaveShortcut(event: KeyboardEvent): boolean {
   return (
@@ -36,18 +57,71 @@ export function isRedoShortcut(event: KeyboardEvent): boolean {
   );
 }
 
+export function viewportMotionInputForKey(
+  key: string,
+): ViewportMotionInput | null {
+  switch (key) {
+    case "ArrowLeft":
+      return {
+        kind: "PAN_X",
+        direction: -1,
+      };
+
+    case "ArrowRight":
+      return {
+        kind: "PAN_X",
+        direction: 1,
+      };
+
+    case "ArrowUp":
+      return {
+        kind: "PAN_Y",
+        direction: 1,
+      };
+
+    case "ArrowDown":
+      return {
+        kind: "PAN_Y",
+        direction: -1,
+      };
+
+    case "+":
+    case "=":
+      return {
+        kind: "ZOOM",
+        direction: 1,
+      };
+
+    case "-":
+    case "_":
+      return {
+        kind: "ZOOM",
+        direction: -1,
+      };
+
+    case "[":
+      return {
+        kind: "ROTATE",
+        direction: 1,
+      };
+
+    case "]":
+      return {
+        kind: "ROTATE",
+        direction: -1,
+      };
+
+    default:
+      return null;
+  }
+}
+
 export function viewportRotationDirectionForKey(
   key: string,
 ): ViewportRotationDirection | null {
-  if (key === "[") {
-    return 1;
-  }
+  const input = viewportMotionInputForKey(key);
 
-  if (key === "]") {
-    return -1;
-  }
-
-  return null;
+  return input?.kind === "ROTATE" ? input.direction : null;
 }
 
 export function shouldIgnoreKeyDownTarget(target: EventTarget | null): boolean {

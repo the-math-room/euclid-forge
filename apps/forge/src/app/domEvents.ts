@@ -15,11 +15,11 @@ import {
   isSaveShortcut,
   isUndoShortcut,
   shouldIgnoreKeyDownTarget,
-  viewportRotationDirectionForKey,
+  viewportMotionInputForKey,
 } from "./keyboardShortcuts";
 import type { WorkspaceActionEnvironment } from "./workspaceActions";
 import { openWorkspace, saveWorkspace } from "./workspaceActions";
-import { startViewportRotation, stopViewportRotation } from "./viewportMotion";
+import { startViewportMotion, stopViewportMotion } from "./viewportMotion";
 import type { ViewportMotionState } from "./viewportMotion";
 
 export type DomEventBindingsInput = Readonly<{
@@ -116,11 +116,11 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
       return;
     }
 
-    const rotateDirection = viewportRotationDirectionForKey(event.key);
+    const viewportMotionInput = viewportMotionInputForKey(event.key);
 
-    if (rotateDirection !== null) {
+    if (viewportMotionInput !== null) {
       input.setViewportMotion(
-        startViewportRotation(input.getViewportMotion(), rotateDirection),
+        startViewportMotion(input.getViewportMotion(), viewportMotionInput),
       );
       input.requestViewportMotionFrame();
       event.preventDefault();
@@ -137,14 +137,14 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.windowTarget.addEventListener("keyup", (event) => {
-    const rotateDirection = viewportRotationDirectionForKey(event.key);
+    const viewportMotionInput = viewportMotionInputForKey(event.key);
 
-    if (rotateDirection === null) {
+    if (viewportMotionInput === null) {
       return;
     }
 
     input.setViewportMotion(
-      stopViewportRotation(input.getViewportMotion(), rotateDirection),
+      stopViewportMotion(input.getViewportMotion(), viewportMotionInput),
     );
     event.preventDefault();
   });

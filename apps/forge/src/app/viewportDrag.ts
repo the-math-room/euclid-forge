@@ -11,20 +11,30 @@ export function viewportCenterForDrag(
     y: currentPointerScreen.y - dragState.initialPointerScreen.y,
   };
 
-  const cos = Math.cos(dragState.initialViewportRotation);
-  const sin = Math.sin(dragState.initialViewportRotation);
-
-  const worldDelta = {
-    x:
-      (cos * screenDelta.x + sin * screenDelta.y) /
-      dragState.initialViewportZoom,
-    y:
-      (-sin * screenDelta.x + cos * screenDelta.y) /
-      dragState.initialViewportZoom,
-  };
+  const worldDelta = screenDeltaToWorldDelta(
+    screenDelta,
+    dragState.initialViewportZoom,
+    dragState.initialViewportRotation,
+  );
 
   return vec2(
     dragState.initialViewportCenter.x - worldDelta.x,
-    dragState.initialViewportCenter.y + worldDelta.y,
+    dragState.initialViewportCenter.y - worldDelta.y,
+  );
+}
+
+export function screenDeltaToWorldDelta(
+  screenDelta: Readonly<{ x: number; y: number }>,
+  viewportZoom: number,
+  viewportRotation: number,
+): Vec2 {
+  const screenWorldX = screenDelta.x / viewportZoom;
+  const screenWorldY = -screenDelta.y / viewportZoom;
+  const cos = Math.cos(viewportRotation);
+  const sin = Math.sin(viewportRotation);
+
+  return vec2(
+    cos * screenWorldX + sin * screenWorldY,
+    -sin * screenWorldX + cos * screenWorldY,
   );
 }
