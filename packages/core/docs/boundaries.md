@@ -116,4 +116,3 @@ Run the normal patch-loop gate:
 ```bash
 npm run check:concise
 ```
-

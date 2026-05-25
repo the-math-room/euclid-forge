@@ -5,6 +5,7 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
+import { nextPointLabel } from "../../representation/pointLabelPlanning";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type { GeometryDefinition, NodeByKind } from "../geometryDefinition";
@@ -76,7 +77,7 @@ function centroidConstructionNodes(
 
   const id = nextCentroidId(graph);
 
-  return Object.freeze([centroidNode(id, triangle, id)]);
+  return Object.freeze([centroidNode(id, triangle, nextPointLabel(graph))]);
 }
 
 function nextCentroidId(

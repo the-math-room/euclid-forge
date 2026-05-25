@@ -66,4 +66,3 @@ Smoke coverage should document real user paths, especially modal tool workflows 
 Forge may adapt Core concepts to the browser, but browser-specific code should stay here. Do not move DOM, canvas, rendering, toolbar, pointer-capture, status-message, or file-picker concerns into `packages/core`.
 
 Core should own math and graph invariants. Forge should own the browser gesture that invokes those invariants.
-

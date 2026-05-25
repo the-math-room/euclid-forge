@@ -20,7 +20,7 @@ describe("representation/segment intersection construction", () => {
     ]);
 
     expect(segmentIntersectionConstruction(graph, "AB", "CD")).toEqual([
-      segmentIntersectionNode("X1", "AB", "CD", "X1"),
+      segmentIntersectionNode("X1", "AB", "CD", "E"),
     ]);
   });
 

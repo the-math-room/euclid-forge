@@ -8,6 +8,7 @@ import type {
   TriangleNode,
 } from "./node";
 import type { Graph } from "./graph";
+import { nextAlphabeticLabel } from "./pointLabelPlanning";
 
 export function segmentIntersectionConstruction(
   graph: Graph,
@@ -74,6 +75,41 @@ export function centroidConstruction(
   );
 }
 
+export function segmentMidpointConstruction(
+  graph: Graph,
+  segment: NodeId,
+): readonly GeometryNode[] {
+  const node = graph.byId.get(segment);
+
+  if (!node) {
+    throw new Error(`Cannot create midpoint for missing segment: ${segment}`);
+  }
+
+  if (node.kind !== "SEGMENT") {
+    throw new Error(`Cannot create midpoint for non-segment node: ${segment}`);
+  }
+
+  const existing = findMidpointForSegment(graph.nodes, segment);
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  return Object.freeze([
+    midpointNode(
+      nextMidpointId(graph.nodes, segment),
+      segment,
+      nextAlphabeticLabel(
+        new Set(
+          graph.nodes
+            .filter((candidate) => "label" in candidate)
+            .map((candidate) => candidate.label),
+        ),
+      ),
+    ),
+  ]);
+}
+
 export function triangleSideMidpointConstruction(
   graph: Graph,
   triangle: NodeId,
@@ -93,6 +129,9 @@ export function triangleSideMidpointConstruction(
   }
 
   const additions: GeometryNode[] = [];
+  const usedPointLabels = new Set(
+    graph.nodes.filter((node) => "label" in node).map((node) => node.label),
+  );
   let nodes = [...graph.nodes];
 
   for (const [a, b] of triangleEdges(node)) {
@@ -107,7 +146,9 @@ export function triangleSideMidpointConstruction(
 
     if (!findMidpointForSegment(nodes, segment.id)) {
       const id = nextMidpointId(nodes, segment.id);
-      const midpoint = midpointNode(id, segment.id, id);
+      const label = nextAlphabeticLabel(usedPointLabels);
+      usedPointLabels.add(label);
+      const midpoint = midpointNode(id, segment.id, label);
 
       additions.push(midpoint);
       nodes = [...nodes, midpoint];

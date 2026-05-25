@@ -85,4 +85,3 @@ Forge may ask the core package for evaluated geometry, graph edits, construction
 Geometry definitions may describe representation, evaluation, and construction. They should not describe rendering or interaction.
 
 When adding a feature, prove the denotation first. Add editor behavior only after the headless meaning is stable.
-

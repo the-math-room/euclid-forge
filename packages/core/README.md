@@ -97,4 +97,3 @@ The legacy package-local dump script now delegates to the root target:
 ```bash
 packages/core/scripts/dump-source.sh
 ```
-

@@ -44,17 +44,23 @@ test("drags the triangle body and translates its derived constructions", async (
   await expectBluePointNear(frame.canvas, { x: 1, y: 0.5 });
 });
 
-test("clicks empty canvas to add a new draggable free point", async ({
+test("point mode clicks empty canvas to add a new draggable free point", async ({
   page,
 }) => {
   await page.goto("/");
 
   const frame = await getCanvasFrame(page);
 
+  await page.getByRole("button", { name: "Point" }).click();
+  await waitForAnimationFrame(page);
+
   await clickWorld(page, frame, { x: 3, y: 2 });
   await waitForAnimationFrame(page);
 
   await expectYellowPointNear(frame.canvas, { x: 3, y: 2 });
+
+  await page.getByRole("button", { name: "Move" }).click();
+  await waitForAnimationFrame(page);
 
   await dragWorld(page, frame, { x: 3, y: 2 }, { x: 2, y: 2 });
   await waitForAnimationFrame(page);
@@ -73,6 +79,9 @@ test("shift-selects three free points and creates a triangle with J", async ({
   const p2 = { x: 4, y: 2 };
   const p3 = { x: 3, y: 3 };
 
+  await page.getByRole("button", { name: "Point" }).click();
+  await waitForAnimationFrame(page);
+
   await clickWorld(page, frame, p1);
   await waitForAnimationFrame(page);
 
@@ -80,6 +89,9 @@ test("shift-selects three free points and creates a triangle with J", async ({
   await waitForAnimationFrame(page);
 
   await clickWorld(page, frame, p3);
+  await waitForAnimationFrame(page);
+
+  await page.getByRole("button", { name: "Move" }).click();
   await waitForAnimationFrame(page);
 
   await shiftClickWorld(page, frame, p1);
@@ -118,12 +130,18 @@ test("deletes an isolated point and undo restores it", async ({ page }) => {
 
   let frame = await getCanvasFrame(page);
 
+  await page.getByRole("button", { name: "Point" }).click();
+  await waitForAnimationFrame(page);
+
   await clickWorld(page, frame, { x: 4, y: 3 });
   await waitForAnimationFrame(page);
 
   frame = await getCanvasFrame(page);
 
   await expectYellowPointNear(frame.canvas, { x: 4, y: 3 });
+
+  await page.getByRole("button", { name: "Move" }).click();
+  await waitForAnimationFrame(page);
 
   await shiftClickWorld(page, frame, { x: 4, y: 3 });
   await waitForAnimationFrame(page);
@@ -194,6 +212,9 @@ test("delete mode deletes clicked geometry without preselecting", async ({
 
   const frame = await getCanvasFrame(page);
 
+  await page.getByRole("button", { name: "Point" }).click();
+  await waitForAnimationFrame(page);
+
   await clickWorld(page, frame, { x: 4, y: 3 });
   await waitForAnimationFrame(page);
 
@@ -216,10 +237,16 @@ test("creates a circle from two selected points", async ({ page }) => {
   const center = { x: 3, y: 2 };
   const through = { x: 4, y: 2 };
 
+  await page.getByRole("button", { name: "Point" }).click();
+  await waitForAnimationFrame(page);
+
   await clickWorld(page, frame, center);
   await waitForAnimationFrame(page);
 
   await clickWorld(page, frame, through);
+  await waitForAnimationFrame(page);
+
+  await page.getByRole("button", { name: "Move" }).click();
   await waitForAnimationFrame(page);
 
   await shiftClickWorld(page, frame, center);

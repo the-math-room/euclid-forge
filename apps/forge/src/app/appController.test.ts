@@ -96,7 +96,7 @@ describe("app/appController", () => {
 
   test("joins three selected free points into a triangle with J", () => {
     const graph = createGraph([
-      freePoint("P1", 0, 0, "P1"),
+      freePoint("P1", 0, 0, "D"),
       freePoint("P2", 2, 0, "P2"),
       freePoint("P3", 1, 2, "P3"),
     ]);
@@ -120,7 +120,7 @@ describe("app/appController", () => {
 
   test("ignores J unless exactly two or three selected nodes are free points", () => {
     const graph = createGraph([
-      freePoint("P1", 0, 0, "P1"),
+      freePoint("P1", 0, 0, "D"),
       freePoint("P2", 2, 0, "P2"),
       freePoint("P3", 1, 2, "P3"),
       triangleNode("T1", "P1", "P2", "P3"),
@@ -158,7 +158,7 @@ describe("app/appController", () => {
 
     expect(transition.history).toBe("commit");
     expect(transition.state.graph.byId.get("X1")).toEqual(
-      segmentIntersectionNode("X1", "AB", "CD", "X1"),
+      segmentIntersectionNode("X1", "AB", "CD", "E"),
     );
     expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
   });
@@ -209,8 +209,8 @@ describe("app/appController", () => {
     );
 
     expect(curveIntersections.map((node) => node.label).sort()).toEqual([
-      "X1",
-      "X2",
+      "C",
+      "D",
     ]);
     expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
       "linear-circle:0",
@@ -225,7 +225,7 @@ describe("app/appController", () => {
 
   test("creates a centroid for one selected triangle with G", () => {
     const graph = createGraph([
-      freePoint("P1", 0, 0, "P1"),
+      freePoint("P1", 0, 0, "D"),
       freePoint("P2", 2, 0, "P2"),
       freePoint("P3", 1, 2, "P3"),
       triangleNode("T1", "P1", "P2", "P3"),
@@ -238,14 +238,14 @@ describe("app/appController", () => {
     });
 
     expect(transition.state.graph.byId.get("G1")).toEqual(
-      centroidNode("G1", "T1", "G1"),
+      centroidNode("G1", "T1", "A"),
     );
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
   });
 
   test("creates side midpoints for one selected triangle with M", () => {
     const graph = createGraph([
-      freePoint("P1", 0, 0, "P1"),
+      freePoint("P1", 0, 0, "D"),
       freePoint("P2", 2, 0, "P2"),
       freePoint("P3", 1, 2, "P3"),
       triangleNode("T1", "P1", "P2", "P3"),
@@ -261,19 +261,19 @@ describe("app/appController", () => {
       segmentNode("S_P1_P2", "P1", "P2"),
     );
     expect(transition.state.graph.byId.get("M_S_P1_P2")).toEqual(
-      midpointNode("M_S_P1_P2", "S_P1_P2", "M_S_P1_P2"),
+      midpointNode("M_S_P1_P2", "S_P1_P2", "A"),
     );
     expect(transition.state.graph.byId.get("S_P2_P3")).toEqual(
       segmentNode("S_P2_P3", "P2", "P3"),
     );
     expect(transition.state.graph.byId.get("M_S_P2_P3")).toEqual(
-      midpointNode("M_S_P2_P3", "S_P2_P3", "M_S_P2_P3"),
+      midpointNode("M_S_P2_P3", "S_P2_P3", "B"),
     );
     expect(transition.state.graph.byId.get("S_P1_P3")).toEqual(
       segmentNode("S_P1_P3", "P3", "P1"),
     );
     expect(transition.state.graph.byId.get("M_S_P1_P3")).toEqual(
-      midpointNode("M_S_P1_P3", "S_P1_P3", "M_S_P1_P3"),
+      midpointNode("M_S_P1_P3", "S_P1_P3", "C"),
     );
     expect([...transition.state.viewState.selectedNodeIds]).toEqual([]);
   });
@@ -392,7 +392,8 @@ describe("app/appController", () => {
       pointerId: 1,
     });
   });
-  test("pointerdown ignores hidden free points and adds a new point instead", () => {
+
+  test("pointerdown ignores hidden free points and starts viewport drag instead", () => {
     const graph = createGraph([freePoint("A", -2, -1, "A")]);
 
     const hiddenViewState = hideSelectedNodes(
@@ -409,15 +410,17 @@ describe("app/appController", () => {
       },
     );
 
-    expect(transition.state.dragState).toBeNull();
-    expect(transition.effects).not.toContainEqual(
-      expect.objectContaining({
-        kind: "SET_POINTER_CAPTURE",
-      }),
-    );
-    expect(transition.state.graph.byId.get("P1")).toEqual(
-      freePoint("P1", -2, -1, "P1"),
-    );
+    expect(transition.state.dragState).toEqual({
+      kind: "VIEWPORT",
+      initialPointerWorld: { x: -2, y: -1 },
+      initialViewportCenter: { x: 0, y: 0 },
+    });
+    expect(transition.effects).toContainEqual({
+      kind: "SET_POINTER_CAPTURE",
+      pointerId: 1,
+    });
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
   });
 
   test("shift-click ignores hidden points", () => {
@@ -498,7 +501,7 @@ describe("app/appController", () => {
     expect(transition.shouldPreventDefault).toBe(true);
   });
 
-  test("pointerdown ignores hidden triangle interiors and adds a point instead", () => {
+  test("pointerdown ignores hidden triangle interiors and starts viewport drag instead", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
@@ -520,15 +523,17 @@ describe("app/appController", () => {
       },
     );
 
-    expect(transition.state.dragState).toBeNull();
-    expect(transition.effects).not.toContainEqual(
-      expect.objectContaining({
-        kind: "SET_POINTER_CAPTURE",
-      }),
-    );
-    expect(transition.state.graph.byId.get("P1")).toEqual(
-      freePoint("P1", 0, 0, "P1"),
-    );
+    expect(transition.state.dragState).toEqual({
+      kind: "VIEWPORT",
+      initialPointerWorld: { x: 0, y: 0 },
+      initialViewportCenter: { x: 0, y: 0 },
+    });
+    expect(transition.effects).toContainEqual({
+      kind: "SET_POINTER_CAPTURE",
+      pointerId: 1,
+    });
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
   });
 
   test("shift-click ignores effectively hidden dependent centroids", () => {
@@ -560,7 +565,7 @@ describe("app/appController", () => {
     expect(transition.shouldPreventDefault).toBe(true);
   });
 
-  test("pointerdown ignores effectively hidden triangles when a vertex is hidden", () => {
+  test("pointerdown ignores effectively hidden triangles and starts viewport drag when a vertex is hidden", () => {
     const graph = createGraph([
       freePoint("A", -2, -1, "A"),
       freePoint("B", 2, -1, "B"),
@@ -582,15 +587,17 @@ describe("app/appController", () => {
       },
     );
 
-    expect(transition.state.dragState).toBeNull();
-    expect(transition.effects).not.toContainEqual(
-      expect.objectContaining({
-        kind: "SET_POINTER_CAPTURE",
-      }),
-    );
-    expect(transition.state.graph.byId.get("P1")).toEqual(
-      freePoint("P1", 0, 0, "P1"),
-    );
+    expect(transition.state.dragState).toEqual({
+      kind: "VIEWPORT",
+      initialPointerWorld: { x: 0, y: 0 },
+      initialViewportCenter: { x: 0, y: 0 },
+    });
+    expect(transition.effects).toContainEqual({
+      kind: "SET_POINTER_CAPTURE",
+      pointerId: 1,
+    });
+    expect(transition.history).toBe("ignore");
+    expect(transition.state.graph).toBe(graph);
   });
 
   test("hiding a source clears dependent selected nodes", () => {
@@ -1007,7 +1014,7 @@ describe("app/appController", () => {
 
   test("durable graph commands request history commits", () => {
     const graph = createGraph([
-      freePoint("P1", 0, 0, "P1"),
+      freePoint("P1", 0, 0, "D"),
       freePoint("P2", 2, 0, "P2"),
       freePoint("P3", 1, 2, "P3"),
     ]);

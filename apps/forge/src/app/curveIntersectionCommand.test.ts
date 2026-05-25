@@ -32,8 +32,8 @@ describe("app curve intersection command", () => {
 
     expect(result.history).toBe("commit");
     expect(curveIntersections.map((node) => node.label).sort()).toEqual([
-      "X1",
-      "X2",
+      "C",
+      "D",
     ]);
     expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
       "circle-circle:0",

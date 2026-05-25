@@ -206,4 +206,3 @@ ray: half-bounded linear curve
 ```
 
 That will test whether curve domains, hit testing, rendering, modal tools, and intersection candidate generation are sufficiently denotational.
-

@@ -197,4 +197,3 @@ a local app layer imports against the intended app-side direction
 The monorepo should reduce coordination cost. It should not reduce architectural pressure.
 
 A correct change should feel easier because all code is nearby. An incorrect dependency should feel harder because the checks reject it immediately.
-

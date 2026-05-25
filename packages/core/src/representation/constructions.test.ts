@@ -78,12 +78,12 @@ describe("representation/constructions", () => {
     ]);
 
     expect(centroidConstruction(graph, "ABC")).toEqual([
-      centroidNode("G1", "ABC", "G1"),
+      centroidNode("G1", "ABC", "D"),
     ]);
 
     const withCentroid = createGraph([
       ...graph.nodes,
-      centroidNode("G1", "ABC", "G1"),
+      centroidNode("G1", "ABC", "D"),
     ]);
 
     expect(centroidConstruction(withCentroid, "ABC")).toEqual([]);
@@ -99,11 +99,11 @@ describe("representation/constructions", () => {
 
     expect(triangleSideMidpointConstruction(graph, "ABC")).toEqual([
       segmentNode("S_A_B", "A", "B"),
-      midpointNode("M_S_A_B", "S_A_B", "M_S_A_B"),
+      midpointNode("M_S_A_B", "S_A_B", "D"),
       segmentNode("S_B_C", "B", "C"),
-      midpointNode("M_S_B_C", "S_B_C", "M_S_B_C"),
+      midpointNode("M_S_B_C", "S_B_C", "E"),
       segmentNode("S_A_C", "C", "A"),
-      midpointNode("M_S_A_C", "S_A_C", "M_S_A_C"),
+      midpointNode("M_S_A_C", "S_A_C", "F"),
     ]);
   });
 
@@ -119,9 +119,9 @@ describe("representation/constructions", () => {
 
     expect(triangleSideMidpointConstruction(graph, "ABC")).toEqual([
       segmentNode("S_B_C", "B", "C"),
-      midpointNode("M_S_B_C", "S_B_C", "M_S_B_C"),
+      midpointNode("M_S_B_C", "S_B_C", "D"),
       segmentNode("S_A_C", "C", "A"),
-      midpointNode("M_S_A_C", "S_A_C", "M_S_A_C"),
+      midpointNode("M_S_A_C", "S_A_C", "E"),
     ]);
   });
   test("creates a segment from two free points", () => {

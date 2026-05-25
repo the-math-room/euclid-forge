@@ -6,6 +6,7 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
+import { nextPointLabel } from "../../representation/pointLabelPlanning";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
 import type { GeometryDefinition, NodeByKind } from "../geometryDefinition";
@@ -108,7 +109,9 @@ function segmentIntersectionConstructionNodes(
 
   const id = nextSegmentIntersectionId(graph);
 
-  return Object.freeze([segmentIntersectionNode(id, segmentA, segmentB, id)]);
+  return Object.freeze([
+    segmentIntersectionNode(id, segmentA, segmentB, nextPointLabel(graph)),
+  ]);
 }
 
 function nextSegmentIntersectionId(

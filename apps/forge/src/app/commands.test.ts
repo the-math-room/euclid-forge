@@ -300,7 +300,7 @@ describe("app/commands", () => {
 
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.get("G1")).toEqual(
-      centroidNode("G1", "T1", "G1"),
+      centroidNode("G1", "T1", "A"),
     );
   });
 

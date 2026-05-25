@@ -1,6 +1,7 @@
 import type { Vec2 } from "../meaning/vec2";
 import type { Graph } from "./graph";
 import { freePoint, type FreePointNode, type NodeId } from "./node";
+import { nextPointLabel } from "./pointLabelPlanning";
 
 export type PlannedFreePoint = Readonly<{
   id: NodeId;
@@ -22,6 +23,6 @@ export function planFreePoint(graph: Graph, point: Vec2): PlannedFreePoint {
 
   return {
     id,
-    node: freePoint(id, point.x, point.y, id),
+    node: freePoint(id, point.x, point.y, nextPointLabel(graph)),
   };
 }

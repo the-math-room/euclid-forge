@@ -137,4 +137,3 @@ Forge decides how users see and manipulate it.
 ```
 
 Browser ergonomics can depend on Core invariants, but Core must not depend on browser ergonomics.
-

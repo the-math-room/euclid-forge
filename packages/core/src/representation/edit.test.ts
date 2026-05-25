@@ -19,7 +19,7 @@ describe("representation/applyGraphEdit", () => {
       point: vec2(2, 3),
     });
 
-    expect(next.byId.get("P2")).toEqual(freePoint("P2", 2, 3, "P2"));
+    expect(next.byId.get("P2")).toEqual(freePoint("P2", 2, 3, "A"));
   });
 
   test("adds structural nodes", () => {

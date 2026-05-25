@@ -35,7 +35,7 @@ describe("representation/freePointPlanning", () => {
 
     expect(planFreePoint(graph, vec2(2, 3))).toEqual({
       id: "P2",
-      node: freePoint("P2", 2, 3, "P2"),
+      node: freePoint("P2", 2, 3, "A"),
     });
   });
 });

@@ -29,7 +29,7 @@ describe("app segment intersection command", () => {
 
     expect(result?.history).toBe("commit");
     expect(result?.state.graph.byId.get("X1")).toEqual(
-      segmentIntersectionNode("X1", "AB", "CD", "X1"),
+      segmentIntersectionNode("X1", "AB", "CD", "E"),
     );
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
   });
@@ -80,8 +80,8 @@ test("creates curve intersection nodes for non-segment curve pairs", () => {
   );
 
   expect(curveIntersections.map((node) => node.label).sort()).toEqual([
-    "X1",
-    "X2",
+    "C",
+    "D",
   ]);
   expect(curveIntersections.map((node) => node.branchKey).sort()).toEqual([
     "linear-circle:0",

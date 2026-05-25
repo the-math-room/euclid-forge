@@ -71,6 +71,7 @@ export type { EvaluationIssueCode } from "../evaluation/evaluationIssue";
 
 export {
   segmentIntersectionConstruction,
+  segmentMidpointConstruction,
   segmentConstruction,
   lineConstruction,
   circleConstruction,
@@ -145,3 +146,10 @@ export {
   planFreePoint,
   type PlannedFreePoint,
 } from "../representation/freePointPlanning";
+
+export {
+  alphabeticLabelForIndex,
+  nextAlphabeticLabel,
+  nextPointLabel,
+  nextPointLabels,
+} from "../representation/pointLabelPlanning";

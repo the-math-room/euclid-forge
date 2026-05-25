@@ -4,6 +4,11 @@ import type { FreePointPositionSnapshot } from "./freePointDrag";
 
 export type DragState =
   | Readonly<{
+      kind: "VIEWPORT";
+      initialPointerWorld: Vec2;
+      initialViewportCenter: Vec2;
+    }>
+  | Readonly<{
       kind: "FREE_POINT";
       nodeId: NodeId;
     }>

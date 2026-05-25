@@ -1,4 +1,4 @@
-import { deltaBetween } from "@euclid-forge/core";
+import { deltaBetween, vec2 } from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
 import type { NodeId } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
@@ -13,6 +13,7 @@ import type { AppState } from "./appState";
 
 import {
   clearSelection,
+  panViewport,
   setHoveredNode,
   toggleSelectedNode,
 } from "./viewState";
@@ -119,18 +120,26 @@ export function handlePointerDown(
       });
 
     case "ADD_FREE_POINT":
-      return changed(
-        appState(
-          applyGraphEdit(state.graph, {
-            kind: "ADD_FREE_POINT",
-            point: intent.point,
-          }),
+      return transition({
+        state: appState(
+          state.graph,
           clearSelection(viewState),
-          null,
+          {
+            kind: "VIEWPORT",
+            initialPointerWorld: screenToWorld(input.viewport, input.point),
+            initialViewportCenter: viewState.viewportCenter,
+          },
           state.activeTool,
         ),
-        "commit",
-      );
+        shouldRender: false,
+        shouldPreventDefault: true,
+        effects: [
+          {
+            kind: "SET_POINTER_CAPTURE",
+            pointerId: input.pointerId,
+          },
+        ],
+      });
 
     case "NONE":
       return preventOnly(
@@ -158,6 +167,21 @@ export function handlePointerMove(
   const viewState = setHoveredNode(state.viewState, null);
 
   switch (state.dragState.kind) {
+    case "VIEWPORT": {
+      const currentWorld = screenToWorld(input.viewport, input.point);
+      const delta = deltaBetween(
+        currentWorld,
+        state.dragState.initialPointerWorld,
+      );
+      const baseViewState = {
+        ...viewState,
+        viewportCenter: state.dragState.initialViewportCenter,
+      };
+      const nextViewState = panViewport(baseViewState, delta);
+
+      return changed(appState(state.graph, nextViewState, state.dragState));
+    }
+
     case "FREE_POINT":
       return changed(
         appState(

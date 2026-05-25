@@ -98,4 +98,3 @@ Full gate:
 ```bash
 npm run check
 ```
-

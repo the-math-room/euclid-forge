@@ -4,6 +4,7 @@ import {
   deleteNodesDisabledReason,
   isConstructiblePointNode,
   lineConstruction,
+  midpointNode,
   planFreePoint,
   screenToWorld,
   segmentConstruction,
@@ -182,8 +183,24 @@ function constructionNodesForPointTool(
     case "triangle":
       return triangleConstruction(state.graph, requiredInputs(activeTool, 3));
 
-    case "midpoint":
-      return [];
+    case "midpoint": {
+      const [a, b] = requiredInputs(activeTool, 2);
+      const segment = findSegmentBetween(state.graph.nodes, a, b);
+
+      if (!segment) {
+        return [];
+      }
+
+      const existing = state.graph.nodes.find(
+        (node) => node.kind === "MIDPOINT" && node.segment === segment.id,
+      );
+
+      if (existing) {
+        return [];
+      }
+
+      return [midpointNode(`M_${segment.id}`, segment.id, "M")];
+    }
   }
 }
 
@@ -266,4 +283,18 @@ function selectablePointerHit(
   );
 
   return intent.kind === "SELECT_NODE" ? intent.id : null;
+}
+
+function findSegmentBetween(
+  nodes: readonly GeometryNode[],
+  a: NodeId,
+  b: NodeId,
+): GeometryNode | null {
+  const found = nodes.find(
+    (node) =>
+      node.kind === "SEGMENT" &&
+      ((node.a === a && node.b === b) || (node.a === b && node.b === a)),
+  );
+
+  return found ?? null;
 }

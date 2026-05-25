@@ -5,6 +5,7 @@ import {
   circleConstruction,
   lineConstruction,
   segmentIntersectionConstruction,
+  segmentMidpointConstruction,
   segmentConstruction,
   triangleConstruction,
   triangleSideMidpointConstruction,
@@ -13,6 +14,7 @@ import { applyGraphEdit } from "@euclid-forge/core";
 import { curveIntersectionNode } from "@euclid-forge/core";
 import type { GeometryNode, NodeId } from "@euclid-forge/core";
 import { deleteNodesDisabledReason } from "@euclid-forge/core";
+import { nextPointLabels } from "@euclid-forge/core";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
 import { clearEffectivelyHiddenSelection } from "./effectiveVisibility";
@@ -27,6 +29,7 @@ import {
   selectedConstructibleCurveTuple,
   selectedSegmentEndpoints,
   selectedFreePointVertices,
+  selectedSegmentTuple,
   selectedTriangle,
 } from "./selectionPredicates";
 import {
@@ -333,23 +336,34 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   }),
 
   command({
-    id: "create-side-midpoints",
+    id: "create-midpoint",
     keys: ["m"],
-    disabledReason: (state) => (selectedTriangle(state) ? null : ""),
-    run: (state) =>
-      commit(
+    disabledReason: midpointDisabledReason,
+    run: (state) => {
+      const segment = selectedSegmentTuple(state, 1)?.[0];
+
+      const nodes = segment
+        ? segmentMidpointConstruction(state.graph, segment)
+        : triangleSideMidpointConstruction(
+            state.graph,
+            requireSelectedTriangle(state),
+          );
+
+      if (nodes.length === 0) {
+        return ignore(state, "Midpoint already exists.");
+      }
+
+      return commit(
         appState(
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
-            nodes: triangleSideMidpointConstruction(
-              state.graph,
-              requireSelectedTriangle(state),
-            ),
+            nodes,
           }),
           clearSelection(state.viewState),
           state.dragState,
         ),
-      ),
+      );
+    },
   }),
 
   command({
@@ -564,6 +578,8 @@ function curveIntersectionConstruction(
   }
 
   const additions: GeometryNode[] = [];
+  const labels = nextPointLabels(state.graph, result.candidates.length);
+  let labelIndex = 0;
 
   for (const candidate of result.candidates) {
     const existing = [...state.graph.nodes, ...additions].find(
@@ -584,14 +600,16 @@ function curveIntersectionConstruction(
       candidate.branchKey,
     );
 
+    const label = labels[labelIndex];
+
+    if (!label) {
+      throw new Error("Internal curve intersection label allocation error");
+    }
+
+    labelIndex += 1;
+
     additions.push(
-      curveIntersectionNode(
-        id,
-        curveA,
-        curveB,
-        candidate.branchKey,
-        nextCurveIntersectionLabel([...state.graph.nodes, ...additions]),
-      ),
+      curveIntersectionNode(id, curveA, curveB, candidate.branchKey, label),
     );
   }
 
@@ -608,23 +626,6 @@ function sameUnorderedPair(
     (leftA === rightA && leftB === rightB) ||
     (leftA === rightB && leftB === rightA)
   );
-}
-
-function nextCurveIntersectionLabel(nodes: readonly GeometryNode[]): string {
-  let index = 1;
-
-  while (
-    nodes.some(
-      (node) =>
-        "label" in node &&
-        typeof node.label === "string" &&
-        node.label === `X${index}`,
-    )
-  ) {
-    index += 1;
-  }
-
-  return `X${index}`;
 }
 
 function nextCurveIntersectionId(
@@ -658,6 +659,14 @@ function segmentIntersectionDisabledReason(state: AppState): string | null {
   }
 
   return "Select exactly two curve nodes, such as segments or circles, to create an intersection.";
+}
+
+function midpointDisabledReason(state: AppState): string | null {
+  if (selectedSegmentTuple(state, 1) || selectedTriangle(state)) {
+    return null;
+  }
+
+  return "Select one segment for its midpoint, or one triangle for side midpoints.";
 }
 
 function selectedNodesDisabledReason(state: AppState): string | null {

@@ -152,4 +152,3 @@ Every Forge import from Core should be intentional, documented, and stable.
 ```
 
 A good final state may still have a few family subpaths if they make the app clearer without exposing implementation details.
-
