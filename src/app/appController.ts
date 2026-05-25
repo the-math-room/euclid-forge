@@ -91,7 +91,7 @@ export function handleKeyDown(
 
   const result = command.run(state);
 
-  return changed(result.state, result.history);
+  return changed(result.state, result.history, result.statusMessage);
 }
 
 export function handlePointerDown(

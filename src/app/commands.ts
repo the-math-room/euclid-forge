@@ -51,6 +51,7 @@ export type CommandHistoryPolicy = "commit" | "ignore";
 export type AppCommandResult = Readonly<{
   state: AppState;
   history: CommandHistoryPolicy;
+  statusMessage?: string;
 }>;
 
 export type AppCommand = Readonly<{
@@ -508,10 +509,14 @@ function commit(state: AppState): AppCommandResult {
   });
 }
 
-function ignore(state: AppState): AppCommandResult {
+function ignore(
+  state: AppState,
+  statusMessage?: string,
+): AppCommandResult {
   return Object.freeze({
     state,
     history: "ignore",
+    ...(statusMessage === undefined ? {} : { statusMessage }),
   });
 }
 
