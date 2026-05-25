@@ -1,4 +1,8 @@
 import { describe, expect, test } from "vitest";
+import {
+  parseSerializedWorkspace,
+  serializeWorkspace,
+} from "../core/workspace";
 import { vec2 } from "../meaning/vec2";
 import { createGraph } from "../representation/graph";
 import {
@@ -8,11 +12,7 @@ import {
   triangleNode,
 } from "../representation/node";
 import { appState } from "./appState";
-import {
-  deserializeWorkspace,
-  parseSerializedWorkspace,
-  serializeWorkspace,
-} from "./workspace";
+import { deserializeWorkspace } from "./workspace";
 import {
   emptyViewState,
   setHoveredNode,
