@@ -7,6 +7,7 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
+import { isConstructiblePointNode } from "../../representation/pointNode";
 import { renderTriangle } from "../../rendering/triangleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -129,7 +130,7 @@ function triangleConstructionNodes(
       throw new Error(`Cannot create triangle with missing vertex: ${id}`);
     }
 
-    if (node.kind !== "FREE_POINT") {
+    if (!isConstructiblePointNode(node)) {
       throw new Error(`Cannot create triangle with constrained vertex: ${id}`);
     }
   }

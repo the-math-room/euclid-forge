@@ -17,7 +17,7 @@ import {
 import {
   requireSelectedCirclePoints,
   requireSelectedSegmentEndpoints,
-  requireSelectedFreePointTuple,
+  requireSelectedConstructiblePointTuple,
   requireSelectedFreePointVertices,
   requireSelectedTriangle,
   selectedCirclePoints,
@@ -201,7 +201,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
         selectedCount === 2
           ? segmentConstruction(
               state.graph,
-              ...requireSelectedFreePointTuple(
+              ...requireSelectedConstructiblePointTuple(
                 state,
                 2,
                 "Cannot run join-selected-free-points while disabled",
@@ -209,7 +209,7 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
             )
           : triangleConstruction(
               state.graph,
-              requireSelectedFreePointTuple(
+              requireSelectedConstructiblePointTuple(
                 state,
                 3,
                 "Cannot run join-selected-free-points while disabled",

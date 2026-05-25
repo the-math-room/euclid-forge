@@ -5,6 +5,7 @@ import {
   centroidNode,
   circleNode,
   freePoint,
+  midpointNode,
   segmentNode,
   triangleNode,
 } from "../representation/node";
@@ -96,6 +97,61 @@ describe("app/commands", () => {
           ),
         ),
     ).toBe("");
+  });
+
+
+  test("joins derived point inputs", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("C", 0, 2, "C"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M", "AB", "M"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "M"),
+      "G",
+    );
+
+    const result = appCommandForKey("j")?.run(appState(graph, viewState, null));
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.nodes).toContainEqual(
+      expect.objectContaining({
+        kind: "SEGMENT",
+        a: "M",
+        b: "G",
+      }),
+    );
+  });
+
+  test("creates a circle from derived point inputs", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("C", 0, 2, "C"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M", "AB", "M"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+    const viewState = toggleSelectedNode(
+      toggleSelectedNode(emptyViewState(), "G"),
+      "M",
+    );
+
+    const result = appCommandForKey("c")?.run(appState(graph, viewState, null));
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.nodes).toContainEqual(
+      expect.objectContaining({
+        kind: "CIRCLE",
+        center: "G",
+        through: "M",
+      }),
+    );
   });
 
   test("creates a circle from two selected free points", () => {

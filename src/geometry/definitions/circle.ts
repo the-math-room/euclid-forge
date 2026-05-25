@@ -7,6 +7,7 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
+import { isConstructiblePointNode } from "../../representation/pointNode";
 import { renderCircle } from "../../rendering/circleRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -131,7 +132,7 @@ function circleConstructionNodes(
       throw new Error(`Cannot create circle with missing point: ${id}`);
     }
 
-    if (node.kind !== "FREE_POINT") {
+    if (!isConstructiblePointNode(node)) {
       throw new Error(`Cannot create circle with constrained point: ${id}`);
     }
   }

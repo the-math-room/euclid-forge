@@ -7,6 +7,7 @@ import {
   type GeometryNode,
   type NodeId,
 } from "../../representation/node";
+import { isConstructiblePointNode } from "../../representation/pointNode";
 import { renderSegment } from "../../rendering/segmentRenderer";
 import type { ConstructionContext } from "../constructionContext";
 import type { EvaluationContext } from "../evaluationContext";
@@ -114,7 +115,7 @@ function segmentConstructionNodes(
       throw new Error(`Cannot create segment with missing endpoint: ${id}`);
     }
 
-    if (node.kind !== "FREE_POINT") {
+    if (!isConstructiblePointNode(node)) {
       throw new Error(`Cannot create segment with constrained endpoint: ${id}`);
     }
   }

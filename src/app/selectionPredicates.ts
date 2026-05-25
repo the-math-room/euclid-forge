@@ -1,7 +1,8 @@
 import type { NodeId } from "../representation/node";
+import { isConstructiblePointNode } from "../representation/pointNode";
 import type { AppState } from "./appState";
 
-export function selectedFreePointTuple<const N extends number>(
+export function selectedConstructiblePointTuple<const N extends number>(
   state: AppState,
   count: N,
 ): TupleOf<NodeId, N> | null {
@@ -12,7 +13,9 @@ export function selectedFreePointTuple<const N extends number>(
   }
 
   for (const id of selected) {
-    if (state.graph.byId.get(id)?.kind !== "FREE_POINT") {
+    const node = state.graph.byId.get(id);
+
+    if (!node || !isConstructiblePointNode(node)) {
       return null;
     }
   }
@@ -20,12 +23,12 @@ export function selectedFreePointTuple<const N extends number>(
   return selected as TupleOf<NodeId, N>;
 }
 
-export function requireSelectedFreePointTuple<const N extends number>(
+export function requireSelectedConstructiblePointTuple<const N extends number>(
   state: AppState,
   count: N,
   message: string,
 ): TupleOf<NodeId, N> {
-  const tuple = selectedFreePointTuple(state, count);
+  const tuple = selectedConstructiblePointTuple(state, count);
 
   if (!tuple) {
     throw new Error(message);
@@ -37,13 +40,13 @@ export function requireSelectedFreePointTuple<const N extends number>(
 export function selectedSegmentEndpoints(
   state: AppState,
 ): readonly [NodeId, NodeId] | null {
-  return selectedFreePointTuple(state, 2);
+  return selectedConstructiblePointTuple(state, 2);
 }
 
 export function requireSelectedSegmentEndpoints(
   state: AppState,
 ): readonly [NodeId, NodeId] {
-  return requireSelectedFreePointTuple(
+  return requireSelectedConstructiblePointTuple(
     state,
     2,
     "Cannot run create-segment while disabled",
@@ -53,34 +56,41 @@ export function requireSelectedSegmentEndpoints(
 export function selectedCirclePoints(
   state: AppState,
 ): readonly [NodeId, NodeId] | null {
-  return selectedFreePointTuple(state, 2);
+  return selectedConstructiblePointTuple(state, 2);
 }
 
 export function requireSelectedCirclePoints(
   state: AppState,
 ): readonly [NodeId, NodeId] {
-  return requireSelectedFreePointTuple(
+  return requireSelectedConstructiblePointTuple(
     state,
     2,
     "Cannot run create-circle while disabled",
   );
 }
 
-export function selectedFreePointVertices(
+export function selectedTriangleVertices(
   state: AppState,
 ): readonly [NodeId, NodeId, NodeId] | null {
-  return selectedFreePointTuple(state, 3);
+  return selectedConstructiblePointTuple(state, 3);
 }
 
-export function requireSelectedFreePointVertices(
+export function requireSelectedTriangleVertices(
   state: AppState,
 ): readonly [NodeId, NodeId, NodeId] {
-  return requireSelectedFreePointTuple(
+  return requireSelectedConstructiblePointTuple(
     state,
     3,
     "Cannot run create-triangle while disabled",
   );
 }
+
+// Backward-compatible aliases for existing command/test code. These are now
+// construction-input predicates, not editability predicates.
+export const selectedFreePointTuple = selectedConstructiblePointTuple;
+export const requireSelectedFreePointTuple = requireSelectedConstructiblePointTuple;
+export const selectedFreePointVertices = selectedTriangleVertices;
+export const requireSelectedFreePointVertices = requireSelectedTriangleVertices;
 
 export function selectedTriangle(state: AppState): NodeId | null {
   const selected = [...state.viewState.selectedNodeIds];

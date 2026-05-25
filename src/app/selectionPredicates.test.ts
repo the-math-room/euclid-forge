@@ -1,8 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { createGraph } from "../representation/graph";
-import { freePoint, triangleNode } from "../representation/node";
+import {
+  centroidNode,
+  freePoint,
+  midpointNode,
+  segmentNode,
+  triangleNode,
+} from "../representation/node";
 import { appState } from "./appState";
 import {
+  selectedConstructiblePointTuple,
   requireSelectedCirclePoints,
   requireSelectedFreePointVertices,
   requireSelectedSegmentEndpoints,
@@ -31,6 +38,28 @@ function selectedState(ids: readonly string[]) {
 }
 
 describe("app/selectionPredicates", () => {
+
+
+  test("accepts derived point nodes as constructible point inputs", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("C", 0, 2, "C"),
+      segmentNode("AB", "A", "B"),
+      midpointNode("M", "AB", "M"),
+      triangleNode("ABC", "A", "B", "C"),
+      centroidNode("G", "ABC", "G"),
+    ]);
+
+    const viewState = ["M", "G"].reduce(
+      (current, id) => toggleSelectedNode(current, id),
+      emptyViewState(),
+    );
+
+    expect(
+      selectedConstructiblePointTuple(appState(graph, viewState, null), 2),
+    ).toEqual(["M", "G"]);
+  });
 
   test("selects exactly two free points for segment construction", () => {
     expect(selectedSegmentEndpoints(selectedState(["A", "B"]))).toEqual([
