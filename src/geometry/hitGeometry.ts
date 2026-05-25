@@ -4,7 +4,7 @@ import type {
   EvaluatedSegment,
   EvaluatedTriangle,
 } from "../evaluation/evaluated";
-import { screenToWorld, worldToScreen } from "../meaning/viewport";
+import { screenToWorld, worldToScreen } from "../view/viewport";
 import type { GeometryHitContext } from "./interactionContext";
 import type {
   CircleHit,

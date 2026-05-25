@@ -8,7 +8,7 @@ import type {
   GeometryRenderLayer,
   GeometryRenderOptions,
 } from "./geometryRenderingContext";
-import type { Viewport } from "../meaning/viewport";
+import type { Viewport } from "../view/viewport";
 
 export type RenderSceneOptions = GeometryRenderOptions;
 

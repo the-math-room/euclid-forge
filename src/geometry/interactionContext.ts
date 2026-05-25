@@ -1,5 +1,5 @@
 import type { NodeId } from "../representation/node";
-import type { ScreenPoint, Viewport } from "../meaning/viewport";
+import type { ScreenPoint, Viewport } from "../view/viewport";
 
 export type GeometryHitClass = "POINT" | "LINEAR" | "AREA";
 

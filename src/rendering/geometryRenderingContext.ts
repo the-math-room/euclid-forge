@@ -1,4 +1,4 @@
-import type { Viewport } from "../meaning/viewport";
+import type { Viewport } from "../view/viewport";
 
 export type GeometryRenderLayer = "AREA" | "LINEAR" | "POINT";
 

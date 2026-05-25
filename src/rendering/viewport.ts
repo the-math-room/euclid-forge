@@ -1,1 +1,1 @@
-export * from "../meaning/viewport";
+export * from "../view/viewport";

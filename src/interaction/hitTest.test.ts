@@ -11,7 +11,7 @@ import {
   segmentNode,
   triangleNode,
 } from "../representation/node";
-import { worldToScreen } from "../meaning/viewport";
+import { worldToScreen } from "../view/viewport";
 import { testViewport } from "../rendering/testHelpers";
 import {
   hitTestCircleSelection,

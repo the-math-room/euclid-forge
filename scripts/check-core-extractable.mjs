@@ -7,6 +7,7 @@ const SRC = join(ROOT, "src");
 const EXTRACTABLE_LAYERS = new Set([
   "core",
   "meaning",
+  "view",
   "representation",
   "evaluation",
   "geometry",
@@ -35,6 +36,7 @@ const BROWSER_GLOBAL_PATTERNS = [
 
 const ALL_LAYERS = [
   "meaning",
+  "view",
   "representation",
   "evaluation",
   "rendering",

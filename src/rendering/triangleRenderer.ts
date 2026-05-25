@@ -1,7 +1,7 @@
 import type { EvaluatedTriangle } from "../evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
-import type { Viewport } from "../meaning/viewport";
-import { worldToScreen } from "../meaning/viewport";
+import type { Viewport } from "../view/viewport";
+import { worldToScreen } from "../view/viewport";
 
 export type TriangleRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;

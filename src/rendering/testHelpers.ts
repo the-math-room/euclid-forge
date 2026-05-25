@@ -1,5 +1,5 @@
 import { vec2 } from "../meaning/vec2";
-import type { Viewport } from "../meaning/viewport";
+import type { Viewport } from "../view/viewport";
 
 export function testViewport(
   overrides: Partial<Viewport> = {},
