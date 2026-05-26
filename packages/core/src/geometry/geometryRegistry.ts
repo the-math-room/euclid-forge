@@ -10,8 +10,8 @@ import { circleDefinition } from "./definitions/circle";
 import { curveIntersectionDefinition } from "./definitions/curveIntersection";
 import { freePointDefinition } from "./definitions/freePoint";
 import { lineDefinition } from "./definitions/line";
+import { linearConstrainedPointDefinition } from "./definitions/linearConstrainedPoint";
 import { midpointDefinition } from "./definitions/midpoint";
-import { parallelPointDefinition } from "./definitions/parallelPoint";
 import { segmentDefinition } from "./definitions/segment";
 import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { triangleDefinition } from "./definitions/triangle";
@@ -31,7 +31,7 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(centroidDefinition),
   eraseGeometryDefinition(segmentIntersectionDefinition),
   eraseGeometryDefinition(curveIntersectionDefinition),
-  eraseGeometryDefinition(parallelPointDefinition),
+  eraseGeometryDefinition(linearConstrainedPointDefinition),
 ] satisfies readonly AnyGeometryDefinition[]);
 
 const definitionsByKind: ReadonlyMap<GeometryKind, AnyGeometryDefinition> =

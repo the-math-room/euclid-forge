@@ -10,7 +10,9 @@ export type GeometryNode =
   | CentroidNode
   | SegmentIntersectionNode
   | CurveIntersectionNode
-  | ParallelPointNode;
+  | LinearConstrainedPointNode;
+
+export type LinearConstraintMode = "PARALLEL" | "PERPENDICULAR";
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -89,12 +91,13 @@ export type CurveIntersectionNode = Readonly<{
   label: string;
 }>;
 
-export type ParallelPointNode = Readonly<{
-  kind: "PARALLEL_POINT";
+export type LinearConstrainedPointNode = Readonly<{
+  kind: "LINEAR_CONSTRAINED_POINT";
   id: NodeId;
   zIndex?: number;
   reference: NodeId;
   anchor: NodeId;
+  mode: LinearConstraintMode;
   offset: number;
   label: string;
 }>;
@@ -218,18 +221,20 @@ export function curveIntersectionNode(
   });
 }
 
-export function parallelPointNode(
+export function linearConstrainedPointNode(
   id: NodeId,
   reference: NodeId,
   anchor: NodeId,
+  mode: LinearConstraintMode,
   offset: number,
   label: string,
-): ParallelPointNode {
+): LinearConstrainedPointNode {
   return Object.freeze({
-    kind: "PARALLEL_POINT",
+    kind: "LINEAR_CONSTRAINED_POINT",
     id,
     reference,
     anchor,
+    mode,
     offset,
     label,
   });

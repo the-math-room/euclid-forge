@@ -14,18 +14,19 @@ describe("representation/parallelSegmentConstruction", () => {
 
     expect(parallelSegmentConstruction(graph, "AB", "C", 2)).toEqual([
       {
-        kind: "PARALLEL_POINT",
-        id: "PP_AB_C",
+        kind: "LINEAR_CONSTRAINED_POINT",
+        id: "LP_AB_C",
         reference: "AB",
         anchor: "C",
+        mode: "PARALLEL",
         offset: 2,
         label: "D",
       },
       {
         kind: "SEGMENT",
-        id: "S_C_PP_AB_C",
+        id: "S_C_LP_AB_C",
         a: "C",
-        b: "PP_AB_C",
+        b: "LP_AB_C",
       },
     ]);
   });

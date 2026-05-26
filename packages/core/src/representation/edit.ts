@@ -1,6 +1,6 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
-import type { EvaluatedGeometry } from "../evaluation/evaluated";
-import { vec2, type Vec2 } from "../meaning/vec2";
+import { constrainedDirectionForLinearGeometry } from "../geometry/definitions/linearConstrainedPoint";
+import type { Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
 import { freePoint, type GeometryNode, type NodeId } from "./node";
 import { canDeleteNodes, cascadingDeleteIds } from "./deletePolicy";
@@ -115,7 +115,7 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
     throw new Error(`Cannot move missing node: ${id}`);
   }
 
-  if (node.kind !== "PARALLEL_POINT") {
+  if (node.kind !== "LINEAR_CONSTRAINED_POINT") {
     throw new Error(`Cannot move non-constrained point: ${id}`);
   }
 
@@ -135,7 +135,10 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
     );
   }
 
-  const direction = unitDirectionForLinearGeometry(reference);
+  const direction = constrainedDirectionForLinearGeometry(
+    reference,
+    node.mode,
+  );
 
   if (!direction) {
     throw new Error(
@@ -157,28 +160,6 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
         : candidate,
     ),
   );
-}
-
-function unitDirectionForLinearGeometry(value: EvaluatedGeometry): Vec2 | null {
-  switch (value.kind) {
-    case "SEGMENT":
-    case "LINE": {
-      const dx = value.b.x - value.a.x;
-      const dy = value.b.y - value.a.y;
-      const length = Math.hypot(dx, dy);
-
-      if (length <= 1e-9) {
-        return null;
-      }
-
-      return vec2(dx / length, dy / length);
-    }
-
-    case "POINT":
-    case "CIRCLE":
-    case "TRIANGLE":
-      return null;
-  }
 }
 
 function translateFreePoints(

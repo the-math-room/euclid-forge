@@ -4,25 +4,25 @@ import { createGraph } from "../representation/graph";
 import {
   freePoint,
   lineNode,
-  parallelPointNode,
+  linearConstrainedPointNode,
   segmentNode,
 } from "../representation/node";
 
-describe("geometry/parallelPoint", () => {
+describe("geometry/linearConstrainedPoint", () => {
   test("evaluates a constrained point along a segment reference direction", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
       freePoint("B", 3, 4, "B"),
       freePoint("C", 10, 10, "C"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("D", "AB", "C", 5, "D"),
+      linearConstrainedPointNode("D", "AB", "C", "PARALLEL", 5, "D"),
     ]);
 
     const evaluated = evaluateGraph(graph).values.get("D");
 
     expect(evaluated).toEqual({
       kind: "POINT",
-      sourceKind: "PARALLEL_POINT",
+      sourceKind: "LINEAR_CONSTRAINED_POINT",
       id: "D",
       point: {
         x: 13,
@@ -39,14 +39,14 @@ describe("geometry/parallelPoint", () => {
       freePoint("B", 0, 2, "B"),
       freePoint("C", 1, 1, "C"),
       lineNode("line", "A", "B"),
-      parallelPointNode("D", "line", "C", -3, "D"),
+      linearConstrainedPointNode("D", "line", "C", "PARALLEL", -3, "D"),
     ]);
 
     const evaluated = evaluateGraph(graph).values.get("D");
 
     expect(evaluated).toEqual({
       kind: "POINT",
-      sourceKind: "PARALLEL_POINT",
+      sourceKind: "LINEAR_CONSTRAINED_POINT",
       id: "D",
       point: {
         x: 1,
@@ -62,7 +62,7 @@ describe("geometry/parallelPoint", () => {
       freePoint("A", 0, 0, "A"),
       freePoint("B", 1, 0, "B"),
       freePoint("C", 0, 1, "C"),
-      parallelPointNode("D", "C", "A", 1, "D"),
+      linearConstrainedPointNode("D", "C", "A", "PARALLEL", 1, "D"),
     ]);
 
     expect(evaluateGraph(graph).issues).toEqual([

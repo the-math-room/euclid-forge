@@ -1,7 +1,8 @@
 import { constructionFactoryForGeometryKind } from "../geometry/geometryRegistry";
-import { midpointNode, parallelPointNode, segmentNode } from "./node";
+import { linearConstrainedPointNode, midpointNode, segmentNode } from "./node";
 import type {
   GeometryNode,
+  LinearConstraintMode,
   MidpointNode,
   NodeId,
   SegmentNode,
@@ -47,17 +48,49 @@ export function parallelSegmentConstruction(
   anchor: NodeId,
   offset = 1,
 ): readonly GeometryNode[] {
+  return linearConstrainedSegmentConstruction(
+    graph,
+    reference,
+    anchor,
+    "PARALLEL",
+    offset,
+  );
+}
+
+export function perpendicularSegmentConstruction(
+  graph: Graph,
+  reference: NodeId,
+  anchor: NodeId,
+  offset = 1,
+): readonly GeometryNode[] {
+  return linearConstrainedSegmentConstruction(
+    graph,
+    reference,
+    anchor,
+    "PERPENDICULAR",
+    offset,
+  );
+}
+
+function linearConstrainedSegmentConstruction(
+  graph: Graph,
+  reference: NodeId,
+  anchor: NodeId,
+  mode: LinearConstraintMode,
+  offset: number,
+): readonly GeometryNode[] {
+  const description = mode === "PARALLEL" ? "parallel" : "perpendicular";
   const referenceNode = graph.byId.get(reference);
 
   if (!referenceNode) {
     throw new Error(
-      `Cannot create parallel segment with missing reference: ${reference}`,
+      `Cannot create ${description} segment with missing reference: ${reference}`,
     );
   }
 
   if (referenceNode.kind !== "SEGMENT" && referenceNode.kind !== "LINE") {
     throw new Error(
-      `Cannot create parallel segment with non-linear reference: ${reference}`,
+      `Cannot create ${description} segment with non-linear reference: ${reference}`,
     );
   }
 
@@ -65,7 +98,7 @@ export function parallelSegmentConstruction(
 
   if (!anchorNode) {
     throw new Error(
-      `Cannot create parallel segment with missing anchor: ${anchor}`,
+      `Cannot create ${description} segment with missing anchor: ${anchor}`,
     );
   }
 
@@ -75,18 +108,19 @@ export function parallelSegmentConstruction(
     anchorNode.kind !== "CENTROID" &&
     anchorNode.kind !== "SEGMENT_INTERSECTION" &&
     anchorNode.kind !== "CURVE_INTERSECTION" &&
-    anchorNode.kind !== "PARALLEL_POINT"
+    anchorNode.kind !== "LINEAR_CONSTRAINED_POINT"
   ) {
     throw new Error(
-      `Cannot create parallel segment with non-point anchor: ${anchor}`,
+      `Cannot create ${description} segment with non-point anchor: ${anchor}`,
     );
   }
 
   const existingEndpoint = graph.nodes.find(
     (node) =>
-      node.kind === "PARALLEL_POINT" &&
+      node.kind === "LINEAR_CONSTRAINED_POINT" &&
       node.reference === reference &&
-      node.anchor === anchor,
+      node.anchor === anchor &&
+      node.mode === mode,
   );
 
   if (existingEndpoint) {
@@ -108,11 +142,17 @@ export function parallelSegmentConstruction(
         ]);
   }
 
-  const endpointId = nextParallelPointId(graph.nodes, reference, anchor);
-  const endpoint = parallelPointNode(
+  const endpointId = nextLinearConstrainedPointId(
+    graph.nodes,
+    mode,
+    reference,
+    anchor,
+  );
+  const endpoint = linearConstrainedPointNode(
     endpointId,
     reference,
     anchor,
+    mode,
     offset,
     nextAlphabeticLabel(
       new Set(
@@ -286,12 +326,14 @@ function triangleEdges(
   ];
 }
 
-function nextParallelPointId(
+function nextLinearConstrainedPointId(
   nodes: readonly { id: NodeId }[],
+  mode: LinearConstraintMode,
   reference: NodeId,
   anchor: NodeId,
 ): NodeId {
-  const base = `PP_${reference}_${anchor}`;
+  const prefix = mode === "PARALLEL" ? "LP" : "OP";
+  const base = `${prefix}_${reference}_${anchor}`;
 
   if (!nodes.some((node) => node.id === base)) {
     return base;

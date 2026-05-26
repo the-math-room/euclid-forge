@@ -72,7 +72,7 @@ function pointLabelForNode(node: GeometryNode): string | null {
     case "CENTROID":
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
-    case "PARALLEL_POINT":
+    case "LINEAR_CONSTRAINED_POINT":
       return node.label;
 
     case "SEGMENT":

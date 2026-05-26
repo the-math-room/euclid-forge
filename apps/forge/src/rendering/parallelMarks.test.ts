@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createGraph } from "@euclid-forge/core";
-import { freePoint, parallelPointNode, segmentNode } from "@euclid-forge/core";
+import { freePoint, linearConstrainedPointNode, segmentNode } from "@euclid-forge/core";
 import { parallelMarkCountsForGraph } from "./parallelMarks";
 
 describe("rendering/parallelMarks", () => {
@@ -10,7 +10,7 @@ describe("rendering/parallelMarks", () => {
       freePoint("B", 1, 0, "B"),
       freePoint("C", 0, 1, "C"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("D", "AB", "C", 1, "D"),
+      linearConstrainedPointNode("D", "AB", "C", "PARALLEL", 1, "D"),
       segmentNode("CD", "C", "D"),
     ]);
 
@@ -27,9 +27,9 @@ describe("rendering/parallelMarks", () => {
       freePoint("C", 0, 1, "C"),
       freePoint("E", 0, 2, "E"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("D", "AB", "C", 1, "D"),
+      linearConstrainedPointNode("D", "AB", "C", "PARALLEL", 1, "D"),
       segmentNode("CD", "C", "D"),
-      parallelPointNode("F", "CD", "E", 1, "F"),
+      linearConstrainedPointNode("F", "CD", "E", "PARALLEL", 1, "F"),
       segmentNode("EF", "E", "F"),
     ]);
 
@@ -52,13 +52,13 @@ describe("rendering/parallelMarks", () => {
       freePoint("H", 5, 0, "H"),
       freePoint("I", 4, 1, "I"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("C2", "AB", "C", 1, "C2"),
+      linearConstrainedPointNode("C2", "AB", "C", "PARALLEL", 1, "C2"),
       segmentNode("CC2", "C", "C2"),
       segmentNode("DE", "D", "E"),
-      parallelPointNode("F2", "DE", "F", 1, "F2"),
+      linearConstrainedPointNode("F2", "DE", "F", "PARALLEL", 1, "F2"),
       segmentNode("FF2", "F", "F2"),
       segmentNode("GH", "G", "H"),
-      parallelPointNode("I2", "GH", "I", 1, "I2"),
+      linearConstrainedPointNode("I2", "GH", "I", "PARALLEL", 1, "I2"),
       segmentNode("II2", "I", "I2"),
     ]);
 
@@ -78,7 +78,7 @@ describe("rendering/parallelMarks", () => {
       freePoint("B", 1, 0, "B"),
       freePoint("C", 0, 1, "C"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("D", "AB", "C", 1, "D"),
+      linearConstrainedPointNode("D", "AB", "C", "PARALLEL", 1, "D"),
       segmentNode("CD", "C", "D"),
     ]);
 

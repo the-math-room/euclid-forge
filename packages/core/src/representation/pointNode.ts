@@ -7,7 +7,7 @@ export function isConstructiblePointNode(node: GeometryNode): boolean {
     case "CENTROID":
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
-    case "PARALLEL_POINT":
+    case "LINEAR_CONSTRAINED_POINT":
       return true;
 
     default:

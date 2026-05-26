@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { createGraph } from "./graph";
 import { applyGraphEdit } from "./edit";
-import { freePoint, parallelPointNode, segmentNode } from "./node";
+import { freePoint, linearConstrainedPointNode, segmentNode } from "./node";
 
 describe("representation/constrained point edits", () => {
   test("moves a parallel point by updating its offset along the reference direction", () => {
@@ -11,7 +11,7 @@ describe("representation/constrained point edits", () => {
       freePoint("B", 2, 0, "B"),
       freePoint("C", 0, 1, "C"),
       segmentNode("AB", "A", "B"),
-      parallelPointNode("D", "AB", "C", 1, "D"),
+      linearConstrainedPointNode("D", "AB", "C", "PARALLEL", 1, "D"),
     ]);
 
     const next = applyGraphEdit(graph, {
@@ -24,17 +24,18 @@ describe("representation/constrained point edits", () => {
     });
 
     expect(next.byId.get("D")).toEqual({
-      kind: "PARALLEL_POINT",
+      kind: "LINEAR_CONSTRAINED_POINT",
       id: "D",
       reference: "AB",
       anchor: "C",
+      mode: "PARALLEL",
       offset: 4,
       label: "D",
     });
 
     expect(evaluateGraph(next).values.get("D")).toEqual({
       kind: "POINT",
-      sourceKind: "PARALLEL_POINT",
+      sourceKind: "LINEAR_CONSTRAINED_POINT",
       id: "D",
       point: {
         x: 4,

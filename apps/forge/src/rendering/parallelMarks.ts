@@ -23,7 +23,11 @@ export function parallelMarkCountsForGraph({
   const unionFind = new UnionFind(linearIds);
 
   for (const node of graph.nodes) {
-    if (node.kind !== "PARALLEL_POINT" || hiddenNodeIds?.has(node.id)) {
+    if (
+      node.kind !== "LINEAR_CONSTRAINED_POINT" ||
+      node.mode !== "PARALLEL" ||
+      hiddenNodeIds?.has(node.id)
+    ) {
       continue;
     }
 
@@ -83,7 +87,7 @@ function isVisibleLinearNode(
 
 function segmentForParallelPoint(
   nodes: readonly GeometryNode[],
-  point: Extract<GeometryNode, { kind: "PARALLEL_POINT" }>,
+  point: Extract<GeometryNode, { kind: "LINEAR_CONSTRAINED_POINT" }>,
   hiddenNodeIds: ReadonlySet<NodeId> | undefined,
 ): Extract<GeometryNode, { kind: "SEGMENT" }> | null {
   const found = nodes.find(

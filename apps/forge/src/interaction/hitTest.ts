@@ -341,7 +341,7 @@ function isFreePoint(graph: Graph, id: NodeId): boolean {
 function isDraggablePoint(graph: Graph, id: NodeId): boolean {
   const node = graph.byId.get(id);
 
-  return node?.kind === "FREE_POINT" || node?.kind === "PARALLEL_POINT";
+  return node?.kind === "FREE_POINT" || node?.kind === "LINEAR_CONSTRAINED_POINT";
 }
 
 function isBodyDraggableTriangle(graph: Graph, id: NodeId): boolean {

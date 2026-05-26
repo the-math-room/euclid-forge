@@ -5,15 +5,16 @@ import type {
 import { GeometryEvaluationIssueError } from "../../evaluation/evaluationIssue";
 import { vec2 } from "../../meaning/vec2";
 import type { Vec2 } from "../../meaning/vec2";
+import type { LinearConstraintMode } from "../../representation/node";
 import type { EvaluationContext } from "../evaluationContext";
 import type { GeometryDefinition, NodeByKind } from "../geometryDefinition";
 
-export const parallelPointDefinition: GeometryDefinition<"PARALLEL_POINT"> =
+export const linearConstrainedPointDefinition: GeometryDefinition<"LINEAR_CONSTRAINED_POINT"> =
   Object.freeze({
-    kind: "PARALLEL_POINT",
+    kind: "LINEAR_CONSTRAINED_POINT",
 
     representation: Object.freeze({
-      dependencies: (node: NodeByKind<"PARALLEL_POINT">) => [
+      dependencies: (node: NodeByKind<"LINEAR_CONSTRAINED_POINT">) => [
         node.reference,
         node.anchor,
       ],
@@ -21,12 +22,15 @@ export const parallelPointDefinition: GeometryDefinition<"PARALLEL_POINT"> =
 
     evaluation: Object.freeze({
       evaluate: (
-        node: NodeByKind<"PARALLEL_POINT">,
+        node: NodeByKind<"LINEAR_CONSTRAINED_POINT">,
         context: EvaluationContext,
       ): EvaluatedPoint => {
         const reference = context.getGeometry(node.reference);
         const anchor = context.getPoint(node.anchor);
-        const direction = unitDirectionForLinearGeometry(reference);
+        const direction = constrainedDirectionForLinearGeometry(
+          reference,
+          node.mode,
+        );
 
         if (!direction) {
           throw new GeometryEvaluationIssueError(
@@ -51,6 +55,25 @@ export const parallelPointDefinition: GeometryDefinition<"PARALLEL_POINT"> =
       },
     }),
   });
+
+export function constrainedDirectionForLinearGeometry(
+  value: EvaluatedGeometry,
+  mode: LinearConstraintMode,
+): Vec2 | null {
+  const direction = unitDirectionForLinearGeometry(value);
+
+  if (!direction) {
+    return null;
+  }
+
+  switch (mode) {
+    case "PARALLEL":
+      return direction;
+
+    case "PERPENDICULAR":
+      return vec2(-direction.y, direction.x);
+  }
+}
 
 function unitDirectionForLinearGeometry(value: EvaluatedGeometry): Vec2 | null {
   switch (value.kind) {
