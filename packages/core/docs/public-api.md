@@ -28,12 +28,14 @@ Use approved subpath imports only when they represent a stable, intentional API 
 
 `@euclid-forge/core` should cover graph creation and edits, node factories and node types, construction helpers, free-point planning, dependency inspection, delete policy, evaluation/diagnostics, workspace serialization, viewport/view-state helpers, engine facade, and stable meaning helpers used by Forge.
 
-Recent app-facing root exports should include constrained parallel helpers such as:
+App-facing constrained-linear root exports should include:
 
 ```text
-ParallelPointNode
-parallelPointNode
+LinearConstrainedPointNode
+LinearConstraintMode
+linearConstrainedPointNode
 parallelSegmentConstruction
+perpendicularSegmentConstruction
 MOVE_CONSTRAINED_POINT via GraphEdit
 ```
 
@@ -59,16 +61,25 @@ Forge should not depend on geometry internals unless the dependency is deliberat
 ## Examples
 
 ```ts
-import { applyGraphEdit, parallelSegmentConstruction } from "@euclid-forge/core";
+import {
+  applyGraphEdit,
+  parallelSegmentConstruction,
+  perpendicularSegmentConstruction,
+} from "@euclid-forge/core";
 
-const nodes = parallelSegmentConstruction(graph, "AB", "C");
-const nextGraph = applyGraphEdit(graph, { kind: "ADD_NODES", nodes });
+const parallelNodes = parallelSegmentConstruction(graph, "AB", "C");
+const perpendicularNodes = perpendicularSegmentConstruction(graph, "AB", "D");
+
+const nextGraph = applyGraphEdit(graph, {
+  kind: "ADD_NODES",
+  nodes: parallelNodes,
+});
 ```
 
 ```ts
 const nextGraph = applyGraphEdit(graph, {
   kind: "MOVE_CONSTRAINED_POINT",
-  id: "PP_AB_C",
+  id: "LP_AB_C",
   point: { x: 4, y: 1 },
 });
 ```

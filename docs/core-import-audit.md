@@ -40,17 +40,29 @@ Discouraged for Forge unless explicitly justified:
 @euclid-forge/core/geometry/*
 ```
 
+Forge should generally use the root facade for app-facing constrained construction helpers such as `linearConstrainedPointNode`, `parallelSegmentConstruction`, `perpendicularSegmentConstruction`, and `MOVE_CONSTRAINED_POINT` via `GraphEdit`.
+
 ## Root facade expectations
 
 The root facade should expose ordinary app-facing capabilities, including graph creation/editing, node factories/types, construction helpers, free-point planning, dependency inspection, delete policy, evaluation/diagnostics, workspace parsing/serialization, viewport/view-state helpers, and stable meaning helpers used by Forge.
 
-Recent app-facing core additions such as `PARALLEL_POINT`, `parallelPointNode`, `parallelSegmentConstruction`, and `MOVE_CONSTRAINED_POINT` should be available through the root facade if Forge needs them.
+App-facing constrained-linear exports should include:
+
+```text
+LinearConstrainedPointNode
+LinearConstraintMode
+linearConstrainedPointNode
+parallelSegmentConstruction
+perpendicularSegmentConstruction
+MOVE_CONSTRAINED_POINT via GraphEdit
+```
 
 ## Useful commands
 
 ```bash
 npm run audit:core-imports
 npm run audit:core-imports:quiet
+npm run check:concise
 scripts/checks.sh concise
 ```
 

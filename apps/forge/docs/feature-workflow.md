@@ -5,7 +5,7 @@ This document describes how to add features in the Euclid Forge monorepo without
 ## Default workflow
 
 1. Make the smallest coherent patch.
-2. Keep `scripts/checks.sh concise` green between patches.
+2. Keep `npm run check:concise` or `scripts/checks.sh concise` green between patches.
 3. Prefer behavior tests before or with implementation.
 4. Decide whether the change belongs in `packages/core`, `apps/forge`, or both.
 5. Keep `packages/core` headless.
@@ -22,7 +22,7 @@ Put behavior in `apps/forge` when it involves keyboard shortcuts, pointer gestur
 
 A new geometry kind usually touches:
 
-```txt
+```text
 packages/core/src/representation/node.ts
 packages/core/src/evaluation/evaluated.ts
 packages/core/src/geometry/definitions/<kind>.ts
@@ -38,9 +38,11 @@ apps/forge/src/app selection predicates, commands, or modal tools, if user-const
 apps/forge smoke tests, if browser behavior changes
 ```
 
+Do not add a new geometry kind when a mode or construction helper on an existing denotation is the better model. Parallel and perpendicular finite segments share `LINEAR_CONSTRAINED_POINT` rather than separate persistent point kinds.
+
 ## Modal tool workflow
 
-```txt
+```text
 activeTool.ts          tool state, required input counts, status text
 activeToolPointer.ts   pointer behavior for the active tool
 toolSurface.ts         toolbar exposure
@@ -54,18 +56,5 @@ smoke tests            browser-level user workflow
 - Lasso is app interaction.
 - Print is app rendering through a print-only image.
 - Display theme/scale are app display settings.
-- Parallel finite segments use core `PARALLEL_POINT + SEGMENT`, with app command/tool wiring and app-rendered chevrons.
-
-## Recent project state
-
-Recent decisions that should be treated as current context:
-
-- Lasso selection is app-side interaction. It selects fully contained visible selectable geometry; infinite lines are excluded from lasso containment.
-- Labels render with translucent label pills for readability over geometry.
-- The canvas has dark and high-contrast display modes plus incremental display scale for line/point/label size.
-- Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
-- Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
-- Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
-- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
-- Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
-- Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.
+- Parallel and perpendicular finite segments use core `LINEAR_CONSTRAINED_POINT + SEGMENT`, with app command/tool wiring.
+- Parallel chevrons are app-rendered notation, not graph state.

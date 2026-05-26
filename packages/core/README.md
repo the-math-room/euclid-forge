@@ -4,7 +4,7 @@ This workspace contains the headless geometry engine for Euclid Forge.
 
 It owns geometric meaning, graph representation, construction helpers, graph edits, constrained construction nodes, free-point planning, cascading delete policy, evaluation, diagnostics, dependency inspection, workspace serialization/deserialization, headless viewport and view-state math, and the public core API.
 
-It must not depend on the forge app, DOM, canvas, browser APIs, CSS, app commands, rendering notation, print surfaces, or editor gestures.
+It must not depend on the Forge app, DOM, canvas, browser APIs, CSS, app commands, rendering notation, print surfaces, or editor gestures.
 
 ## Package name
 
@@ -19,6 +19,7 @@ Forge should import Core through package paths, not relative paths into this wor
 ```bash
 npm run check -w @euclid-forge/core
 npm run check:core
+npm run check:concise
 scripts/checks.sh concise
 ```
 
@@ -31,8 +32,8 @@ scripts/checks.sh concise
 - evaluation is deterministic from graph state
 - undefined geometry is reported through diagnostics rather than browser state
 - viewport math is pure coordinate-system math, not rendering
-- constrained endpoints such as `PARALLEL_POINT` store semantic offsets, not screen positions
-- moving a constrained point updates its constraint parameter through a graph edit
+- constrained endpoints store semantic offsets, not screen positions
+- moving a constrained endpoint updates its constraint parameter through a graph edit
 
 ## Current graph model highlights
 
@@ -46,10 +47,17 @@ MIDPOINT
 CENTROID
 SEGMENT_INTERSECTION
 CURVE_INTERSECTION
-PARALLEL_POINT
+LINEAR_CONSTRAINED_POINT
 ```
 
-A finite parallel segment is represented as a normal `SEGMENT` from an anchor point to a constrained `PARALLEL_POINT` endpoint.
+A finite parallel or perpendicular segment is represented as:
+
+```text
+LINEAR_CONSTRAINED_POINT(reference, anchor, mode, offset)
+SEGMENT(anchor, constrainedPoint)
+```
+
+where `mode` is either `"PARALLEL"` or `"PERPENDICULAR"`.
 
 ## Recent project state
 
@@ -61,6 +69,6 @@ Recent decisions that should be treated as current context:
 - Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
 - Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
 - Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
-- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
+- `LINEAR_CONSTRAINED_POINT` is a core constrained visible endpoint for finite parallel and perpendicular segments.
 - Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
 - Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.

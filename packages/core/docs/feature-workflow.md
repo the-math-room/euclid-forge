@@ -20,10 +20,10 @@ Core geometry features should be developed headless-first.
 Headless patch:
 
 ```text
-add PARALLEL_POINT or PERPENDICULAR_POINT node
+add or extend LINEAR_CONSTRAINED_POINT mode support
 evaluate it from reference + anchor + signed offset
-add a construction helper that creates constrained point + SEGMENT
-add MOVE_CONSTRAINED_POINT graph edit or equivalent
+add construction helpers that create constrained point + SEGMENT
+support MOVE_CONSTRAINED_POINT for the movement edit
 export app-facing helpers through the core facade
 test evaluation, construction, edit behavior, and public API
 ```
@@ -35,12 +35,13 @@ add command/tool behavior
 hit test and drag the constrained endpoint
 call the constrained movement edit during drag
 render ordinary evaluated points/segments
-add visual notation if useful
+add visual notation only if useful
 ```
 
 ## Validation
 
 ```bash
+npm run check:concise
 scripts/checks.sh concise
 npm run check:core
 npm run check

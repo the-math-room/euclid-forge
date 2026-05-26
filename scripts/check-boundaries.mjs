@@ -33,13 +33,26 @@ const FORGE_SRC_ROOT = "apps/forge/src";
 const BROWSER_GLOBAL_PATTERNS = [
   /\bwindow\b/,
   /\bdocument\b/,
+  /\bnavigator\b/,
+  /\bperformance\b/,
   /\bHTMLElement\b/,
+  /\bHTMLImageElement\b/,
   /\bHTMLCanvasElement\b/,
   /\bCanvasRenderingContext2D\b/,
+  /\bOffscreenCanvas\b/,
+  /\bPath2D\b/,
+  /\bDOMRect\b/,
+  /\bDOMPoint\b/,
+  /\bDOMMatrix\b/,
+  /\bEventTarget\b/,
   /\bPointerEvent\b/,
   /\bKeyboardEvent\b/,
   /\bMouseEvent\b/,
   /\bTouchEvent\b/,
+  /\bResizeObserver\b/,
+  /\bMutationObserver\b/,
+  /\bCSSStyleDeclaration\b/,
+  /\bImage\b/,
   /\bFile\b/,
   /\bBlob\b/,
   /\bFileReader\b/,
@@ -49,6 +62,19 @@ const BROWSER_GLOBAL_PATTERNS = [
   /\bcancelAnimationFrame\b/,
   /\bURL\.createObjectURL\b/,
   /\bURL\.revokeObjectURL\b/,
+];
+
+const CORE_PRESENTATION_PATTERNS = [
+  /\bRenderTheme\b/,
+  /\bPointTheme\b/,
+  /\brenderScene\b/,
+  /\brender[A-Z][A-Za-z0-9_]*\b/,
+  /\blabelPill\b/,
+  /\bparallelChevron\b/,
+  /\bparallelMark\b/,
+  /\bpointerCapture\b/,
+  /\btoolbar\b/,
+  /\bsmoke\b/,
 ];
 
 const errors = [];
@@ -105,6 +131,14 @@ function checkCoreBoundary(rel, text) {
     if (pattern.test(stripped)) {
       errors.push(
         `${rel} appears to use browser/DOM API ${pattern}. Core must stay browser-free.`,
+      );
+    }
+  }
+
+  for (const pattern of CORE_PRESENTATION_PATTERNS) {
+    if (pattern.test(stripped)) {
+      errors.push(
+        `${rel} appears to use Forge presentation/rendering concept ${pattern}. Core should keep rendering notation and browser UI concerns out.`,
       );
     }
   }
