@@ -35,7 +35,7 @@ export function parallelMarkCountsForGraph({
       continue;
     }
 
-    const constrainedSegment = segmentForParallelPoint(
+    const constrainedSegment = segmentForParallelConstrainedPoint(
       graph.nodes,
       node,
       hiddenNodeIds,
@@ -85,7 +85,7 @@ function isVisibleLinearNode(
   );
 }
 
-function segmentForParallelPoint(
+function segmentForParallelConstrainedPoint(
   nodes: readonly GeometryNode[],
   point: Extract<GeometryNode, { kind: "LINEAR_CONSTRAINED_POINT" }>,
   hiddenNodeIds: ReadonlySet<NodeId> | undefined,

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { createGraph } from "@euclid-forge/core";
-import { freePoint, linearConstrainedPointNode, segmentNode } from "@euclid-forge/core";
+import {
+  freePoint,
+  linearConstrainedPointNode,
+  segmentNode,
+} from "@euclid-forge/core";
 import { parallelMarkCountsForGraph } from "./parallelMarks";
 
 describe("rendering/parallelMarks", () => {
