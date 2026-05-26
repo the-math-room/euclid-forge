@@ -7,6 +7,8 @@ import {
 import type { GeometryRenderOptions } from "./geometryRenderingContext";
 import type { RenderLayer } from "./geometryRenderers";
 import { renderLassoOverlay } from "./lassoRenderer";
+import { polygonOccludersForScene } from "./linearOcclusion";
+import { renderZLevelOverlay } from "./zLevelOverlay";
 import type { Viewport } from "@euclid-forge/core";
 
 export type RenderSceneOptions = GeometryRenderOptions;
@@ -27,13 +29,23 @@ export function renderScene(
 ): void {
   const hidden = options.hiddenNodeIds ?? new Set<string>();
   const visible = scene.ordered.filter((value) => !hidden.has(value.id));
+  const renderOptions = {
+    ...options,
+    polygonOccluders: options.showOccludedLines
+      ? polygonOccludersForScene(visible, viewport)
+      : [],
+  };
 
   for (const value of renderOrderedValues(visible)) {
     renderEvaluatedSceneItem(value, {
       ctx,
       viewport,
-      options,
+      options: renderOptions,
     });
+  }
+
+  if (options.showZLevels) {
+    renderZLevelOverlay(ctx, viewport, visible, options.theme);
   }
 
   if (options.lassoPolygon) {
@@ -46,9 +58,9 @@ function renderOrderedValues(
 ): readonly EvaluatedSceneItem[] {
   return [...values].sort(
     (a, b) =>
+      zIndexOf(a) - zIndexOf(b) ||
       RENDER_LAYER_ORDER[renderLayerForSceneItem(a)] -
-        RENDER_LAYER_ORDER[renderLayerForSceneItem(b)] ||
-      zIndexOf(a) - zIndexOf(b),
+        RENDER_LAYER_ORDER[renderLayerForSceneItem(b)],
   );
 }
 

@@ -4,6 +4,8 @@ export type CanvasDisplayScale = "normal" | "large" | "extra-large";
 export type CanvasDisplaySettings = Readonly<{
   mode: CanvasDisplayMode;
   scale: CanvasDisplayScale;
+  showOccludedLines: boolean;
+  showZLevels: boolean;
 }>;
 
 export type DisplayThemeSurfaceHandlers = Readonly<{
@@ -42,6 +44,8 @@ export function installDisplayThemeSurface(
   let currentSettings: CanvasDisplaySettings = {
     mode: "dark",
     scale: "normal",
+    showOccludedLines: false,
+    showZLevels: false,
   };
 
   const root = document.createElement("section");
@@ -100,7 +104,30 @@ export function installDisplayThemeSurface(
   });
 
   sizeGroup.append(decreaseButton, sizeLabel, increaseButton);
-  root.append(themeButton, sizeGroup);
+
+  const occludedLinesButton = document.createElement("button");
+  occludedLinesButton.type = "button";
+  occludedLinesButton.className =
+    "display-theme-surface__button display-theme-surface__occluded-lines-button";
+  occludedLinesButton.addEventListener("click", () => {
+    handlers.onSettingsChange({
+      ...currentSettings,
+      showOccludedLines: !currentSettings.showOccludedLines,
+    });
+  });
+
+  const zLevelsButton = document.createElement("button");
+  zLevelsButton.type = "button";
+  zLevelsButton.className =
+    "display-theme-surface__button display-theme-surface__z-levels-button";
+  zLevelsButton.addEventListener("click", () => {
+    handlers.onSettingsChange({
+      ...currentSettings,
+      showZLevels: !currentSettings.showZLevels,
+    });
+  });
+
+  root.append(themeButton, sizeGroup, occludedLinesButton, zLevelsButton);
   app.append(root);
 
   return {
@@ -128,8 +155,21 @@ export function updateDisplayThemeSurface(
   const sizeLabel = root.querySelector<HTMLElement>(
     ".display-theme-surface__size-label",
   );
+  const occludedLinesButton = root.querySelector<HTMLButtonElement>(
+    ".display-theme-surface__occluded-lines-button",
+  );
+  const zLevelsButton = root.querySelector<HTMLButtonElement>(
+    ".display-theme-surface__z-levels-button",
+  );
 
-  if (!themeButton || !decreaseButton || !increaseButton || !sizeLabel) {
+  if (
+    !themeButton ||
+    !decreaseButton ||
+    !increaseButton ||
+    !sizeLabel ||
+    !occludedLinesButton ||
+    !zLevelsButton
+  ) {
     throw new Error("Missing display theme controls");
   }
 
@@ -149,6 +189,30 @@ export function updateDisplayThemeSurface(
   decreaseButton.disabled = scaleIndex <= 0;
   increaseButton.disabled = scaleIndex >= DISPLAY_SCALES.length - 1;
   sizeLabel.textContent = scaleLabel(settings.scale);
+
+  occludedLinesButton.dataset.enabled = settings.showOccludedLines
+    ? "true"
+    : "false";
+  occludedLinesButton.setAttribute(
+    "aria-pressed",
+    settings.showOccludedLines ? "true" : "false",
+  );
+  occludedLinesButton.textContent = settings.showOccludedLines
+    ? "Hidden lines on"
+    : "Hidden lines";
+  occludedLinesButton.title = settings.showOccludedLines
+    ? "Render lower z-level lines as dashed when they pass behind polygons"
+    : "Show dashed portions where lower z-level lines pass behind polygons";
+
+  zLevelsButton.dataset.enabled = settings.showZLevels ? "true" : "false";
+  zLevelsButton.setAttribute(
+    "aria-pressed",
+    settings.showZLevels ? "true" : "false",
+  );
+  zLevelsButton.textContent = settings.showZLevels ? "Z levels on" : "Z levels";
+  zLevelsButton.title = settings.showZLevels
+    ? "Hide z-level labels on canvas geometry"
+    : "Show z-level labels on canvas geometry";
 }
 
 function previousScale(scale: CanvasDisplayScale): CanvasDisplayScale {

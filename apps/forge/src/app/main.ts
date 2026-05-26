@@ -44,6 +44,8 @@ function render(
   ctx: CanvasRenderingContext2D,
   state: AppState,
   theme: RenderTheme = RENDER_THEME,
+  showOccludedLines = false,
+  showZLevels = false,
 ): void {
   resizeCanvasToDisplaySize(canvas, ctx);
 
@@ -64,6 +66,8 @@ function render(
       graph: state.graph,
       hiddenNodeIds,
     }),
+    showOccludedLines,
+    showZLevels,
     ...(state.dragState?.kind === "LASSO"
       ? { lassoPolygon: state.dragState.points }
       : {}),
@@ -97,6 +101,8 @@ function main(): void {
   let canvasDisplaySettings: CanvasDisplaySettings = {
     mode: "dark",
     scale: "normal",
+    showOccludedLines: false,
+    showZLevels: false,
   };
   const requestRender = createRenderScheduler(() => {
     render(
@@ -104,6 +110,8 @@ function main(): void {
       ctx,
       runtime.getState(),
       renderThemeForDisplaySettings(canvasDisplaySettings),
+      canvasDisplaySettings.showOccludedLines,
+      canvasDisplaySettings.showZLevels,
     );
   });
   const runtime = createAppRuntime({

@@ -24,6 +24,7 @@ function contextStub(): CanvasRenderingContext2D {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     stroke: vi.fn(),
+    setLineDash: vi.fn(),
     strokeStyle: "",
     lineWidth: 0,
   };

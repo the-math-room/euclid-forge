@@ -4,6 +4,8 @@ import { worldToScreen } from "@euclid-forge/core";
 
 import { RENDER_THEME } from "./theme";
 import { renderParallelMarks } from "./parallelMarkRenderer";
+import { drawOccludedSegment } from "./linearOcclusion";
+import type { LinearOcclusionOptions } from "./linearOcclusion";
 import type { RenderTheme } from "./theme";
 
 export type LineRenderOptions = Readonly<{
@@ -11,7 +13,8 @@ export type LineRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
   theme?: RenderTheme;
   parallelMarkCounts?: ReadonlyMap<string, 1 | 2 | 3>;
-}>;
+}> &
+  LinearOcclusionOptions;
 
 export function renderLine(
   ctx: CanvasRenderingContext2D,
@@ -54,10 +57,16 @@ export function renderLine(
   ctx.strokeStyle = theme.line.strokeStyle;
   ctx.lineWidth = theme.line.lineWidth;
 
-  ctx.beginPath();
-  ctx.moveTo(endpoints.start.x, endpoints.start.y);
-  ctx.lineTo(endpoints.end.x, endpoints.end.y);
-  ctx.stroke();
+  drawOccludedSegment(
+    ctx,
+    {
+      id: line.id,
+      ...(line.zIndex === undefined ? {} : { zIndex: line.zIndex }),
+      a: endpoints.start,
+      b: endpoints.end,
+    },
+    options,
+  );
 
   const parallelMarkCount = options.parallelMarkCounts?.get(line.id);
 

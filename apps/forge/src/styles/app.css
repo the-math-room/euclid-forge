@@ -376,3 +376,10 @@ body {
   cursor: not-allowed;
   opacity: 0.42;
 }
+
+
+.display-theme-surface__occluded-lines-button[aria-pressed="true"],
+.display-theme-surface__z-levels-button[aria-pressed="true"] {
+  border-color: rgb(251 191 36 / 0.72);
+  color: #fbbf24;
+}
