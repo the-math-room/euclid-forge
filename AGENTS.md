@@ -1,75 +1,54 @@
-# AGENTS.md
+# Euclid Forge Agent Notes
 
-## Purpose
+Euclid Forge is a canvas-based dynamic geometry app for classroom geometry. The project is intentionally split between Core geometry meaning/representation/evaluation and Forge app interaction/rendering/UI.
 
-This file describes how human/assistant collaboration works best in this repository. It is workflow guidance for making safe, reviewable changes, not product documentation.
+## Primary architectural rule
 
-## Preferred workflow
+If something is a real authored mathematical or notational object that should survive save/load, participate in dependency tracking, or be usable by later operations, it belongs in Core. If something is transient interaction behavior, hit testing, visual drawing, or UI policy, it belongs in Forge.
 
-Work in small, green steps. Prefer targeted source dumps over full-repo dumps. Use `scripts/dumps/dump-target help` to find available targets.
+## Current denotational hierarchy
 
-When proposing changes, state the intended behavior first, then provide the patch. After changes, run:
+Core now distinguishes graph state from geometric meaning:
 
-```bash
-scripts/checks.sh concise
+```ts
+GraphNode = GeometryNode | AnnotationNode
+AnnotationNode = SegmentMeasurementNode
 ```
 
-Use broader checks only when needed.
+Evaluated output mirrors that distinction:
 
-## Source sharing workflow
-
-The user usually pipes source dumps into a custom clipboard command:
-
-```bash
-... | xc
+```ts
+EvaluatedSceneItem = EvaluatedGeometry | EvaluatedAnnotation
+EvaluatedAnnotation = EvaluatedSegmentMeasurement
 ```
 
-Use `| xc` in suggested dump commands. Ask for the smallest useful dump or `nl -ba ... | sed -n 'x,yp'` range rather than the whole repo.
+Use geometry-only helpers and predicates when a function really needs geometry. Do not teach every geometry consumer about every annotation case manually.
 
-## Patch format preferences
+## Cyborg workflow conventions
 
-For Markdown/docs, prefer downloadable files or zips. Inline Markdown can break chat rendering.
+The human often runs shell scripts pasted from chat. Prefer scripts that are safe, clear, and root-relative.
 
-For reasonably sized source files, a paste-to-terminal shell script that replaces the whole file is usually preferred. For very large source files where the exact current source is known, a targeted patch script is acceptable.
+When a patch is uncertain, provide an inspection script first and wait for the output before providing a fix. Do not include a patch immediately after a sed/inspection command when the patch depends on seeing that output.
 
-For regex patches, use a safety-first flow:
+For shell snippets:
 
-1. Request or provide a quick `sed` / `nl -ba ... | sed` context command first.
-2. Anchor on actual local helper names and nearby structure.
-3. Prefer exact block replacement over clever broad patterns.
-4. Include a count guard, usually “replace exactly one.”
-5. Run format and concise checks afterward.
+- Use `#!/usr/bin/env bash` and `set -euo pipefail`.
+- Prefer Python scripts for multi-file edits.
+- Keep scripts root-relative.
+- Avoid writing or scanning `node_modules`, `dist`, and `.git`.
+- Use braces around sed commands when practical, and pipe inspection output through the user's `xc` command only when explicitly requested.
+- Put long terminal input into a shell script rather than many separate commands.
+- End patch scripts with `npm run check:concise` unless the user asks for inspection only.
+- Do not include `npm run check:concise` in source inspection dumps unless baseline output is explicitly useful.
 
-Avoid clever regex repairs for fragile syntax, brace structure, or test-file surgery. Prefer full-file or full-section replacement.
+## Patch style
 
-## Testing expectations
+Make small green slices. Prefer type-level seams over scattered stringly checks. When TypeScript reports fallout from a refactor, use the errors to identify real boundary mismatches rather than casting through them.
 
-Use the repo’s check scripts rather than ad hoc commands when possible.
+Avoid changing performance-sensitive pointermove or viewport motion paths unless necessary. The app should remain buttery during pointer movement, pan, zoom, and rotation.
 
-```bash
-scripts/checks.sh concise
-npm run typecheck -w @euclid-forge/core
-npm run typecheck -w euclid-forge
-```
+## Current feature notes
 
-## Interaction/product semantics to remember
+Segment measurements are persistent Core annotation nodes, not global display toggles. Point label offsets are persistent authored visual notation stored on point-label-bearing nodes as screen-pixel offsets.
 
-Move mode is for selecting, dragging, and panning. It should not create points. Point mode creates free points. Shape tools may create free points as inputs when clicking empty space. Viewport drag and keyboard pan are screen-relative, including after rotation. Viewport motion for held pan/zoom/rotate keys is continuous and animation-frame driven.
-
-## Recent project state
-
-Recent decisions that should be treated as current context:
-
-- Lasso selection is app-side interaction. It selects fully contained visible selectable geometry; infinite lines are excluded from lasso containment.
-- Labels render with translucent label pills for readability over geometry.
-- The canvas has dark and high-contrast display modes plus incremental display scale for line/point/label size.
-- Print output uses a print-only offscreen render/image path, not the live canvas, with a white-background print theme.
-- Curve intersections suppress duplicate derived points when a candidate already coincides with an existing evaluated point.
-- Circle-circle branch keys are stable relative to the directed center-to-center axis, not sorted by world coordinates.
-- `PARALLEL_POINT` is a core constrained visible endpoint. A finite parallel segment is represented as `PARALLEL_POINT + SEGMENT`.
-- Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
-- Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.
-
-## Communication style
-
-Be direct about uncertainty. Call out when a change is architectural versus test expectation drift. Prefer lessons-learned summaries after a multi-patch sequence.
+Interaction layers should treat annotations explicitly. Geometry hit testing remains geometry-first; annotation hit testing should be opt-in.
