@@ -70,7 +70,6 @@ Recent decisions that should be treated as current context:
 - Dragging a constrained endpoint updates its scalar offset through `MOVE_CONSTRAINED_POINT`; this is not a general constraint solver.
 - Parallel chevrons are render-derived notation from transitive parallel families; they are not graph state.
 
-
 ## Communication style
 
 Be direct about uncertainty. Call out when a change is architectural versus test expectation drift. Prefer lessons-learned summaries after a multi-patch sequence.
