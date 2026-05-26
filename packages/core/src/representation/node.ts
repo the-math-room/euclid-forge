@@ -10,8 +10,11 @@ export type GeometryNode =
   | CentroidNode
   | SegmentIntersectionNode
   | CurveIntersectionNode
-  | LinearConstrainedPointNode
-  | SegmentMeasurementNode;
+  | LinearConstrainedPointNode;
+
+export type AnnotationNode = SegmentMeasurementNode;
+
+export type GraphNode = GeometryNode | AnnotationNode;
 
 export type LinearConstraintMode = "PARALLEL" | "PERPENDICULAR";
 export type SegmentMeasurementPrecision = "auto";

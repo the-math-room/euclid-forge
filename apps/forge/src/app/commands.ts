@@ -15,7 +15,7 @@ import {
 } from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
 import { curveIntersectionNode } from "@euclid-forge/core";
-import type { GeometryNode, NodeId } from "@euclid-forge/core";
+import type { GeometryNode, GraphNode, NodeId } from "@euclid-forge/core";
 import { deleteNodesDisabledReason } from "@euclid-forge/core";
 import { isConstructiblePointNode, nextPointLabels } from "@euclid-forge/core";
 import { appState } from "./appState";
@@ -842,22 +842,22 @@ function requireSelectedSegmentTuple(
 }
 
 function segmentMeasurementForSegment(
-  nodes: readonly GeometryNode[],
+  nodes: readonly GraphNode[],
   segment: NodeId,
-): Extract<GeometryNode, { kind: "SEGMENT_MEASUREMENT" }> | null {
+): Extract<GraphNode, { kind: "SEGMENT_MEASUREMENT" }> | null {
   const found = nodes.find(
-    (node): node is Extract<GeometryNode, { kind: "SEGMENT_MEASUREMENT" }> =>
+    (node): node is Extract<GraphNode, { kind: "SEGMENT_MEASUREMENT" }> =>
       node.kind === "SEGMENT_MEASUREMENT" && node.segment === segment,
   );
 
   return found ?? null;
 }
 
-function isLinearNode(node: GeometryNode | null | undefined): boolean {
+function isLinearNode(node: GraphNode | null | undefined): boolean {
   return node?.kind === "SEGMENT" || node?.kind === "LINE";
 }
 
-function isPointNode(node: GeometryNode | null | undefined): boolean {
+function isPointNode(node: GraphNode | null | undefined): boolean {
   return !!node && isConstructiblePointNode(node);
 }
 

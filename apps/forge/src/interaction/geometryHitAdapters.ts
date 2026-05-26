@@ -1,6 +1,6 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
 import type { Graph } from "@euclid-forge/core";
-import type { GeometryNode, NodeId } from "@euclid-forge/core";
+import type { GraphNode, NodeId } from "@euclid-forge/core";
 import {
   hitCircleValue,
   hitLineValue,
@@ -95,7 +95,7 @@ export function bodyDragForGeometryNode(
   return Object.freeze({ sourcePointIds });
 }
 
-function bodyDragSourcePointIds(node: GeometryNode): readonly NodeId[] | null {
+function bodyDragSourcePointIds(node: GraphNode): readonly NodeId[] | null {
   switch (node.kind) {
     case "LINE":
       return Object.freeze([node.a, node.b]);

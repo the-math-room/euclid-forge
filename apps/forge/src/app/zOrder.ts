@@ -1,10 +1,10 @@
 import type { Graph } from "@euclid-forge/core";
-import type { GeometryNode, NodeId } from "@euclid-forge/core";
+import type { GraphNode, NodeId } from "@euclid-forge/core";
 
 export type ZIndexUpdates = ReadonlyMap<NodeId, number>;
 
 type OrderedNode = Readonly<{
-  node: GeometryNode;
+  node: GraphNode;
   originalIndex: number;
 }>;
 
@@ -137,6 +137,6 @@ function zIndexUpdatesForOrder(
   return updates;
 }
 
-function zIndexOf(node: GeometryNode): number {
+function zIndexOf(node: GraphNode): number {
   return node.zIndex ?? 0;
 }

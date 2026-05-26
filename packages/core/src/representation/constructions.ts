@@ -6,7 +6,7 @@ import {
   segmentNode,
 } from "./node";
 import type {
-  GeometryNode,
+  GraphNode,
   LinearConstraintMode,
   MidpointNode,
   NodeId,
@@ -20,7 +20,7 @@ export function segmentIntersectionConstruction(
   graph: Graph,
   segmentA: NodeId,
   segmentB: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind(
     "SEGMENT_INTERSECTION",
     "segmentIntersection",
@@ -31,7 +31,7 @@ export function segmentConstruction(
   graph: Graph,
   a: NodeId,
   b: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind("SEGMENT", "segment")(
     { graph },
     a,
@@ -43,7 +43,7 @@ export function lineConstruction(
   graph: Graph,
   a: NodeId,
   b: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind("LINE", "line")({ graph }, a, b);
 }
 
@@ -52,7 +52,7 @@ export function parallelSegmentConstruction(
   reference: NodeId,
   anchor: NodeId,
   offset = 1,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return linearConstrainedSegmentConstruction(
     graph,
     reference,
@@ -67,7 +67,7 @@ export function perpendicularSegmentConstruction(
   reference: NodeId,
   anchor: NodeId,
   offset = 1,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return linearConstrainedSegmentConstruction(
     graph,
     reference,
@@ -83,7 +83,7 @@ function linearConstrainedSegmentConstruction(
   anchor: NodeId,
   mode: LinearConstraintMode,
   offset: number,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   const description = mode === "PARALLEL" ? "parallel" : "perpendicular";
   const referenceNode = graph.byId.get(reference);
 
@@ -181,7 +181,7 @@ function linearConstrainedSegmentConstruction(
 export function segmentMeasurementConstruction(
   graph: Graph,
   segment: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   const node = graph.byId.get(segment);
 
   if (!node) {
@@ -211,7 +211,7 @@ export function circleConstruction(
   graph: Graph,
   center: NodeId,
   through: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind("CIRCLE", "circle")(
     { graph },
     center,
@@ -222,7 +222,7 @@ export function circleConstruction(
 export function triangleConstruction(
   graph: Graph,
   vertices: readonly [NodeId, NodeId, NodeId],
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind("TRIANGLE", "triangle")(
     { graph },
     vertices[0],
@@ -234,7 +234,7 @@ export function triangleConstruction(
 export function centroidConstruction(
   graph: Graph,
   triangle: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   return constructionFactoryForGeometryKind("CENTROID", "centroid")(
     { graph },
     triangle,
@@ -244,7 +244,7 @@ export function centroidConstruction(
 export function segmentMidpointConstruction(
   graph: Graph,
   segment: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   const node = graph.byId.get(segment);
 
   if (!node) {
@@ -279,7 +279,7 @@ export function segmentMidpointConstruction(
 export function triangleSideMidpointConstruction(
   graph: Graph,
   triangle: NodeId,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   const node = graph.byId.get(triangle);
 
   if (!node) {
@@ -294,7 +294,7 @@ export function triangleSideMidpointConstruction(
     );
   }
 
-  const additions: GeometryNode[] = [];
+  const additions: GraphNode[] = [];
   const usedPointLabels = new Set(
     graph.nodes.filter((node) => "label" in node).map((node) => node.label),
   );
@@ -325,7 +325,7 @@ export function triangleSideMidpointConstruction(
 }
 
 function findSegmentBetween(
-  nodes: readonly GeometryNode[],
+  nodes: readonly GraphNode[],
   a: NodeId,
   b: NodeId,
 ): SegmentNode | null {
@@ -339,7 +339,7 @@ function findSegmentBetween(
 }
 
 function findMidpointForSegment(
-  nodes: readonly GeometryNode[],
+  nodes: readonly GraphNode[],
   segment: NodeId,
 ): MidpointNode | null {
   const found = nodes.find(

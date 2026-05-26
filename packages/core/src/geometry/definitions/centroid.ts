@@ -3,6 +3,7 @@ import { centroid } from "../../meaning/vec2";
 import {
   centroidNode,
   type GeometryNode,
+  type GraphNode,
   type NodeId,
 } from "../../representation/node";
 import { nextPointLabel } from "../../representation/pointLabelPlanning";
@@ -49,8 +50,8 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> = Object.freeze(
 
 function centroidConstructionNodes(
   graph: Readonly<{
-    nodes: readonly GeometryNode[];
-    byId: ReadonlyMap<NodeId, GeometryNode>;
+    nodes: readonly GraphNode[];
+    byId: ReadonlyMap<NodeId, GraphNode>;
   }>,
   triangle: NodeId,
 ): readonly GeometryNode[] {
@@ -81,7 +82,7 @@ function centroidConstructionNodes(
 }
 
 function nextCentroidId(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
 ): NodeId {
   let index = 1;
 

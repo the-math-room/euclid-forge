@@ -2,6 +2,7 @@ import type { EvaluatedCircle } from "../../evaluation/evaluated";
 import {
   circleNode,
   type GeometryNode,
+  type GraphNode,
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
@@ -51,8 +52,8 @@ export const circleDefinition: GeometryDefinition<"CIRCLE"> = Object.freeze({
 
 function circleConstructionNodes(
   graph: Readonly<{
-    nodes: readonly GeometryNode[];
-    byId: ReadonlyMap<NodeId, GeometryNode>;
+    nodes: readonly GraphNode[];
+    byId: ReadonlyMap<NodeId, GraphNode>;
   }>,
   center: NodeId,
   through: NodeId,
@@ -90,7 +91,7 @@ function circleConstructionNodes(
 }
 
 function nextCircleId(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
 ): NodeId {
   let index = 1;
 

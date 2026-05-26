@@ -1,4 +1,4 @@
-import type { GeometryNode, Graph, NodeId } from "@euclid-forge/core";
+import type { GeometryNode, Graph, GraphNode, NodeId } from "@euclid-forge/core";
 
 export type ParallelMarkCount = 1 | 2 | 3;
 export type ParallelMarkCounts = ReadonlyMap<NodeId, ParallelMarkCount>;
@@ -76,7 +76,7 @@ export function parallelMarkCountsForGraph({
 }
 
 function isVisibleLinearNode(
-  node: GeometryNode,
+  node: GraphNode,
   hiddenNodeIds: ReadonlySet<NodeId> | undefined,
 ): boolean {
   return (
@@ -86,7 +86,7 @@ function isVisibleLinearNode(
 }
 
 function segmentForParallelConstrainedPoint(
-  nodes: readonly GeometryNode[],
+  nodes: readonly GraphNode[],
   point: Extract<GeometryNode, { kind: "LINEAR_CONSTRAINED_POINT" }>,
   hiddenNodeIds: ReadonlySet<NodeId> | undefined,
 ): Extract<GeometryNode, { kind: "SEGMENT" }> | null {

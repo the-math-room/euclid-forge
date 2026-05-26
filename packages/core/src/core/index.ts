@@ -97,6 +97,14 @@ export {
 } from "../representation/graph";
 
 export {
+  isAnnotationNode,
+  isGeometryNode,
+  isLinearNode,
+  isSegmentNode,
+} from "../representation/graphNode";
+
+
+export {
   centroidNode,
   circleNode,
   curveIntersectionNode,
@@ -111,8 +119,10 @@ export {
   type CentroidNode,
   type CircleNode,
   type CurveIntersectionNode,
+  type AnnotationNode,
   type FreePointNode,
   type GeometryNode,
+  type GraphNode,
   type LinearConstrainedPointNode,
   type LinearConstraintMode,
   type LineNode,

@@ -1,8 +1,8 @@
 import { dependenciesForGeometryNode } from "../geometry/geometryRegistry";
 import type { Graph } from "./graph";
-import type { GeometryNode, NodeId } from "./node";
+import type { GraphNode, NodeId } from "./node";
 
-export function dependenciesOf(node: GeometryNode): readonly NodeId[] {
+export function dependenciesOf(node: GraphNode): readonly NodeId[] {
   return dependenciesForGeometryNode(node);
 }
 

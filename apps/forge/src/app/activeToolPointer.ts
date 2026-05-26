@@ -12,7 +12,7 @@ import {
   segmentConstruction,
   triangleConstruction,
 } from "@euclid-forge/core";
-import type { GeometryNode, Graph, NodeId } from "@euclid-forge/core";
+import type { Graph, GraphNode, NodeId } from "@euclid-forge/core";
 import { pointerDownIntent } from "./pointerIntent";
 import { appState } from "./appState";
 import type { AppState } from "./appState";
@@ -333,7 +333,7 @@ function createFreePointInput(
 function constructionNodesForPointTool(
   state: AppState,
   activeTool: PointInputTool,
-): readonly GeometryNode[] {
+): readonly GraphNode[] {
   switch (activeTool.kind) {
     case "segment": {
       const [a, b] = requiredInputs(activeTool, 2);
@@ -420,7 +420,7 @@ function linearConstrainedToolInputs(
   return null;
 }
 
-function isLinearConstrainedToolCandidate(node: GeometryNode): boolean {
+function isLinearConstrainedToolCandidate(node: GraphNode): boolean {
   return isLinearNode(node) || isPointNode(node);
 }
 
@@ -428,11 +428,11 @@ function capitalize(value: string): string {
   return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
-function isLinearNode(node: GeometryNode | null | undefined): boolean {
+function isLinearNode(node: GraphNode | null | undefined): boolean {
   return node?.kind === "SEGMENT" || node?.kind === "LINE";
 }
 
-function isPointNode(node: GeometryNode | null | undefined): boolean {
+function isPointNode(node: GraphNode | null | undefined): boolean {
   return !!node && isConstructiblePointNode(node);
 }
 
@@ -501,12 +501,12 @@ function selectablePointerHit(
 }
 
 function findSegmentBetween(
-  nodes: readonly GeometryNode[],
+  nodes: readonly GraphNode[],
   a: NodeId,
   b: NodeId,
-): GeometryNode | null {
+): Extract<GraphNode, { kind: "SEGMENT" }> | null {
   const found = nodes.find(
-    (node) =>
+    (node): node is Extract<GraphNode, { kind: "SEGMENT" }> =>
       node.kind === "SEGMENT" &&
       ((node.a === a && node.b === b) || (node.a === b && node.b === a)),
   );

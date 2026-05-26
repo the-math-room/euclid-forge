@@ -2,6 +2,7 @@ import type { EvaluatedSegment } from "../../evaluation/evaluated";
 import {
   segmentNode,
   type GeometryNode,
+  type GraphNode,
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
@@ -46,8 +47,8 @@ export const segmentDefinition: GeometryDefinition<"SEGMENT"> = Object.freeze({
 
 function segmentConstructionNodes(
   graph: Readonly<{
-    nodes: readonly GeometryNode[];
-    byId: ReadonlyMap<NodeId, GeometryNode>;
+    nodes: readonly GraphNode[];
+    byId: ReadonlyMap<NodeId, GraphNode>;
   }>,
   a: NodeId,
   b: NodeId,
@@ -87,7 +88,7 @@ function endpointKey(a: NodeId, b: NodeId): string {
 }
 
 function nextSegmentId(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
   a: NodeId,
   b: NodeId,
 ): NodeId {

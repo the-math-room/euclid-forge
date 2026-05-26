@@ -2,7 +2,7 @@ import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { constrainedDirectionForLinearGeometry } from "../geometry/linearConstraint";
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
-import { freePoint, type GeometryNode, type NodeId } from "./node";
+import { freePoint, type GraphNode, type NodeId } from "./node";
 import { canDeleteNodes, cascadingDeleteIds } from "./deletePolicy";
 import { planFreePoint } from "./freePointPlanning";
 
@@ -13,7 +13,7 @@ export type GraphEdit = Readonly<
     }
   | {
       kind: "ADD_NODES";
-      nodes: readonly GeometryNode[];
+      nodes: readonly GraphNode[];
     }
   | {
       kind: "MOVE_FREE_POINT";
@@ -76,7 +76,7 @@ function addFreePoint(graph: Graph, point: Vec2): Graph {
   return addNodes(graph, [planFreePoint(graph, point).node]);
 }
 
-function addNodes(graph: Graph, nodes: readonly GeometryNode[]): Graph {
+function addNodes(graph: Graph, nodes: readonly GraphNode[]): Graph {
   if (nodes.length === 0) {
     return graph;
   }

@@ -4,6 +4,7 @@ import { segmentIntersection } from "../../meaning/vec2";
 import {
   segmentIntersectionNode,
   type GeometryNode,
+  type GraphNode,
   type NodeId,
 } from "../../representation/node";
 import { nextPointLabel } from "../../representation/pointLabelPlanning";
@@ -68,8 +69,8 @@ export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSEC
 
 function segmentIntersectionConstructionNodes(
   graph: Readonly<{
-    nodes: readonly GeometryNode[];
-    byId: ReadonlyMap<NodeId, GeometryNode>;
+    nodes: readonly GraphNode[];
+    byId: ReadonlyMap<NodeId, GraphNode>;
   }>,
   segmentA: NodeId,
   segmentB: NodeId,
@@ -115,7 +116,7 @@ function segmentIntersectionConstructionNodes(
 }
 
 function nextSegmentIntersectionId(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
 ): NodeId {
   let index = 1;
 

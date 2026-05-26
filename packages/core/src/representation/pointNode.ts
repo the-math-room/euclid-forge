@@ -1,6 +1,21 @@
-import type { GeometryNode } from "./node";
+import type { GeometryNode, GraphNode } from "./node";
 
-export function isConstructiblePointNode(node: GeometryNode): boolean {
+export type ConstructiblePointNode = Extract<
+  GeometryNode,
+  {
+    kind:
+      | "FREE_POINT"
+      | "MIDPOINT"
+      | "CENTROID"
+      | "SEGMENT_INTERSECTION"
+      | "CURVE_INTERSECTION"
+      | "LINEAR_CONSTRAINED_POINT";
+  }
+>;
+
+export function isConstructiblePointNode(
+  node: GraphNode,
+): node is ConstructiblePointNode {
   switch (node.kind) {
     case "FREE_POINT":
     case "MIDPOINT":
@@ -10,7 +25,11 @@ export function isConstructiblePointNode(node: GeometryNode): boolean {
     case "LINEAR_CONSTRAINED_POINT":
       return true;
 
-    default:
+    case "SEGMENT":
+    case "LINE":
+    case "CIRCLE":
+    case "TRIANGLE":
+    case "SEGMENT_MEASUREMENT":
       return false;
   }
 }

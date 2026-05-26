@@ -1,20 +1,20 @@
 import { dependenciesOf } from "./dependencies";
-import type { GeometryNode, NodeId } from "./node";
+import type { GraphNode, NodeId } from "./node";
 
 const graphBrand: unique symbol = Symbol("Graph");
 
 export type SceneDraft = Readonly<{
-  nodes: readonly GeometryNode[];
+  nodes: readonly GraphNode[];
 }>;
 
 export type Graph = Readonly<{
-  nodes: readonly GeometryNode[];
-  byId: ReadonlyMap<NodeId, GeometryNode>;
+  nodes: readonly GraphNode[];
+  byId: ReadonlyMap<NodeId, GraphNode>;
   [graphBrand]: "Graph";
 }>;
 
-export function createGraph(nodes: readonly GeometryNode[]): Graph {
-  const byId = new Map<NodeId, GeometryNode>();
+export function createGraph(nodes: readonly GraphNode[]): Graph {
+  const byId = new Map<NodeId, GraphNode>();
   const indegree = new Map<NodeId, number>();
   const dependents = new Map<NodeId, NodeId[]>();
 
@@ -60,7 +60,7 @@ export function createGraph(nodes: readonly GeometryNode[]): Graph {
     }
   }
 
-  const ordered: GeometryNode[] = [];
+  const ordered: GraphNode[] = [];
   let head = 0;
 
   while (head < queue.length) {

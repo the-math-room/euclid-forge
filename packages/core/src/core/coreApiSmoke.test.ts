@@ -123,7 +123,7 @@ import {
   serializeWorkspace as publicSerializeWorkspace,
   toggleSelectedNode as publicToggleSelectedNode,
   worldToScreen as publicWorldToScreen,
-  type GeometryNode as PublicGeometryNode,
+  type GraphNode as PublicGraphNode,
   type Viewport as PublicViewport,
 } from "./index";
 
@@ -177,7 +177,7 @@ test("core index exposes the extraction-facing public API", () => {
     JSON.stringify(serialized),
   );
 
-  expect(parsed.nodes.map((node: PublicGeometryNode) => node.id)).toContain(
+  expect(parsed.nodes.map((node: PublicGraphNode) => node.id)).toContain(
     "C1",
   );
   expect(parsed.view.selectedNodeIds).toEqual(["A"]);

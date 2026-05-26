@@ -1,7 +1,7 @@
-import type { GeometryNode } from "./node";
+import type { GeometryNode, GraphNode } from "./node";
 
 export type PointLabelGraph = Readonly<{
-  nodes: readonly GeometryNode[];
+  nodes: readonly GraphNode[];
 }>;
 
 export function nextPointLabel(graph: PointLabelGraph): string {
@@ -65,7 +65,7 @@ function usedPointLabels(graph: PointLabelGraph): Set<string> {
   return used;
 }
 
-function pointLabelForNode(node: GeometryNode): string | null {
+function pointLabelForNode(node: GraphNode): string | null {
   switch (node.kind) {
     case "FREE_POINT":
     case "MIDPOINT":

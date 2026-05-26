@@ -2,6 +2,7 @@ import type { EvaluatedTriangle } from "../../evaluation/evaluated";
 import {
   triangleNode,
   type GeometryNode,
+  type GraphNode,
   type NodeId,
 } from "../../representation/node";
 import { isConstructiblePointNode } from "../../representation/pointNode";
@@ -51,7 +52,7 @@ export const triangleDefinition: GeometryDefinition<"TRIANGLE"> = Object.freeze(
 );
 
 function triangleConstructionNodes(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
   vertices: readonly [NodeId, NodeId, NodeId],
 ): readonly GeometryNode[] {
   const uniqueVertices = new Set(vertices);
@@ -78,7 +79,7 @@ function triangleConstructionNodes(
 }
 
 function nextTriangleId(
-  graph: Readonly<{ byId: ReadonlyMap<NodeId, GeometryNode> }>,
+  graph: Readonly<{ byId: ReadonlyMap<NodeId, GraphNode> }>,
 ): NodeId {
   let index = 1;
 

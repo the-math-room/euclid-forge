@@ -1,13 +1,13 @@
 import type { ViewState } from "./viewState";
 import type { Graph } from "../representation/graph";
 import { createGraph } from "../representation/graph";
-import type { GeometryNode, NodeId } from "../representation/node";
+import type { GraphNode, NodeId } from "../representation/node";
 import { vec2 } from "../meaning/vec2";
 import type { Vec2 } from "../meaning/vec2";
 
 export type SerializedWorkspace = Readonly<{
   version: 1;
-  nodes: readonly GeometryNode[];
+  nodes: readonly GraphNode[];
   view: SerializedWorkspaceView;
 }>;
 
@@ -126,7 +126,7 @@ export function parseSerializedWorkspace(value: unknown): SerializedWorkspace {
 
   return Object.freeze({
     version: 1,
-    nodes: Object.freeze(value.nodes as readonly GeometryNode[]),
+    nodes: Object.freeze(value.nodes as readonly GraphNode[]),
     view: Object.freeze({
       selectedNodeIds: Object.freeze([...view.selectedNodeIds]),
       hiddenNodeIds: Object.freeze([...view.hiddenNodeIds]),
