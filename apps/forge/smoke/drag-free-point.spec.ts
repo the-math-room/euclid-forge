@@ -178,6 +178,32 @@ test("creates a segment using the toolbar without Shift", async ({ page }) => {
   await expectLightEdgeNear(frame.canvas, { x: 3.5, y: 2 });
 });
 
+test("creates a perpendicular segment using the toolbar", async ({ page }) => {
+  await page.goto("/");
+
+  const frame = await getCanvasFrame(page);
+
+  await page.getByRole("button", { name: "Segment" }).click();
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 4, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await page.getByRole("button", { name: "Perp" }).click();
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3.5, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await clickWorld(page, frame, { x: 3, y: 2 });
+  await waitForAnimationFrame(page);
+
+  await expectLightEdgeNear(frame.canvas, { x: 3, y: 2.5 });
+});
+
 test("creates a triangle using the toolbar and empty-space clicks", async ({
   page,
 }) => {
