@@ -744,7 +744,7 @@ function requireSelectedLinearConstrainedSegmentInputs(
   const inputs = selectedLinearConstrainedSegmentInputs(state);
 
   if (!inputs) {
-    throw new Error("Cannot run create-parallel-segment while disabled");
+    throw new Error("Cannot run linear constrained segment command while disabled");
   }
 
   return inputs;
@@ -772,7 +772,7 @@ function linearConstrainedInputsForIds(
 function linearConstrainedSegmentDisabledReason(state: AppState): string | null {
   return selectedLinearConstrainedSegmentInputs(state)
     ? null
-    : "Select one segment or line and one point to create a parallel segment.";
+    : "Select one segment or line and one point.";
 }
 
 function isLinearNode(node: GeometryNode | null | undefined): boolean {

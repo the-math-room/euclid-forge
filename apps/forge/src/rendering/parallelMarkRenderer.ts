@@ -5,6 +5,8 @@ export type ParallelMarkSegment = Readonly<{
   b: Readonly<{ x: number; y: number }>;
 }>;
 
+const PARALLEL_MARK_SEGMENT_PARAMETER = 0.42;
+
 export function renderParallelMarks(
   ctx: CanvasRenderingContext2D,
   segment: ParallelMarkSegment,
@@ -24,8 +26,12 @@ export function renderParallelMarks(
   const nx = -uy;
   const ny = ux;
   const center = {
-    x: (segment.a.x + segment.b.x) / 2,
-    y: (segment.a.y + segment.b.y) / 2,
+    x:
+      segment.a.x +
+      (segment.b.x - segment.a.x) * PARALLEL_MARK_SEGMENT_PARAMETER,
+    y:
+      segment.a.y +
+      (segment.b.y - segment.a.y) * PARALLEL_MARK_SEGMENT_PARAMETER,
   };
   const spacing = 9;
   const size = 9;
