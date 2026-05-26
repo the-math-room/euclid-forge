@@ -29,6 +29,7 @@ export function isConstructiblePointNode(
     case "LINE":
     case "CIRCLE":
     case "TRIANGLE":
+    case "POLYGON":
     case "SEGMENT_MEASUREMENT":
       return false;
   }

@@ -40,6 +40,7 @@ function unitDirectionForLinearGeometry(value: EvaluatedGeometry): Vec2 | null {
     case "POINT":
     case "CIRCLE":
     case "TRIANGLE":
+    case "POLYGON":
       return null;
   }
 }

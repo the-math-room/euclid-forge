@@ -21,6 +21,7 @@ export function curveDenotationForGeometry(
 
     case "POINT":
     case "TRIANGLE":
+    case "POLYGON":
       return null;
   }
 }

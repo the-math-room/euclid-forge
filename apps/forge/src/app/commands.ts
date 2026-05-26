@@ -14,7 +14,7 @@ import {
   triangleSideMidpointConstruction,
 } from "@euclid-forge/core";
 import { applyGraphEdit } from "@euclid-forge/core";
-import { curveIntersectionNode } from "@euclid-forge/core";
+import { curveIntersectionNode, polygonNode } from "@euclid-forge/core";
 import type { GeometryNode, GraphNode, NodeId } from "@euclid-forge/core";
 import { deleteNodesDisabledReason } from "@euclid-forge/core";
 import { isConstructiblePointNode, nextPointLabels } from "@euclid-forge/core";
@@ -306,6 +306,29 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
           applyGraphEdit(state.graph, {
             kind: "ADD_NODES",
             nodes,
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "create-polygon",
+    keys: ["f"],
+    disabledReason: polygonDisabledReason,
+    run: (state) => {
+      const vertices = requireSelectedPolygonCycle(
+        state,
+        "Cannot run create-polygon while disabled",
+      );
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes: [polygonNode(nextPolygonId(state.graph.nodes), vertices)],
           }),
           clearSelection(state.viewState),
           state.dragState,
@@ -889,4 +912,122 @@ function deleteSelectedDisabledReason(state: AppState): string | null {
   }
 
   return deleteNodesDisabledReason(state.graph, selected);
+}
+
+
+function polygonDisabledReason(state: AppState): string | null {
+  return selectedPolygonCycle(state)
+    ? null
+    : "Select a closed cycle of at least three segments to create a polygon.";
+}
+
+function requireSelectedPolygonCycle(
+  state: AppState,
+  message: string,
+): readonly NodeId[] {
+  const vertices = selectedPolygonCycle(state);
+
+  if (!vertices) {
+    throw new Error(message);
+  }
+
+  return vertices;
+}
+
+function selectedPolygonCycle(state: AppState): readonly NodeId[] | null {
+  const selectedSegments = selectedSegmentNodes(state);
+
+  if (selectedSegments.length < 3) {
+    return null;
+  }
+
+  const adjacency = new Map<NodeId, NodeId[]>();
+
+  for (const segment of selectedSegments) {
+    appendAdjacent(adjacency, segment.a, segment.b);
+    appendAdjacent(adjacency, segment.b, segment.a);
+  }
+
+  for (const neighbors of adjacency.values()) {
+    if (neighbors.length !== 2) {
+      return null;
+    }
+  }
+
+  if (adjacency.size !== selectedSegments.length) {
+    return null;
+  }
+
+  const start = [...adjacency.keys()].sort()[0];
+
+  if (!start) {
+    return null;
+  }
+
+  const ordered: NodeId[] = [start];
+  let previous: NodeId | null = null;
+  let current: NodeId = start;
+
+  while (true) {
+    const neighbors = adjacency.get(current);
+
+    if (!neighbors || neighbors.length !== 2) {
+      return null;
+    }
+
+    const next = neighbors.find((candidate) => candidate !== previous);
+
+    if (!next) {
+      return null;
+    }
+
+    if (next === start) {
+      return ordered.length === adjacency.size ? Object.freeze(ordered) : null;
+    }
+
+    if (ordered.includes(next)) {
+      return null;
+    }
+
+    ordered.push(next);
+    previous = current;
+    current = next;
+  }
+}
+
+function selectedSegmentNodes(
+  state: AppState,
+): readonly Extract<GraphNode, { kind: "SEGMENT" }>[] {
+  const selected = [...state.viewState.selectedNodeIds];
+  const segments: Extract<GraphNode, { kind: "SEGMENT" }>[] = [];
+
+  for (const id of selected) {
+    const node = state.graph.byId.get(id);
+
+    if (node?.kind !== "SEGMENT") {
+      return [];
+    }
+
+    segments.push(node);
+  }
+
+  return Object.freeze(segments);
+}
+
+function appendAdjacent(
+  adjacency: Map<NodeId, NodeId[]>,
+  a: NodeId,
+  b: NodeId,
+): void {
+  adjacency.set(a, [...(adjacency.get(a) ?? []), b]);
+}
+
+function nextPolygonId(nodes: readonly { id: NodeId }[]): NodeId {
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `PG${index}`)) {
+    index += 1;
+  }
+
+  return `PG${index}`;
 }

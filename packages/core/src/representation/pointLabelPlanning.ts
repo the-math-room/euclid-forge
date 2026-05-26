@@ -80,6 +80,7 @@ function pointLabelForNode(node: GraphNode): string | null {
     case "LINE":
     case "CIRCLE":
     case "TRIANGLE":
+    case "POLYGON":
       return null;
   }
 }

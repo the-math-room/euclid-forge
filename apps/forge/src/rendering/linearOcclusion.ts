@@ -40,6 +40,17 @@ export function polygonOccludersForScene(
           }),
         ];
 
+      case "POLYGON":
+        return [
+          Object.freeze({
+            id: value.id,
+            zIndex: value.zIndex ?? 0,
+            points: Object.freeze(
+              value.points.map((point) => worldToScreen(viewport, point)),
+            ),
+          }),
+        ];
+
       case "CIRCLE":
         return [
           Object.freeze({
