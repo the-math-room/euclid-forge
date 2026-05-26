@@ -262,9 +262,9 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   command({
     id: "create-parallel-segment",
     keys: ["p"],
-    disabledReason: parallelSegmentDisabledReason,
+    disabledReason: linearConstrainedSegmentDisabledReason,
     run: (state) => {
-      const [reference, anchor] = requireSelectedParallelSegmentInputs(state);
+      const [reference, anchor] = requireSelectedLinearConstrainedSegmentInputs(state);
       const nodes = parallelSegmentConstruction(state.graph, reference, anchor);
 
       if (nodes.length === 0) {
@@ -287,9 +287,9 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
   command({
     id: "create-perpendicular-segment",
     keys: ["o"],
-    disabledReason: parallelSegmentDisabledReason,
+    disabledReason: linearConstrainedSegmentDisabledReason,
     run: (state) => {
-      const [reference, anchor] = requireSelectedParallelSegmentInputs(state);
+      const [reference, anchor] = requireSelectedLinearConstrainedSegmentInputs(state);
       const nodes = perpendicularSegmentConstruction(
         state.graph,
         reference,
@@ -720,7 +720,7 @@ function safeIdPart(value: string): string {
   return value.replace(/[^A-Za-z0-9_]+/g, "_");
 }
 
-function selectedParallelSegmentInputs(
+function selectedLinearConstrainedSegmentInputs(
   state: AppState,
 ): readonly [NodeId, NodeId] | null {
   const selected = [...state.viewState.selectedNodeIds];
@@ -735,13 +735,13 @@ function selectedParallelSegmentInputs(
     return null;
   }
 
-  return parallelInputsForIds(state, first, second);
+  return linearConstrainedInputsForIds(state, first, second);
 }
 
-function requireSelectedParallelSegmentInputs(
+function requireSelectedLinearConstrainedSegmentInputs(
   state: AppState,
 ): readonly [NodeId, NodeId] {
-  const inputs = selectedParallelSegmentInputs(state);
+  const inputs = selectedLinearConstrainedSegmentInputs(state);
 
   if (!inputs) {
     throw new Error("Cannot run create-parallel-segment while disabled");
@@ -750,7 +750,7 @@ function requireSelectedParallelSegmentInputs(
   return inputs;
 }
 
-function parallelInputsForIds(
+function linearConstrainedInputsForIds(
   state: AppState,
   first: NodeId,
   second: NodeId,
@@ -769,8 +769,8 @@ function parallelInputsForIds(
   return null;
 }
 
-function parallelSegmentDisabledReason(state: AppState): string | null {
-  return selectedParallelSegmentInputs(state)
+function linearConstrainedSegmentDisabledReason(state: AppState): string | null {
+  return selectedLinearConstrainedSegmentInputs(state)
     ? null
     : "Select one segment or line and one point to create a parallel segment.";
 }
