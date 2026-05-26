@@ -61,7 +61,14 @@ export function renderPoint(
   ctx.arc(screen.x, screen.y, style.radiusPx, 0, Math.PI * 2);
   ctx.fill();
 
-  renderPointLabel(ctx, theme.point, screen.x, screen.y, point.label);
+  renderPointLabel(
+    ctx,
+    theme.point,
+    screen.x,
+    screen.y,
+    point.label,
+    point.labelOffsetPx,
+  );
 
   ctx.restore();
 }
@@ -83,25 +90,14 @@ function renderPointLabel(
   pointX: number,
   pointY: number,
   label: string,
+  labelOffsetPx: Readonly<{ x: number; y: number }> = { x: 0, y: 0 },
 ): void {
   const pill = theme.labelPill;
-  const textX = pointX + theme.labelOffsetX;
-  const textY = pointY + theme.labelOffsetY;
+  const textX = pointX + theme.labelOffsetX + labelOffsetPx.x;
+  const textY = pointY + theme.labelOffsetY + labelOffsetPx.y;
 
   ctx.font = theme.labelFont;
   ctx.textBaseline = "alphabetic";
-
-  const metrics = ctx.measureText(label);
-  const actualLeft = metrics.actualBoundingBoxLeft || 0;
-  const actualRight = metrics.actualBoundingBoxRight || metrics.width;
-  const actualAscent = metrics.actualBoundingBoxAscent || pill.fallbackAscentPx;
-  const actualDescent =
-    metrics.actualBoundingBoxDescent || pill.fallbackDescentPx;
-
-  const x = textX - actualLeft - pill.paddingXPx;
-  const y = textY - actualAscent - pill.paddingYPx;
-  const width = actualLeft + actualRight + pill.paddingXPx * 2;
-  const height = actualAscent + actualDescent + pill.paddingYPx * 2;
 
   renderMeasurementPill(
     ctx,

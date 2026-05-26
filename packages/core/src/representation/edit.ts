@@ -42,6 +42,11 @@ export type GraphEdit = Readonly<
       kind: "SET_NODE_Z_INDICES";
       zIndices: ReadonlyMap<NodeId, number>;
     }
+  | {
+      kind: "SET_POINT_LABEL_OFFSET";
+      id: NodeId;
+      offsetPx: Vec2;
+    }
 >;
 
 export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
@@ -69,6 +74,9 @@ export function applyGraphEdit(graph: Graph, edit: GraphEdit): Graph {
 
     case "SET_NODE_Z_INDICES":
       return setNodeZIndices(graph, edit.zIndices);
+
+    case "SET_POINT_LABEL_OFFSET":
+      return setPointLabelOffset(graph, edit.id, edit.offsetPx);
   }
 }
 
@@ -275,4 +283,60 @@ function setNodeZIndices(
           };
     }),
   );
+}
+
+
+function setPointLabelOffset(graph: Graph, id: NodeId, offsetPx: Vec2): Graph {
+  const node = graph.byId.get(id);
+
+  if (!node) {
+    throw new Error(`Cannot set label offset for missing node: ${id}`);
+  }
+
+  if (!isPointLabelNode(node)) {
+    throw new Error(`Cannot set label offset for non-point-label node: ${id}`);
+  }
+
+  return createGraph(
+    graph.nodes.map((candidate) =>
+      candidate.id === id
+        ? {
+            ...node,
+            labelOffsetPx: offsetPx,
+          }
+        : candidate,
+    ),
+  );
+}
+
+function isPointLabelNode(
+  node: GraphNode,
+): node is Extract<
+  GraphNode,
+  {
+    kind:
+      | "FREE_POINT"
+      | "MIDPOINT"
+      | "CENTROID"
+      | "SEGMENT_INTERSECTION"
+      | "CURVE_INTERSECTION"
+      | "LINEAR_CONSTRAINED_POINT";
+  }
+> {
+  switch (node.kind) {
+    case "FREE_POINT":
+    case "MIDPOINT":
+    case "CENTROID":
+    case "SEGMENT_INTERSECTION":
+    case "CURVE_INTERSECTION":
+    case "LINEAR_CONSTRAINED_POINT":
+      return true;
+
+    case "SEGMENT":
+    case "LINE":
+    case "CIRCLE":
+    case "TRIANGLE":
+    case "SEGMENT_MEASUREMENT":
+      return false;
+  }
 }

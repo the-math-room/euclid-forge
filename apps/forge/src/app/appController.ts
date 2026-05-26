@@ -104,6 +104,31 @@ export function handlePointerDown(
         ],
       });
 
+    case "DRAG_LABEL": {
+      const node = state.graph.byId.get(intent.id);
+      const initialLabelOffsetPx =
+        node && "labelOffsetPx" in node && node.labelOffsetPx
+          ? node.labelOffsetPx
+          : { x: 0, y: 0 };
+
+      return transition({
+        state: appState(state.graph, viewState, {
+          kind: "LABEL",
+          nodeId: intent.id,
+          initialPointerScreen: input.point,
+          initialLabelOffsetPx,
+        }),
+        shouldRender: false,
+        shouldPreventDefault: true,
+        effects: [
+          {
+            kind: "SET_POINTER_CAPTURE",
+            pointerId: input.pointerId,
+          },
+        ],
+      });
+    }
+
     case "DRAG_BODY":
       return transition({
         state: appState(state.graph, viewState, {
@@ -250,6 +275,29 @@ export function handlePointerMove(
       return changed(
         appState(
           applyGraphEdit(state.graph, edit),
+          viewState,
+          state.dragState,
+          state.activeTool,
+        ),
+      );
+    }
+
+    case "LABEL": {
+      const delta = deltaBetween(
+        state.dragState.initialPointerScreen,
+        input.point,
+      );
+
+      return changed(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "SET_POINT_LABEL_OFFSET",
+            id: state.dragState.nodeId,
+            offsetPx: {
+              x: state.dragState.initialLabelOffsetPx.x + delta.x,
+              y: state.dragState.initialLabelOffsetPx.y + delta.y,
+            },
+          }),
           viewState,
           state.dragState,
           state.activeTool,

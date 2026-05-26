@@ -3,6 +3,7 @@ import { visibleEvaluatedScene } from "@euclid-forge/core";
 import {
   hitTestDraggableAreaBody,
   hitTestDraggablePointTarget,
+  hitTestPointLabel,
   hitTestSelectionTarget,
 } from "../interaction/hitTest";
 import type { Vec2 } from "@euclid-forge/core";
@@ -19,6 +20,10 @@ export type PointerDownIntent =
     }>
   | Readonly<{
       kind: "DRAG_FREE_POINT";
+      id: NodeId;
+    }>
+  | Readonly<{
+      kind: "DRAG_LABEL";
       id: NodeId;
     }>
   | Readonly<{
@@ -61,6 +66,15 @@ export function pointerDownIntent(
 
     return {
       kind: "NONE",
+    };
+  }
+
+  const labelHit = hitTestPointLabel(evaluated, input.viewport, input.point);
+
+  if (labelHit) {
+    return {
+      kind: "DRAG_LABEL",
+      id: labelHit.id,
     };
   }
 
@@ -110,6 +124,7 @@ export function hoverIntent(state: AppState, input: PointerInput): HoverIntent {
       };
 
     case "DRAG_FREE_POINT":
+    case "DRAG_LABEL":
       return {
         kind: "HOVER_NODE",
         id: intent.id,

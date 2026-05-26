@@ -21,6 +21,9 @@ export const freePointDefinition: GeometryDefinition<"FREE_POINT"> =
         id: node.id,
         point: vec2(node.x, node.y),
         label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
         role: "FREE",
       }),
     }),

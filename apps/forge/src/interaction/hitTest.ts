@@ -1,5 +1,11 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
-import { evaluatedGeometryItems, type EvaluatedScene } from "@euclid-forge/core";
+import {
+  evaluatedGeometryItems,
+  type EvaluatedScene,
+  type NodeId,
+  type ScreenPoint,
+  type Viewport,
+} from "@euclid-forge/core";
 import {
   bodyDragForGeometryNode,
   hitGeometryValue,
@@ -14,8 +20,8 @@ import type {
   TriangleHitTarget,
 } from "./geometryInteractionContext";
 import type { Graph } from "@euclid-forge/core";
-import type { NodeId } from "@euclid-forge/core";
-import type { ScreenPoint, Viewport } from "@euclid-forge/core";
+import { worldToScreen } from "@euclid-forge/core";
+import { labelPillBounds } from "../ui/labelPillLayout";
 
 export type { CircleHit, HitTarget, PointHit, SegmentHit, TriangleHitTarget };
 
@@ -26,6 +32,10 @@ export type TriangleSelectionHit = Readonly<{
 export type TriangleInteriorHit = Readonly<{
   id: NodeId;
   vertexIds: readonly [NodeId, NodeId, NodeId];
+}>;
+
+export type PointLabelHit = Readonly<{
+  id: NodeId;
 }>;
 
 export type AreaBodyDragHit = Readonly<{
@@ -102,6 +112,40 @@ export function hitTestDraggableAreaBody(
         sourcePointIds: best.sourcePointIds,
       }
     : null;
+}
+
+export function hitTestPointLabel(
+  evaluated: EvaluatedScene,
+  viewport: Viewport,
+  screenPoint: ScreenPoint,
+): PointLabelHit | null {
+  for (const value of reverseVisualOrder(evaluatedGeometryItems(evaluated))) {
+    if (value.kind !== "POINT") {
+      continue;
+    }
+
+    const point = worldToScreen(viewport, value.point);
+    const offset = value.labelOffsetPx ?? { x: 0, y: 0 };
+    const bounds = labelPillBounds(
+      labelMeasureContext,
+      POINT_LABEL_HIT_THEME.labelPill,
+      POINT_LABEL_HIT_THEME.labelFont,
+      point.x + POINT_LABEL_HIT_THEME.labelOffsetX + offset.x,
+      point.y + POINT_LABEL_HIT_THEME.labelOffsetY + offset.y,
+      value.label,
+    );
+
+    if (
+      screenPoint.x >= bounds.x &&
+      screenPoint.x <= bounds.x + bounds.width &&
+      screenPoint.y >= bounds.y &&
+      screenPoint.y <= bounds.y + bounds.height
+    ) {
+      return { id: value.id };
+    }
+  }
+
+  return null;
 }
 
 export function hitTestPointTarget(
@@ -357,3 +401,38 @@ function isBodyDraggableTriangle(graph: Graph, id: NodeId): boolean {
     graph.byId.get(node.c)?.kind === "FREE_POINT"
   );
 }
+
+
+const labelMeasureContext: Pick<
+  CanvasRenderingContext2D,
+  "font" | "measureText" | "textBaseline"
+> = {
+  font: "",
+  textBaseline: "alphabetic",
+  measureText(text: string): TextMetrics {
+    const sizeMatch = this.font.match(/(\d+(?:\.\d+)?)px/);
+    const size = sizeMatch ? Number(sizeMatch[1]) : 14;
+    const width = text.length * size * 0.6;
+
+    return {
+      width,
+      actualBoundingBoxLeft: 0,
+      actualBoundingBoxRight: width,
+      actualBoundingBoxAscent: size * 0.8,
+      actualBoundingBoxDescent: size * 0.25,
+    } as TextMetrics;
+  },
+};
+
+
+const POINT_LABEL_HIT_THEME = Object.freeze({
+  labelFont: "14px system-ui, sans-serif",
+  labelOffsetX: 10,
+  labelOffsetY: -10,
+  labelPill: Object.freeze({
+    paddingXPx: 4,
+    paddingYPx: 2,
+    fallbackAscentPx: 11,
+    fallbackDescentPx: 3,
+  }),
+});

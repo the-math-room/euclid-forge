@@ -24,6 +24,9 @@ export const midpointDefinition: GeometryDefinition<"MIDPOINT"> = Object.freeze(
           id: node.id,
           point: midpoint(segment.a, segment.b),
           label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
           role: "MIDPOINT",
         };
       },

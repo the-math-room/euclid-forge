@@ -51,6 +51,9 @@ export const segmentIntersectionDefinition: GeometryDefinition<"SEGMENT_INTERSEC
           id: node.id,
           point,
           label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
           role: "INTERSECTION",
         };
       },

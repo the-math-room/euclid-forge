@@ -52,6 +52,9 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
           id: node.id,
           point: candidate.point,
           label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
           role: "INTERSECTION",
         };
       },

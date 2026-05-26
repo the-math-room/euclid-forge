@@ -1,3 +1,5 @@
+import type { Vec2 } from "../meaning/vec2";
+
 export type NodeId = string;
 
 export type GeometryNode =
@@ -26,6 +28,7 @@ export type FreePointNode = Readonly<{
   x: number;
   y: number;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type SegmentNode = Readonly<{
@@ -67,6 +70,7 @@ export type MidpointNode = Readonly<{
   zIndex?: number;
   segment: NodeId;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type CentroidNode = Readonly<{
@@ -75,6 +79,7 @@ export type CentroidNode = Readonly<{
   zIndex?: number;
   triangle: NodeId;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type SegmentIntersectionNode = Readonly<{
@@ -84,6 +89,7 @@ export type SegmentIntersectionNode = Readonly<{
   segmentA: NodeId;
   segmentB: NodeId;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type CurveIntersectionNode = Readonly<{
@@ -94,6 +100,7 @@ export type CurveIntersectionNode = Readonly<{
   curveB: NodeId;
   branchKey: string;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type LinearConstrainedPointNode = Readonly<{
@@ -105,6 +112,7 @@ export type LinearConstrainedPointNode = Readonly<{
   mode: LinearConstraintMode;
   offset: number;
   label: string;
+  labelOffsetPx?: Vec2;
 }>;
 
 export type SegmentMeasurementNode = Readonly<{
@@ -120,6 +128,7 @@ export function freePoint(
   x: number,
   y: number,
   label: string,
+  labelOffsetPx?: Vec2,
 ): FreePointNode {
   return Object.freeze({
     kind: "FREE_POINT",
@@ -127,6 +136,7 @@ export function freePoint(
     x,
     y,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 
@@ -180,12 +190,14 @@ export function midpointNode(
   id: NodeId,
   segment: NodeId,
   label: string,
+  labelOffsetPx?: Vec2,
 ): MidpointNode {
   return Object.freeze({
     kind: "MIDPOINT",
     id,
     segment,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 
@@ -193,12 +205,14 @@ export function centroidNode(
   id: NodeId,
   triangle: NodeId,
   label: string,
+  labelOffsetPx?: Vec2,
 ): CentroidNode {
   return Object.freeze({
     kind: "CENTROID",
     id,
     triangle,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 
@@ -207,6 +221,7 @@ export function segmentIntersectionNode(
   segmentA: NodeId,
   segmentB: NodeId,
   label: string,
+  labelOffsetPx?: Vec2,
 ): SegmentIntersectionNode {
   return Object.freeze({
     kind: "SEGMENT_INTERSECTION",
@@ -214,6 +229,7 @@ export function segmentIntersectionNode(
     segmentA,
     segmentB,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 
@@ -223,6 +239,7 @@ export function curveIntersectionNode(
   curveB: NodeId,
   branchKey: string,
   label: string,
+  labelOffsetPx?: Vec2,
 ): CurveIntersectionNode {
   return Object.freeze({
     kind: "CURVE_INTERSECTION",
@@ -231,6 +248,7 @@ export function curveIntersectionNode(
     curveB,
     branchKey,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 
@@ -241,6 +259,7 @@ export function linearConstrainedPointNode(
   mode: LinearConstraintMode,
   offset: number,
   label: string,
+  labelOffsetPx?: Vec2,
 ): LinearConstrainedPointNode {
   return Object.freeze({
     kind: "LINEAR_CONSTRAINED_POINT",
@@ -250,6 +269,7 @@ export function linearConstrainedPointNode(
     mode,
     offset,
     label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });
 }
 

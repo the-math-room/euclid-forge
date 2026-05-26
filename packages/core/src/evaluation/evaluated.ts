@@ -20,6 +20,7 @@ export type EvaluatedPoint = Readonly<{
   id: NodeId;
   point: Vec2;
   label: string;
+  labelOffsetPx?: Vec2;
   role: EvaluatedPointRole;
 }>;
 

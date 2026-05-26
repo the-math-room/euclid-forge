@@ -18,6 +18,12 @@ export type DragState =
       nodeId: NodeId;
     }>
   | Readonly<{
+      kind: "LABEL";
+      nodeId: NodeId;
+      initialPointerScreen: ScreenPoint;
+      initialLabelOffsetPx: Vec2;
+    }>
+  | Readonly<{
       kind: "BODY";
       nodeId: NodeId;
       sourcePointIds: readonly NodeId[];

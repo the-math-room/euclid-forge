@@ -32,6 +32,9 @@ export const centroidDefinition: GeometryDefinition<"CENTROID"> = Object.freeze(
           id: node.id,
           point: centroid(triangle.a, triangle.b, triangle.c),
           label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
           role: "CENTROID",
         };
       },

@@ -46,6 +46,9 @@ export const linearConstrainedPointDefinition: GeometryDefinition<"LINEAR_CONSTR
             anchor.point.y + direction.y * node.offset,
           ),
           label: node.label,
+          ...(node.labelOffsetPx === undefined
+            ? {}
+            : { labelOffsetPx: node.labelOffsetPx }),
           role: "INTERSECTION",
         };
       },
