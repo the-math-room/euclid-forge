@@ -66,20 +66,20 @@ type ScreenAreaOccluder = {
 
 Then all outline renderers should consume it consistently:
 
-* Segment renderer
-* Line renderer
-* Polygon renderer
-* Possibly circle renderer later
+- Segment renderer
+- Line renderer
+- Polygon renderer
+- Possibly circle renderer later
 
 ### 3. Occlusion needs tests before further tuning
 
 Add tests around the splitting logic and renderer calls:
 
-* Lower-z segment crossing higher-z polygon uses dashed middle interval.
-* Higher-z segment crossing lower-z polygon stays solid.
-* Lower-z polygon edge behind higher-z polygon dashes only the hidden span.
-* Hidden-lines toggle off produces no dashed segments.
-* Z-level tie uses layer order only as a tie-breaker.
+- Lower-z segment crossing higher-z polygon uses dashed middle interval.
+- Higher-z segment crossing lower-z polygon stays solid.
+- Lower-z polygon edge behind higher-z polygon dashes only the hidden span.
+- Hidden-lines toggle off produces no dashed segments.
+- Z-level tie uses layer order only as a tie-breaker.
 
 ### 4. Polygon hit-testing is incomplete
 
@@ -87,17 +87,17 @@ Polygon nodes render and can be lasso-selected, but direct polygon interior hit-
 
 Needed:
 
-* Hit polygon interior as an `AREA` target.
-* Allow direct selection of a polygon face.
-* Allow body dragging a polygon face by its vertices when possible.
+- Hit polygon interior as an `AREA` target.
+- Allow direct selection of a polygon face.
+- Allow body dragging a polygon face by its vertices when possible.
 
 ### 5. Face UI is still primitive
 
 The Face button currently runs the create-polygon command. It should eventually show better state:
 
-* Disabled when the selection cannot form a polygon.
-* Tooltip/status explaining what is missing.
-* Possibly a selected-action surface rather than a normal tool button.
+- Disabled when the selection cannot form a polygon.
+- Tooltip/status explaining what is missing.
+- Possibly a selected-action surface rather than a normal tool button.
 
 ## Recommended next implementation pass
 
@@ -113,10 +113,10 @@ Do not continue by special-casing more shapes. Instead:
 
 For now, do not implement:
 
-* Automatic polygons from every closed segment cycle.
-* Filled faces as a requirement for occlusion.
-* Core/math-level occlusion semantics.
-* Per-object “occludable” flags.
-* Shape clipping in Core.
+- Automatic polygons from every closed segment cycle.
+- Filled faces as a requirement for occlusion.
+- Core/math-level occlusion semantics.
+- Per-object “occludable” flags.
+- Shape clipping in Core.
 
 Occlusion should remain a Forge rendering concern.
