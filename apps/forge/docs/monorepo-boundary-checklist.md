@@ -17,27 +17,62 @@ Core must remain headless.
 ```txt
 packages/core imports apps/forge
 packages/core imports forge app/rendering/interaction/styles modules
-packages/core directly references browser globals
+packages/core directly references browser globals or Forge presentation concepts
 apps/forge imports packages/core through relative filesystem paths
 ```
 
-## Browser globals to guard against in Core
+## Browser globals and presentation concepts to guard against in Core
+
+Core source should not reference browser or DOM APIs such as:
 
 ```txt
 window
 document
+navigator
 HTMLElement
+HTMLImageElement
 HTMLCanvasElement
 CanvasRenderingContext2D
+OffscreenCanvas
+Path2D
+DOMRect
+DOMPoint
+DOMMatrix
+EventTarget
 PointerEvent
 KeyboardEvent
 MouseEvent
-requestAnimationFrame
-devicePixelRatio
+TouchEvent
+ResizeObserver
+MutationObserver
+CSSStyleDeclaration
+Image
 Blob
 File
+FileReader
+localStorage
+sessionStorage
+requestAnimationFrame
+cancelAnimationFrame
 URL.createObjectURL
+URL.revokeObjectURL
 ```
+
+Core source should also avoid Forge presentation concepts such as:
+
+```txt
+RenderTheme
+renderScene
+label pills
+parallel marks / chevrons
+toolbar
+pointer capture
+print image generation
+display theme controls
+smoke tests
+```
+
+These are adapter concerns and belong in `apps/forge`.
 
 ## Import guidance
 

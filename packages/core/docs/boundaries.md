@@ -8,7 +8,9 @@ Core may contain pure TypeScript, math and geometry denotations, immutable graph
 
 ## Forbidden in Core
 
-Core must not contain DOM APIs, `CanvasRenderingContext2D`, browser event handling, pointer events, keyboard events, React/UI components, CSS, rendering themes, label pills, parallel chevron drawing, print-image generation, display theme controls, app controller/runtime state, editor commands, smoke tests, or Vite application code.
+Core must not contain browser or DOM APIs such as `window`, `document`, `HTMLElement`, `HTMLCanvasElement`, `CanvasRenderingContext2D`, `OffscreenCanvas`, `Path2D`, `DOMRect`, pointer/keyboard/mouse events, browser file APIs, object URLs, storage APIs, observers, or animation-frame APIs.
+
+Core also must not contain Forge presentation or adapter concepts such as rendering themes, `RenderTheme`, label pills, parallel marks/chevrons, toolbar behavior, pointer capture, print-image generation, display theme controls, app controller/runtime state, editor commands, smoke tests, Vite application code, or browser UI workflows.
 
 ## Adapter-owned concerns
 
