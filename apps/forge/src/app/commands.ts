@@ -5,6 +5,7 @@ import {
   circleConstruction,
   lineConstruction,
   parallelSegmentConstruction,
+  perpendicularSegmentConstruction,
   segmentIntersectionConstruction,
   segmentMidpointConstruction,
   segmentConstruction,
@@ -268,6 +269,35 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
 
       if (nodes.length === 0) {
         return ignore(state, "Parallel segment already exists.");
+      }
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes,
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "create-perpendicular-segment",
+    keys: ["o"],
+    disabledReason: parallelSegmentDisabledReason,
+    run: (state) => {
+      const [reference, anchor] = requireSelectedParallelSegmentInputs(state);
+      const nodes = perpendicularSegmentConstruction(
+        state.graph,
+        reference,
+        anchor,
+      );
+
+      if (nodes.length === 0) {
+        return ignore(state, "Perpendicular segment already exists.");
       }
 
       return commit(

@@ -6,6 +6,7 @@ import {
   lineConstruction,
   midpointNode,
   parallelSegmentConstruction,
+  perpendicularSegmentConstruction,
   planFreePoint,
   screenToWorld,
   segmentConstruction,
@@ -20,7 +21,12 @@ import {
   appendActiveToolInput,
   resetActiveToolInputs,
 } from "./activeTool";
-import type { ActiveTool, ParallelTool, PointInputTool } from "./activeTool";
+import type {
+  ActiveTool,
+  ParallelTool,
+  PerpendicularTool,
+  PointInputTool,
+} from "./activeTool";
 import { changed, preventOnly, transition, unchanged } from "./appTransition";
 import type { AppTransition } from "./appTransition";
 import type { PointerInput } from "./appController";
@@ -48,7 +54,8 @@ export function handleActiveToolPointerDown(
       return handlePointInputToolPointerDown(state, input);
 
     case "parallel":
-      return handleParallelToolPointerDown(state, input);
+    case "perpendicular":
+      return handleLinearConstrainedToolPointerDown(state, input);
 
     case "intersection":
       return changed(
@@ -174,19 +181,25 @@ function handlePointInputToolPointerDown(
   );
 }
 
-function handleParallelToolPointerDown(
+function handleLinearConstrainedToolPointerDown(
   state: AppState,
   input: PointerInput,
 ): AppTransition {
-  if (state.activeTool.kind !== "parallel") {
+  if (
+    state.activeTool.kind !== "parallel" &&
+    state.activeTool.kind !== "perpendicular"
+  ) {
     return unchanged(state);
   }
+
+  const toolLabel =
+    state.activeTool.kind === "parallel" ? "parallel" : "perpendicular";
 
   const hit = selectablePointerHit(state, input);
   const existingInputs = state.activeTool.inputs;
   const inputNode =
     hit === null
-      ? createParallelAnchorPointInput(state, input, existingInputs)
+      ? createLinearConstrainedAnchorPointInput(state, input, existingInputs)
       : { graph: state.graph, id: hit, createdPoint: false };
 
   if (!inputNode) {
@@ -199,11 +212,11 @@ function handleParallelToolPointerDown(
 
   const candidate = inputNode.graph.byId.get(inputNode.id);
 
-  if (!candidate || !isParallelToolCandidate(candidate)) {
+  if (!candidate || !isLinearConstrainedToolCandidate(candidate)) {
     return changed(
       state,
       "ignore",
-      "Choose one segment or line and one point for the parallel tool.",
+      `Choose one segment or line and one point for the ${toolLabel} tool.`,
     );
   }
 
@@ -227,36 +240,42 @@ function handleParallelToolPointerDown(
     );
   }
 
-  if (activeTool.kind !== "parallel") {
+  if (activeTool.kind !== "parallel" && activeTool.kind !== "perpendicular") {
     return changed(
       stateWithInput,
       "ignore",
-      "Choose one segment or line and one point for the parallel tool.",
+      `Choose one segment or line and one point for the ${toolLabel} tool.`,
     );
   }
 
-  const parallelInputs = parallelToolInputs(stateWithInput.graph, activeTool);
-
-  if (!parallelInputs) {
-    return changed(
-      stateWithInput,
-      "ignore",
-      "Choose one segment or line and one point for the parallel tool.",
-    );
-  }
-
-  const [reference, anchor] = parallelInputs;
-  const nodes = parallelSegmentConstruction(
+  const constrainedInputs = linearConstrainedToolInputs(
     stateWithInput.graph,
-    reference,
-    anchor,
+    activeTool,
   );
+
+  if (!constrainedInputs) {
+    return changed(
+      stateWithInput,
+      "ignore",
+      `Choose one segment or line and one point for the ${toolLabel} tool.`,
+    );
+  }
+
+  const [reference, anchor] = constrainedInputs;
+  const nodes =
+    activeTool.kind === "parallel"
+      ? parallelSegmentConstruction(stateWithInput.graph, reference, anchor)
+      : perpendicularSegmentConstruction(
+          stateWithInput.graph,
+          reference,
+          anchor,
+        );
 
   if (nodes.length === 0) {
     return changed(
       stateWithInput,
       "ignore",
-      "Parallel segment already exists.",
+      `${capitalize(toolLabel)} segment already exists.`,
     );
   }
 
@@ -274,7 +293,7 @@ function handleParallelToolPointerDown(
   );
 }
 
-function createParallelAnchorPointInput(
+function createLinearConstrainedAnchorPointInput(
   state: AppState,
   input: PointerInput,
   existingInputs: readonly NodeId[],
@@ -368,6 +387,7 @@ function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
       return true;
 
     case "parallel":
+    case "perpendicular":
     case "select":
     case "lasso":
     case "point":
@@ -377,9 +397,9 @@ function isPointInputTool(tool: ActiveTool): tool is PointInputTool {
   }
 }
 
-function parallelToolInputs(
+function linearConstrainedToolInputs(
   graph: Graph,
-  tool: ParallelTool,
+  tool: ParallelTool | PerpendicularTool,
 ): readonly [NodeId, NodeId] | null {
   if (tool.inputs.length !== 2) {
     return null;
@@ -400,8 +420,12 @@ function parallelToolInputs(
   return null;
 }
 
-function isParallelToolCandidate(node: GeometryNode): boolean {
+function isLinearConstrainedToolCandidate(node: GeometryNode): boolean {
   return isLinearNode(node) || isPointNode(node);
+}
+
+function capitalize(value: string): string {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
 function isLinearNode(node: GeometryNode | null | undefined): boolean {

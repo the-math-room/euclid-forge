@@ -7,6 +7,7 @@ export type ActiveToolKind =
   | "segment"
   | "line"
   | "parallel"
+  | "perpendicular"
   | "circle"
   | "triangle"
   | "midpoint"
@@ -17,6 +18,7 @@ export type ConstructionToolKind =
   | "segment"
   | "line"
   | "parallel"
+  | "perpendicular"
   | "circle"
   | "triangle"
   | "midpoint"
@@ -24,7 +26,7 @@ export type ConstructionToolKind =
 
 export type PointInputToolKind = Exclude<
   ConstructionToolKind,
-  "intersection" | "parallel"
+  "intersection" | "parallel" | "perpendicular"
 >;
 
 export type SelectTool = Readonly<{
@@ -58,6 +60,11 @@ export type ParallelTool = Readonly<{
   inputs: readonly NodeId[];
 }>;
 
+export type PerpendicularTool = Readonly<{
+  kind: "perpendicular";
+  inputs: readonly NodeId[];
+}>;
+
 export type CircleTool = Readonly<{
   kind: "circle";
   inputs: readonly NodeId[];
@@ -85,7 +92,11 @@ export type PointInputTool =
   | TriangleTool
   | MidpointTool;
 
-export type ConstructionTool = PointInputTool | ParallelTool | IntersectionTool;
+export type ConstructionTool =
+  | PointInputTool
+  | ParallelTool
+  | PerpendicularTool
+  | IntersectionTool;
 
 export type ActiveTool =
   | SelectTool
@@ -132,6 +143,7 @@ export function activeToolRequiredInputCount(tool: ActiveTool): number {
     case "segment":
     case "line":
     case "parallel":
+    case "perpendicular":
     case "circle":
     case "midpoint":
     case "intersection":
@@ -147,6 +159,7 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
     case "segment":
     case "line":
     case "parallel":
+    case "perpendicular":
     case "circle":
     case "midpoint":
     case "triangle":
@@ -162,7 +175,11 @@ export function activeToolAcceptsPointInput(tool: ActiveTool): boolean {
 }
 
 export function activeToolAcceptsCurveInput(tool: ActiveTool): boolean {
-  return tool.kind === "intersection" || tool.kind === "parallel";
+  return (
+    tool.kind === "intersection" ||
+    tool.kind === "parallel" ||
+    tool.kind === "perpendicular"
+  );
 }
 
 export function activeToolIsReadyToCommit(tool: ActiveTool): boolean {
@@ -238,6 +255,13 @@ export function activeToolStatusText(tool: ActiveTool): string {
       }
 
       return "Parallel tool: choose an anchor point, or click empty canvas to create one.";
+
+    case "perpendicular":
+      if (tool.inputs.length === 0) {
+        return "Perpendicular tool: choose a reference segment or line.";
+      }
+
+      return "Perpendicular tool: choose an anchor point, or click empty canvas to create one.";
 
     case "circle":
       if (tool.inputs.length === 0) {

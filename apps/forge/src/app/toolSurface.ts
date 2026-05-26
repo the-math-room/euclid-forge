@@ -57,6 +57,12 @@ const TOOL_BUTTONS: readonly ToolButtonSpec[] = [
     tool: () => constructionTool("parallel"),
   },
   {
+    kind: "perpendicular",
+    label: "Perp",
+    title: "Create a finite segment perpendicular to a selected segment or line",
+    tool: () => constructionTool("perpendicular"),
+  },
+  {
     kind: "circle",
     label: "Circle",
     title: "Create a circle from center and radius points",

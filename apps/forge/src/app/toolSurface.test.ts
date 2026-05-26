@@ -177,6 +177,7 @@ describe("app/toolSurface", () => {
       "Point",
       "Segment",
       "Parallel",
+      "Perp",
       "Circle",
       "Triangle",
       "Delete",
