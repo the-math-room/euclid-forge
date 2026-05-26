@@ -1,8 +1,5 @@
-import {
-  isEvaluatedGeometry,
-  type EvaluatedGeometry,
-} from "@euclid-forge/core/evaluation/evaluated";
-import type { EvaluatedScene } from "@euclid-forge/core";
+import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
+import { evaluatedGeometryItems, type EvaluatedScene } from "@euclid-forge/core";
 import {
   bodyDragForGeometryNode,
   hitGeometryValue,
@@ -71,11 +68,7 @@ export function hitTestDraggableAreaBody(
     sourcePointIds: readonly NodeId[];
   }> | null = null;
 
-  for (const value of reverseVisualOrder(evaluated.ordered)) {
-    if (!isEvaluatedGeometry(value)) {
-      continue;
-    }
-
+  for (const value of reverseVisualOrder(evaluatedGeometryItems(evaluated))) {
     const candidate = hitGeometryValue(value, {
       viewport,
       screenPoint,
@@ -285,8 +278,8 @@ function bestHitForClass(
     candidate: GeometryHitCandidate;
   }> | null = null;
 
-  for (const value of reverseVisualOrder(evaluated.ordered)) {
-    if (!isEvaluatedGeometry(value) || !includeValue(value)) {
+  for (const value of reverseVisualOrder(evaluatedGeometryItems(evaluated))) {
+    if (!includeValue(value)) {
       continue;
     }
 

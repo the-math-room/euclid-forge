@@ -52,6 +52,8 @@ export {
 
 export {
   evaluateGraph,
+  evaluatedAnnotationItems,
+  evaluatedGeometryItems,
   type EvaluatedScene,
   type EvaluationIssue,
   type EvaluationIssueSeverity,

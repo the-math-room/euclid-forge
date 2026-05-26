@@ -1,51 +1,31 @@
-import { describe, expect, test, vi } from "vitest";
-import { createGraph } from "../representation/graph";
-import { freePoint, segmentNode } from "../representation/node";
-
-vi.mock("../geometry/geometryRegistry", async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import("../geometry/geometryRegistry")>();
-  const { GeometryEvaluationIssueError } = await import("./evaluationIssue");
-
-  return {
-    ...original,
-    evaluateGeometryNode: vi.fn((node) => {
-      if (node.id === "A") {
-        throw new GeometryEvaluationIssueError("A", "A is undefined");
-      }
-
-      if (node.id === "AB") {
-        throw new Error("Missing evaluated dependency: A");
-      }
-
-      return {
-        kind: "POINT",
-        sourceKind: "FREE_POINT",
-        id: node.id,
-        point: { x: 1, y: 2 },
-        label: node.id,
-        role: "FREE",
-      };
-    }),
-  };
-});
-
+import { describe, expect, test } from "vitest";
 import { evaluateGraph } from "./evaluateGraph";
+import { createGraph } from "../representation/graph";
+import {
+  freePoint,
+  linearConstrainedPointNode,
+  segmentNode,
+} from "../representation/node";
 
 describe("evaluation/evaluateGraph partial issues", () => {
   test("omits nodes that report evaluation issues", () => {
-    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("C", 1, 1, "C"),
+      linearConstrainedPointNode("D", "C", "A", "PARALLEL", 1, "D"),
+    ]);
 
     const evaluated = evaluateGraph(graph);
 
-    expect(evaluated.values.has("A")).toBe(false);
-    expect(evaluated.ordered).toEqual([]);
+    expect(evaluated.values.has("D")).toBe(false);
+    expect(evaluated.ordered.map((value) => value.id)).toEqual(["A", "C"]);
     expect(evaluated.issues).toEqual([
       {
-        nodeId: "A",
+        nodeId: "D",
         severity: "warning",
         code: "UNDEFINED_GEOMETRY",
-        message: "A is undefined",
+        message:
+          "Cannot evaluate D; reference C is not a non-degenerate line or segment",
       },
     ]);
   });
@@ -53,27 +33,31 @@ describe("evaluation/evaluateGraph partial issues", () => {
   test("omits dependents when an evaluated dependency is unavailable", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),
-      freePoint("B", 1, 0, "B"),
-      segmentNode("AB", "A", "B"),
+      freePoint("C", 1, 1, "C"),
+      linearConstrainedPointNode("D", "C", "A", "PARALLEL", 1, "D"),
+      freePoint("B", 2, 0, "B"),
+      segmentNode("DB", "D", "B"),
     ]);
 
     const evaluated = evaluateGraph(graph);
 
-    expect(evaluated.values.has("A")).toBe(false);
-    expect(evaluated.values.has("AB")).toBe(false);
+    expect(evaluated.values.has("D")).toBe(false);
+    expect(evaluated.values.has("DB")).toBe(false);
     expect(evaluated.values.has("B")).toBe(true);
+    expect(evaluated.ordered.map((value) => value.id)).toEqual(["A", "C", "B"]);
     expect(evaluated.issues).toEqual([
       {
-        nodeId: "A",
+        nodeId: "D",
         severity: "warning",
         code: "UNDEFINED_GEOMETRY",
-        message: "A is undefined",
+        message:
+          "Cannot evaluate D; reference C is not a non-degenerate line or segment",
       },
       {
-        nodeId: "AB",
+        nodeId: "DB",
         severity: "warning",
         code: "MISSING_DEPENDENCY",
-        message: "Cannot evaluate AB; Missing evaluated dependency: A",
+        message: "Cannot evaluate DB; Missing evaluated dependency: D",
       },
     ]);
   });

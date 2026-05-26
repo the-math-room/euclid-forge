@@ -1,8 +1,8 @@
+import type { EvaluatedGeometry } from "../evaluation/evaluated";
 import {
-  isEvaluatedGeometry,
-  type EvaluatedGeometry,
-} from "../evaluation/evaluated";
-import type { EvaluatedScene } from "../evaluation/evaluateGraph";
+  evaluatedGeometryItems,
+  type EvaluatedScene,
+} from "../evaluation/evaluateGraph";
 import { intersectCurves } from "../meaning/curve";
 import type { IntersectionResult } from "../meaning/intersection";
 import type { NodeId } from "../representation/node";
@@ -32,18 +32,16 @@ export function curveIntersectionCandidatesForScene(
 ): IntersectionResult {
   const firstValue = scene.values.get(firstId);
   const secondValue = scene.values.get(secondId);
+  const geometry = new Map(evaluatedGeometryItems(scene).map((value) => [value.id, value]));
+  const firstGeometry = firstValue ? geometry.get(firstId) : undefined;
+  const secondGeometry = secondValue ? geometry.get(secondId) : undefined;
 
-  if (
-    !firstValue ||
-    !secondValue ||
-    !isEvaluatedGeometry(firstValue) ||
-    !isEvaluatedGeometry(secondValue)
-  ) {
+  if (!firstGeometry || !secondGeometry) {
     return Object.freeze({
       candidates: Object.freeze([]),
       issue: "Selected curve geometry is not currently evaluated",
     });
   }
 
-  return curveIntersectionCandidatesForValues(firstValue, secondValue);
+  return curveIntersectionCandidatesForValues(firstGeometry, secondGeometry);
 }
