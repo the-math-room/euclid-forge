@@ -916,16 +916,16 @@ function deleteSelectedDisabledReason(state: AppState): string | null {
 
 
 function polygonDisabledReason(state: AppState): string | null {
-  return selectedPolygonCycle(state)
+  return selectedPolygonVertices(state)
     ? null
-    : "Select a closed cycle of at least three segments to create a polygon.";
+    : "Select at least three polygon vertices, or select a closed cycle of boundary segments.";
 }
 
 function requireSelectedPolygonCycle(
   state: AppState,
   message: string,
 ): readonly NodeId[] {
-  const vertices = selectedPolygonCycle(state);
+  const vertices = selectedPolygonVertices(state);
 
   if (!vertices) {
     throw new Error(message);
@@ -934,7 +934,11 @@ function requireSelectedPolygonCycle(
   return vertices;
 }
 
-function selectedPolygonCycle(state: AppState): readonly NodeId[] | null {
+function selectedPolygonVertices(state: AppState): readonly NodeId[] | null {
+  return selectedPolygonSegmentCycle(state) ?? selectedPolygonPointCycle(state);
+}
+
+function selectedPolygonSegmentCycle(state: AppState): readonly NodeId[] | null {
   const selectedSegments = selectedSegmentNodes(state);
 
   if (selectedSegments.length < 3) {
@@ -993,6 +997,55 @@ function selectedPolygonCycle(state: AppState): readonly NodeId[] | null {
     previous = current;
     current = next;
   }
+}
+
+function selectedPolygonPointCycle(state: AppState): readonly NodeId[] | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length < 3) {
+    return null;
+  }
+
+  const evaluated = evaluateGraph(state.graph);
+  const points = selected.map((id) => {
+    const node = state.graph.byId.get(id);
+    const value = evaluated.values.get(id);
+
+    if (!node || !isConstructiblePointNode(node) || value?.kind !== "POINT") {
+      return null;
+    }
+
+    return {
+      id,
+      point: value.point,
+    };
+  });
+
+  if (points.some((point) => point === null)) {
+    return null;
+  }
+
+  const concrete = points as readonly {
+    id: NodeId;
+    point: Readonly<{ x: number; y: number }>;
+  }[];
+
+  const center = {
+    x:
+      concrete.reduce((sum, point) => sum + point.point.x, 0) / concrete.length,
+    y:
+      concrete.reduce((sum, point) => sum + point.point.y, 0) / concrete.length,
+  };
+
+  return Object.freeze(
+    [...concrete]
+      .sort(
+        (left, right) =>
+          Math.atan2(left.point.y - center.y, left.point.x - center.x) -
+          Math.atan2(right.point.y - center.y, right.point.x - center.x),
+      )
+      .map((point) => point.id),
+  );
 }
 
 function selectedSegmentNodes(

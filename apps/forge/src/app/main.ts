@@ -15,6 +15,7 @@ import type { AppState } from "./appState";
 import { effectiveHiddenNodeIds } from "./effectiveVisibility";
 import { initialHistory } from "./history";
 import { connectDomEvents } from "./domEvents";
+import { handleKeyDown } from "./appController";
 import {
   get2DContext,
   getCanvas,
@@ -92,6 +93,13 @@ function main(): void {
       );
       toolSurface.update(runtime.getState().activeTool);
       runtime.requestRender();
+    },
+    onCommand(key) {
+      runtime.applyTransition(
+        new Event("tool-surface-command", { cancelable: true }),
+        handleKeyDown(runtime.getState(), { key }),
+      );
+      toolSurface.update(runtime.getState().activeTool);
     },
   });
   installBuildInfoSurface(document);

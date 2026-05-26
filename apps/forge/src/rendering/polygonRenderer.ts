@@ -1,13 +1,16 @@
 import type { EvaluatedPolygon } from "@euclid-forge/core/evaluation/evaluated";
 import { worldToScreen } from "@euclid-forge/core";
 import type { ScreenPoint, Viewport } from "@euclid-forge/core";
+import { drawOccludedSegment } from "./linearOcclusion";
+import type { LinearOcclusionOptions } from "./linearOcclusion";
 import { RENDER_THEME, type RenderTheme } from "./theme";
 
 export type PolygonRenderOptions = Readonly<{
   selectedNodeIds?: ReadonlySet<string>;
   hoveredNodeId?: string | null;
   theme?: RenderTheme;
-}>;
+}> &
+  LinearOcclusionOptions;
 
 export function renderPolygon(
   ctx: CanvasRenderingContext2D,
@@ -35,7 +38,15 @@ export function renderPolygon(
     strokePolygon(ctx, points, theme.triangle.selectedStroke, theme.triangle.selectedLineWidthPx);
   }
 
-  strokePolygon(ctx, points, theme.triangle.stroke, theme.triangle.lineWidthPx);
+  strokeOccludedPolygon(
+    ctx,
+    polygon.id,
+    polygon.zIndex,
+    points,
+    theme.triangle.stroke,
+    theme.triangle.lineWidthPx,
+    options,
+  );
 
   ctx.restore();
 }
@@ -64,4 +75,38 @@ function strokePolygon(
 
   ctx.closePath();
   ctx.stroke();
+}
+
+
+function strokeOccludedPolygon(
+  ctx: CanvasRenderingContext2D,
+  id: string,
+  zIndex: number | undefined,
+  points: readonly ScreenPoint[],
+  strokeStyle: string,
+  lineWidth: number,
+  options: LinearOcclusionOptions,
+): void {
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = lineWidth;
+
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+
+    if (!a || !b) {
+      continue;
+    }
+
+    drawOccludedSegment(
+      ctx,
+      {
+        id,
+        ...(zIndex === undefined ? {} : { zIndex }),
+        a,
+        b,
+      },
+      options,
+    );
+  }
 }
