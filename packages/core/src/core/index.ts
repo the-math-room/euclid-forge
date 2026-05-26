@@ -58,11 +58,13 @@ export {
 } from "../evaluation/evaluateGraph";
 
 export type {
+  EvaluatedAnnotation,
   EvaluatedCircle,
   EvaluatedGeometry,
   EvaluatedLine,
   EvaluatedPoint,
   EvaluatedPointRole,
+  EvaluatedSceneItem,
   EvaluatedSegment,
   EvaluatedSegmentMeasurement,
   EvaluatedTriangle,

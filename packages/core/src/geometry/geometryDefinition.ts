@@ -1,4 +1,4 @@
-import type { EvaluatedGeometry } from "../evaluation/evaluated";
+import type { EvaluatedSceneItem } from "../evaluation/evaluated";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type { GeometryConstructionFactories } from "./constructionContext";
 import type { EvaluationContext } from "./evaluationContext";
@@ -21,7 +21,7 @@ export type GeometryDefinition<K extends GeometryKind> = Readonly<{
     evaluate: (
       node: NodeByKind<K>,
       context: EvaluationContext,
-    ) => EvaluatedGeometry;
+    ) => EvaluatedSceneItem;
   }>;
 
   construction?: Readonly<{
@@ -40,7 +40,7 @@ export type AnyGeometryDefinition = Readonly<{
     evaluate: (
       node: GeometryNode,
       context: EvaluationContext,
-    ) => EvaluatedGeometry;
+    ) => EvaluatedSceneItem;
   }>;
 
   construction?: Readonly<{

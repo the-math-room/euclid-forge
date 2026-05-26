@@ -1,4 +1,4 @@
-import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
+import type { EvaluatedSceneItem } from "@euclid-forge/core/evaluation/evaluated";
 import { renderCircle } from "./circleRenderer";
 import { renderLine } from "./lineRenderer";
 import { renderPoint } from "./pointRenderer";
@@ -7,9 +7,9 @@ import { renderSegmentMeasurement } from "./segmentMeasurementRenderer";
 import { renderTriangle } from "./triangleRenderer";
 import type { GeometryRenderContext } from "./geometryRenderingContext";
 
-export type RenderLayer = "AREA" | "LINEAR" | "POINT";
+export type RenderLayer = "AREA" | "LINEAR" | "ANNOTATION" | "POINT";
 
-export function renderLayerForGeometry(value: EvaluatedGeometry): RenderLayer {
+export function renderLayerForSceneItem(value: EvaluatedSceneItem): RenderLayer {
   switch (value.kind) {
     case "TRIANGLE":
       return "AREA";
@@ -19,14 +19,16 @@ export function renderLayerForGeometry(value: EvaluatedGeometry): RenderLayer {
     case "CIRCLE":
       return "LINEAR";
 
-    case "POINT":
     case "SEGMENT_MEASUREMENT":
+      return "ANNOTATION";
+
+    case "POINT":
       return "POINT";
   }
 }
 
-export function renderEvaluatedGeometry(
-  value: EvaluatedGeometry,
+export function renderEvaluatedSceneItem(
+  value: EvaluatedSceneItem,
   context: GeometryRenderContext,
 ): void {
   switch (value.kind) {

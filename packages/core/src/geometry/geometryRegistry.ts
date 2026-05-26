@@ -1,4 +1,4 @@
-import type { EvaluatedGeometry } from "../evaluation/evaluated";
+import type { EvaluatedSceneItem } from "../evaluation/evaluated";
 import type { GeometryNode, NodeId } from "../representation/node";
 import type {
   ConstructionFactory,
@@ -58,7 +58,7 @@ export function definitionForGeometryNode(
 }
 
 export function definitionForEvaluatedGeometry(
-  value: EvaluatedGeometry,
+  value: EvaluatedSceneItem,
 ): AnyGeometryDefinition {
   return requireAnyGeometryDefinition(value.sourceKind);
 }
@@ -74,7 +74,7 @@ export function dependenciesForGeometryNode(
 export function evaluateGeometryNode(
   node: GeometryNode,
   context: EvaluationContext,
-): EvaluatedGeometry {
+): EvaluatedSceneItem {
   return requireAnyGeometryDefinition(node.kind).evaluation.evaluate(
     node,
     context,

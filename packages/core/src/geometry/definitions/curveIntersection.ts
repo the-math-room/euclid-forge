@@ -21,8 +21,8 @@ export const curveIntersectionDefinition: GeometryDefinition<"CURVE_INTERSECTION
         node: NodeByKind<"CURVE_INTERSECTION">,
         context: EvaluationContext,
       ): EvaluatedPoint => {
-        const curveA = context.getGeometry(node.curveA);
-        const curveB = context.getGeometry(node.curveB);
+        const curveA = context.getEvaluatedGeometry(node.curveA);
+        const curveB = context.getEvaluatedGeometry(node.curveB);
         const result = curveIntersectionCandidatesForValues(curveA, curveB);
 
         if (result.issue) {

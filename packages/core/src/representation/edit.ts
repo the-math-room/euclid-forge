@@ -129,6 +129,12 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
     );
   }
 
+  if (reference.kind === "SEGMENT_MEASUREMENT") {
+    throw new Error(
+      `Cannot move ${id}; reference ${node.reference} is not evaluated geometry`,
+    );
+  }
+
   if (!anchor || anchor.kind !== "POINT") {
     throw new Error(
       `Cannot move ${id}; missing evaluated anchor: ${node.anchor}`,

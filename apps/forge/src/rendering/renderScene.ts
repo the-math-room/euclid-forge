@@ -1,23 +1,22 @@
-import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
+import type { EvaluatedSceneItem } from "@euclid-forge/core/evaluation/evaluated";
 import type { EvaluatedScene } from "@euclid-forge/core";
 import {
-  renderEvaluatedGeometry as renderGeometryValue,
-  renderLayerForGeometry as renderLayerForGeometryValue,
+  renderEvaluatedSceneItem,
+  renderLayerForSceneItem,
 } from "./geometryRenderers";
-import type {
-  GeometryRenderLayer,
-  GeometryRenderOptions,
-} from "./geometryRenderingContext";
+import type { GeometryRenderOptions } from "./geometryRenderingContext";
+import type { RenderLayer } from "./geometryRenderers";
 import { renderLassoOverlay } from "./lassoRenderer";
 import type { Viewport } from "@euclid-forge/core";
 
 export type RenderSceneOptions = GeometryRenderOptions;
 
-const RENDER_LAYER_ORDER: Readonly<Record<GeometryRenderLayer, number>> =
+const RENDER_LAYER_ORDER: Readonly<Record<RenderLayer, number>> =
   Object.freeze({
     AREA: 0,
     LINEAR: 1,
-    POINT: 2,
+    ANNOTATION: 2,
+    POINT: 3,
   });
 
 export function renderScene(
@@ -30,7 +29,7 @@ export function renderScene(
   const visible = scene.ordered.filter((value) => !hidden.has(value.id));
 
   for (const value of renderOrderedValues(visible)) {
-    renderGeometryValue(value, {
+    renderEvaluatedSceneItem(value, {
       ctx,
       viewport,
       options,
@@ -43,16 +42,16 @@ export function renderScene(
 }
 
 function renderOrderedValues(
-  values: readonly EvaluatedGeometry[],
-): readonly EvaluatedGeometry[] {
+  values: readonly EvaluatedSceneItem[],
+): readonly EvaluatedSceneItem[] {
   return [...values].sort(
     (a, b) =>
-      RENDER_LAYER_ORDER[renderLayerForGeometryValue(a)] -
-        RENDER_LAYER_ORDER[renderLayerForGeometryValue(b)] ||
+      RENDER_LAYER_ORDER[renderLayerForSceneItem(a)] -
+        RENDER_LAYER_ORDER[renderLayerForSceneItem(b)] ||
       zIndexOf(a) - zIndexOf(b),
   );
 }
 
-function zIndexOf(value: EvaluatedGeometry): number {
+function zIndexOf(value: EvaluatedSceneItem): number {
   return value.zIndex ?? 0;
 }

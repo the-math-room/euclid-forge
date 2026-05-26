@@ -38,7 +38,6 @@ function unitDirectionForLinearGeometry(value: EvaluatedGeometry): Vec2 | null {
     }
 
     case "POINT":
-    case "SEGMENT_MEASUREMENT":
     case "CIRCLE":
     case "TRIANGLE":
       return null;

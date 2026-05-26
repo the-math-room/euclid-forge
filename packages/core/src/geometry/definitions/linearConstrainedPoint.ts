@@ -21,7 +21,7 @@ export const linearConstrainedPointDefinition: GeometryDefinition<"LINEAR_CONSTR
         node: NodeByKind<"LINEAR_CONSTRAINED_POINT">,
         context: EvaluationContext,
       ): EvaluatedPoint => {
-        const reference = context.getGeometry(node.reference);
+        const reference = context.getEvaluatedGeometry(node.reference);
         const anchor = context.getPoint(node.anchor);
         const direction = constrainedDirectionForLinearGeometry(
           reference,

@@ -1,27 +1,36 @@
-import type {
-  EvaluatedGeometry,
-  EvaluatedPoint,
-  EvaluatedSegment,
-  EvaluatedTriangle,
+import {
+  isEvaluatedGeometry,
+  type EvaluatedGeometry,
+  type EvaluatedSceneItem,
+  type EvaluatedPoint,
+  type EvaluatedSegment,
+  type EvaluatedTriangle,
 } from "../evaluation/evaluated";
 import type { NodeId } from "../representation/node";
 
 export type EvaluationContext = Readonly<{
-  getGeometry: (id: NodeId) => EvaluatedGeometry;
+  getGeometry: (id: NodeId) => EvaluatedSceneItem;
+  getEvaluatedGeometry: (id: NodeId) => EvaluatedGeometry;
   getPoint: (id: NodeId) => EvaluatedPoint;
   getSegment: (id: NodeId) => EvaluatedSegment;
   getTriangle: (id: NodeId) => EvaluatedTriangle;
 }>;
 
 export function createEvaluationContext(
-  values: ReadonlyMap<NodeId, EvaluatedGeometry>,
+  values: ReadonlyMap<NodeId, EvaluatedSceneItem>,
 ): EvaluationContext {
   return Object.freeze({
-    getGeometry(id: NodeId): EvaluatedGeometry {
-      const value = values.get(id);
+    getGeometry(id: NodeId): EvaluatedSceneItem {
+      return requireEvaluatedSceneItem(values, id);
+    },
 
-      if (!value) {
-        throw new Error(`Missing evaluated dependency: ${id}`);
+    getEvaluatedGeometry(id: NodeId): EvaluatedGeometry {
+      const value = requireEvaluatedSceneItem(values, id);
+
+      if (!isEvaluatedGeometry(value)) {
+        throw new Error(
+          `Expected evaluated geometry for ${id}; got ${value.kind}`,
+        );
       }
 
       return value;
@@ -41,20 +50,29 @@ export function createEvaluationContext(
   });
 }
 
-function requireEvaluated<K extends EvaluatedGeometry["kind"]>(
-  values: ReadonlyMap<NodeId, EvaluatedGeometry>,
+function requireEvaluatedSceneItem(
+  values: ReadonlyMap<NodeId, EvaluatedSceneItem>,
   id: NodeId,
-  kind: K,
-): Extract<EvaluatedGeometry, { kind: K }> {
+): EvaluatedSceneItem {
   const value = values.get(id);
 
   if (!value) {
     throw new Error(`Missing evaluated dependency: ${id}`);
   }
 
+  return value;
+}
+
+function requireEvaluated<K extends EvaluatedSceneItem["kind"]>(
+  values: ReadonlyMap<NodeId, EvaluatedSceneItem>,
+  id: NodeId,
+  kind: K,
+): Extract<EvaluatedSceneItem, { kind: K }> {
+  const value = requireEvaluatedSceneItem(values, id);
+
   if (value.kind !== kind) {
     throw new Error(`Expected ${id} to evaluate to ${kind}, got ${value.kind}`);
   }
 
-  return value as Extract<EvaluatedGeometry, { kind: K }>;
+  return value as Extract<EvaluatedSceneItem, { kind: K }>;
 }

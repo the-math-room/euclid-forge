@@ -1,5 +1,5 @@
 import type { EvaluatedScene } from "./evaluateGraph";
-import type { EvaluatedGeometry } from "./evaluated";
+import type { EvaluatedSceneItem } from "./evaluated";
 import type { NodeId } from "../representation/node";
 
 export type EvaluatedSceneVisibility = Readonly<{
@@ -16,8 +16,8 @@ export function visibleEvaluatedScene(
     return scene;
   }
 
-  const values = new Map<NodeId, EvaluatedGeometry>();
-  const ordered: EvaluatedGeometry[] = [];
+  const values = new Map<NodeId, EvaluatedSceneItem>();
+  const ordered: EvaluatedSceneItem[] = [];
 
   for (const value of scene.ordered) {
     if (hiddenNodeIds.has(value.id)) {

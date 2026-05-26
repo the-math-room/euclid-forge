@@ -2,7 +2,7 @@ import { createEvaluationContext } from "../geometry/evaluationContext";
 import { evaluateGeometryNode } from "../geometry/geometryRegistry";
 import type { Graph } from "../representation/graph";
 import type { NodeId } from "../representation/node";
-import type { EvaluatedGeometry } from "./evaluated";
+import type { EvaluatedSceneItem } from "./evaluated";
 import type { EvaluationIssueCode } from "./evaluationIssue";
 import { GeometryEvaluationIssueError } from "./evaluationIssue";
 
@@ -16,14 +16,14 @@ export type EvaluationIssue = Readonly<{
 }>;
 
 export type EvaluatedScene = Readonly<{
-  values: ReadonlyMap<NodeId, EvaluatedGeometry>;
-  ordered: readonly EvaluatedGeometry[];
+  values: ReadonlyMap<NodeId, EvaluatedSceneItem>;
+  ordered: readonly EvaluatedSceneItem[];
   issues: readonly EvaluationIssue[];
 }>;
 
 export function evaluateGraph(graph: Graph): EvaluatedScene {
-  const values = new Map<NodeId, EvaluatedGeometry>();
-  const ordered: EvaluatedGeometry[] = [];
+  const values = new Map<NodeId, EvaluatedSceneItem>();
+  const ordered: EvaluatedSceneItem[] = [];
   const issues: EvaluationIssue[] = [];
 
   for (const node of graph.nodes) {

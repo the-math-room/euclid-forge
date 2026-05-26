@@ -1,4 +1,7 @@
-import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
+import {
+  isEvaluatedGeometry,
+  type EvaluatedGeometry,
+} from "@euclid-forge/core/evaluation/evaluated";
 import type {
   EvaluatedScene,
   NodeId,
@@ -26,7 +29,10 @@ export function lassoSelectableNodeIds(
   const selected: NodeId[] = [];
 
   for (const value of input.evaluated.ordered) {
-    if (isGeometryFullyContained(value, input.viewport, input.polygon)) {
+    if (
+      isEvaluatedGeometry(value) &&
+      isGeometryFullyContained(value, input.viewport, input.polygon)
+    ) {
       selected.push(value.id);
     }
   }
@@ -56,9 +62,6 @@ export function isGeometryFullyContained(
         worldToScreen(viewport, value.b),
         polygon,
       );
-
-    case "SEGMENT_MEASUREMENT":
-      return false;
 
     case "TRIANGLE":
       return polygonFullyContainedInPolygon(

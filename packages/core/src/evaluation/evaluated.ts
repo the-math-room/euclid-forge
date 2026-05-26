@@ -75,7 +75,32 @@ export type EvaluatedTriangle = Readonly<{
 export type EvaluatedGeometry =
   | EvaluatedPoint
   | EvaluatedSegment
-  | EvaluatedSegmentMeasurement
   | EvaluatedLine
   | EvaluatedCircle
   | EvaluatedTriangle;
+
+export type EvaluatedAnnotation = EvaluatedSegmentMeasurement;
+
+export type EvaluatedSceneItem = EvaluatedGeometry | EvaluatedAnnotation;
+
+export function isEvaluatedGeometry(
+  value: EvaluatedSceneItem,
+): value is EvaluatedGeometry {
+  switch (value.kind) {
+    case "POINT":
+    case "SEGMENT":
+    case "LINE":
+    case "CIRCLE":
+    case "TRIANGLE":
+      return true;
+
+    case "SEGMENT_MEASUREMENT":
+      return false;
+  }
+}
+
+export function isEvaluatedAnnotation(
+  value: EvaluatedSceneItem,
+): value is EvaluatedAnnotation {
+  return !isEvaluatedGeometry(value);
+}
