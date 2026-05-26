@@ -57,6 +57,30 @@ describe("geometry/linearConstrainedPoint", () => {
     });
   });
 
+  test("evaluates a constrained point along a perpendicular segment reference direction", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("C", 1, 1, "C"),
+      segmentNode("AB", "A", "B"),
+      linearConstrainedPointNode("D", "AB", "C", "PERPENDICULAR", 3, "D"),
+    ]);
+
+    const evaluated = evaluateGraph(graph).values.get("D");
+
+    expect(evaluated).toEqual({
+      kind: "POINT",
+      sourceKind: "LINEAR_CONSTRAINED_POINT",
+      id: "D",
+      point: {
+        x: 1,
+        y: 4,
+      },
+      label: "D",
+      role: "INTERSECTION",
+    });
+  });
+
   test("reports an issue when the reference is not linear", () => {
     const graph = createGraph([
       freePoint("A", 0, 0, "A"),

@@ -46,18 +46,44 @@ describe("representation/constrained point edits", () => {
     });
   });
 
-  test("rejects constrained movement for ordinary free points", () => {
-    const graph = createGraph([freePoint("A", 0, 0, "A")]);
+  test("moves a perpendicular point by updating its offset along the perpendicular reference direction", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      freePoint("C", 0, 1, "C"),
+      segmentNode("AB", "A", "B"),
+      linearConstrainedPointNode("D", "AB", "C", "PERPENDICULAR", 1, "D"),
+    ]);
 
-    expect(() =>
-      applyGraphEdit(graph, {
-        kind: "MOVE_CONSTRAINED_POINT",
-        id: "A",
-        point: {
-          x: 1,
-          y: 1,
-        },
-      }),
-    ).toThrow("Cannot move non-constrained point: A");
+    const next = applyGraphEdit(graph, {
+      kind: "MOVE_CONSTRAINED_POINT",
+      id: "D",
+      point: {
+        x: 99,
+        y: 5,
+      },
+    });
+
+    expect(next.byId.get("D")).toEqual({
+      kind: "LINEAR_CONSTRAINED_POINT",
+      id: "D",
+      reference: "AB",
+      anchor: "C",
+      mode: "PERPENDICULAR",
+      offset: 4,
+      label: "D",
+    });
+
+    expect(evaluateGraph(next).values.get("D")).toEqual({
+      kind: "POINT",
+      sourceKind: "LINEAR_CONSTRAINED_POINT",
+      id: "D",
+      point: {
+        x: 0,
+        y: 5,
+      },
+      label: "D",
+      role: "INTERSECTION",
+    });
   });
 });

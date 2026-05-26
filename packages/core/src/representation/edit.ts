@@ -1,5 +1,5 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
-import { constrainedDirectionForLinearGeometry } from "../geometry/definitions/linearConstrainedPoint";
+import { constrainedDirectionForLinearGeometry } from "../geometry/linearConstraint";
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
 import { freePoint, type GeometryNode, type NodeId } from "./node";
