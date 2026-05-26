@@ -32,6 +32,7 @@ describe("app/commands", () => {
   test("looks up commands by normalized key", () => {
     expect(appCommandForKey("J")?.id).toBe("join-selected-free-points");
     expect(appCommandForKey("j")?.id).toBe("join-selected-free-points");
+    expect(appCommandForKey("q")?.id).toBe("toggle-segment-measurement");
     expect(appCommandForKey("ArrowLeft")?.id).toBe("pan-viewport-left");
     expect(appCommandForKey("unknown")).toBeNull();
   });
@@ -63,6 +64,31 @@ describe("app/commands", () => {
       segmentNode("S_A_B", "A", "B"),
     );
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+  test("toggles a length measurement for one selected segment with q", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 1, 0, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "AB");
+
+    const result = appCommandForKey("q")?.run(appState(graph, viewState, null));
+
+    expect(result?.history).toBe("commit");
+    expect(result?.state.graph.byId.get("M_AB")).toEqual({
+      kind: "SEGMENT_MEASUREMENT",
+      id: "M_AB",
+      segment: "AB",
+      precision: "auto",
+    });
+    expect(result?.state.viewState.selectedNodeIds.has("AB")).toBe(true);
+
+    const removed = appCommandForKey("q")?.run(result!.state);
+
+    expect(removed?.history).toBe("commit");
+    expect(removed?.state.graph.byId.has("M_AB")).toBe(false);
   });
 
   test("creates a line from two selected constructible points with L", () => {

@@ -7,6 +7,7 @@ import {
   parallelSegmentConstruction,
   perpendicularSegmentConstruction,
   segmentIntersectionConstruction,
+  segmentMeasurementConstruction,
   segmentMidpointConstruction,
   segmentConstruction,
   triangleConstruction,
@@ -307,6 +308,45 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
             nodes,
           }),
           clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "toggle-segment-measurement",
+    keys: ["q"],
+    disabledReason: segmentMeasurementDisabledReason,
+    run: (state) => {
+      const selectedSegment = requireSelectedSegmentTuple(
+        state,
+        1,
+        "Cannot run toggle-segment-measurement while disabled",
+      );
+      const segment = selectedSegment[0];
+      const existing = segmentMeasurementForSegment(state.graph.nodes, segment);
+
+      if (existing) {
+        return commit(
+          appState(
+            applyGraphEdit(state.graph, {
+              kind: "DELETE_NODES",
+              ids: [existing.id],
+            }),
+            state.viewState,
+            state.dragState,
+          ),
+        );
+      }
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes: segmentMeasurementConstruction(state.graph, segment),
+          }),
+          state.viewState,
           state.dragState,
         ),
       );
@@ -773,6 +813,44 @@ function linearConstrainedSegmentDisabledReason(state: AppState): string | null 
   return selectedLinearConstrainedSegmentInputs(state)
     ? null
     : "Select one segment or line and one point.";
+}
+
+function segmentMeasurementDisabledReason(state: AppState): string | null {
+  return selectedSegmentTuple(state, 1)
+    ? null
+    : "Select one segment to toggle its length measurement.";
+}
+
+function requireSelectedSegmentTuple(
+  state: AppState,
+  count: 1,
+  message: string,
+): readonly [NodeId] {
+  const selected = selectedSegmentTuple(state, count);
+
+  if (!selected) {
+    throw new Error(message);
+  }
+
+  const [segment] = selected;
+
+  if (!segment) {
+    throw new Error(message);
+  }
+
+  return [segment];
+}
+
+function segmentMeasurementForSegment(
+  nodes: readonly GeometryNode[],
+  segment: NodeId,
+): Extract<GeometryNode, { kind: "SEGMENT_MEASUREMENT" }> | null {
+  const found = nodes.find(
+    (node): node is Extract<GeometryNode, { kind: "SEGMENT_MEASUREMENT" }> =>
+      node.kind === "SEGMENT_MEASUREMENT" && node.segment === segment,
+  );
+
+  return found ?? null;
 }
 
 function isLinearNode(node: GeometryNode | null | undefined): boolean {

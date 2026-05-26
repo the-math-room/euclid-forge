@@ -10,9 +10,11 @@ export type GeometryNode =
   | CentroidNode
   | SegmentIntersectionNode
   | CurveIntersectionNode
-  | LinearConstrainedPointNode;
+  | LinearConstrainedPointNode
+  | SegmentMeasurementNode;
 
 export type LinearConstraintMode = "PARALLEL" | "PERPENDICULAR";
+export type SegmentMeasurementPrecision = "auto";
 
 export type FreePointNode = Readonly<{
   kind: "FREE_POINT";
@@ -100,6 +102,14 @@ export type LinearConstrainedPointNode = Readonly<{
   mode: LinearConstraintMode;
   offset: number;
   label: string;
+}>;
+
+export type SegmentMeasurementNode = Readonly<{
+  kind: "SEGMENT_MEASUREMENT";
+  id: NodeId;
+  zIndex?: number;
+  segment: NodeId;
+  precision: SegmentMeasurementPrecision;
 }>;
 
 export function freePoint(
@@ -237,5 +247,18 @@ export function linearConstrainedPointNode(
     mode,
     offset,
     label,
+  });
+}
+
+export function segmentMeasurementNode(
+  id: NodeId,
+  segment: NodeId,
+  precision: SegmentMeasurementPrecision = "auto",
+): SegmentMeasurementNode {
+  return Object.freeze({
+    kind: "SEGMENT_MEASUREMENT",
+    id,
+    segment,
+    precision,
   });
 }

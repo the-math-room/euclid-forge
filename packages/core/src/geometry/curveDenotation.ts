@@ -20,6 +20,7 @@ export function curveDenotationForGeometry(
       return circleCurve(value.center, value.radius);
 
     case "POINT":
+    case "SEGMENT_MEASUREMENT":
     case "TRIANGLE":
       return null;
   }

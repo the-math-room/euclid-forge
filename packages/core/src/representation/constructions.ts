@@ -1,5 +1,10 @@
 import { constructionFactoryForGeometryKind } from "../geometry/geometryRegistry";
-import { linearConstrainedPointNode, midpointNode, segmentNode } from "./node";
+import {
+  linearConstrainedPointNode,
+  midpointNode,
+  segmentMeasurementNode,
+  segmentNode,
+} from "./node";
 import type {
   GeometryNode,
   LinearConstraintMode,
@@ -173,6 +178,35 @@ function linearConstrainedSegmentConstruction(
   ]);
 }
 
+export function segmentMeasurementConstruction(
+  graph: Graph,
+  segment: NodeId,
+): readonly GeometryNode[] {
+  const node = graph.byId.get(segment);
+
+  if (!node) {
+    throw new Error(`Cannot create measurement for missing segment: ${segment}`);
+  }
+
+  if (node.kind !== "SEGMENT") {
+    throw new Error(`Cannot create measurement for non-segment node: ${segment}`);
+  }
+
+  const existing = graph.nodes.find(
+    (candidate) =>
+      candidate.kind === "SEGMENT_MEASUREMENT" &&
+      candidate.segment === segment,
+  );
+
+  if (existing) {
+    return Object.freeze([]);
+  }
+
+  return Object.freeze([
+    segmentMeasurementNode(nextSegmentMeasurementId(graph.nodes, segment), segment),
+  ]);
+}
+
 export function circleConstruction(
   graph: Graph,
   center: NodeId,
@@ -334,6 +368,25 @@ function nextLinearConstrainedPointId(
 ): NodeId {
   const prefix = mode === "PARALLEL" ? "LP" : "OP";
   const base = `${prefix}_${reference}_${anchor}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
+}
+
+function nextSegmentMeasurementId(
+  nodes: readonly { id: NodeId }[],
+  segment: NodeId,
+): NodeId {
+  const base = `M_${segment}`;
 
   if (!nodes.some((node) => node.id === base)) {
     return base;

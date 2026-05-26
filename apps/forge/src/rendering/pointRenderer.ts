@@ -1,6 +1,7 @@
 import type { EvaluatedPoint } from "@euclid-forge/core/evaluation/evaluated";
 import { RENDER_THEME } from "./theme";
 import type { PointTheme, RenderTheme } from "./theme";
+import { renderMeasurementPill } from "./measurementPill";
 import type { Viewport } from "@euclid-forge/core";
 import { worldToScreen } from "@euclid-forge/core";
 
@@ -102,38 +103,13 @@ function renderPointLabel(
   const width = actualLeft + actualRight + pill.paddingXPx * 2;
   const height = actualAscent + actualDescent + pill.paddingYPx * 2;
 
-  ctx.fillStyle = pill.fill;
-  roundedRect(ctx, x, y, width, height, pill.radiusPx);
-  ctx.fill();
-
-  ctx.strokeStyle = pill.stroke;
-  ctx.lineWidth = pill.strokeWidthPx;
-  roundedRect(ctx, x, y, width, height, pill.radiusPx);
-  ctx.stroke();
-
-  ctx.fillStyle = theme.labelFill;
-  ctx.fillText(label, textX, textY);
-}
-
-function roundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-): void {
-  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
-
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-  ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  renderMeasurementPill(
+    ctx,
+    pill,
+    theme.labelFill,
+    theme.labelFont,
+    textX,
+    textY,
+    label,
+  );
 }

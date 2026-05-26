@@ -57,6 +57,9 @@ export function isGeometryFullyContained(
         polygon,
       );
 
+    case "SEGMENT_MEASUREMENT":
+      return false;
+
     case "TRIANGLE":
       return polygonFullyContainedInPolygon(
         [

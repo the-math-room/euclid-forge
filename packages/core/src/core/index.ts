@@ -64,6 +64,7 @@ export type {
   EvaluatedPoint,
   EvaluatedPointRole,
   EvaluatedSegment,
+  EvaluatedSegmentMeasurement,
   EvaluatedTriangle,
 } from "../evaluation/evaluated";
 
@@ -73,6 +74,7 @@ export {
   segmentIntersectionConstruction,
   segmentMidpointConstruction,
   segmentConstruction,
+  segmentMeasurementConstruction,
   lineConstruction,
   parallelSegmentConstruction,
   perpendicularSegmentConstruction,
@@ -99,6 +101,7 @@ export {
   linearConstrainedPointNode,
   midpointNode,
   segmentIntersectionNode,
+  segmentMeasurementNode,
   segmentNode,
   triangleNode,
   type CentroidNode,
@@ -112,6 +115,8 @@ export {
   type MidpointNode,
   type NodeId,
   type SegmentIntersectionNode,
+  type SegmentMeasurementNode,
+  type SegmentMeasurementPrecision,
   type SegmentNode,
   type TriangleNode,
 } from "../representation/node";

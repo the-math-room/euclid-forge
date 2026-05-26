@@ -32,6 +32,18 @@ export type EvaluatedSegment = Readonly<{
   b: Vec2;
 }>;
 
+export type EvaluatedSegmentMeasurement = Readonly<{
+  kind: "SEGMENT_MEASUREMENT";
+  sourceKind: "SEGMENT_MEASUREMENT";
+  zIndex?: number;
+  id: NodeId;
+  segment: NodeId;
+  a: Vec2;
+  b: Vec2;
+  length: number;
+  label: string;
+}>;
+
 export type EvaluatedLine = Readonly<{
   kind: "LINE";
   sourceKind: "LINE";
@@ -63,6 +75,7 @@ export type EvaluatedTriangle = Readonly<{
 export type EvaluatedGeometry =
   | EvaluatedPoint
   | EvaluatedSegment
+  | EvaluatedSegmentMeasurement
   | EvaluatedLine
   | EvaluatedCircle
   | EvaluatedTriangle;

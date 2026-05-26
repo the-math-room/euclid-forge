@@ -14,6 +14,7 @@ import { linearConstrainedPointDefinition } from "./definitions/linearConstraine
 import { midpointDefinition } from "./definitions/midpoint";
 import { segmentDefinition } from "./definitions/segment";
 import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
+import { segmentMeasurementDefinition } from "./definitions/segmentMeasurement";
 import { triangleDefinition } from "./definitions/triangle";
 import {
   eraseGeometryDefinition,
@@ -32,6 +33,7 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(segmentIntersectionDefinition),
   eraseGeometryDefinition(curveIntersectionDefinition),
   eraseGeometryDefinition(linearConstrainedPointDefinition),
+  eraseGeometryDefinition(segmentMeasurementDefinition),
 ] satisfies readonly AnyGeometryDefinition[]);
 
 const definitionsByKind: ReadonlyMap<GeometryKind, AnyGeometryDefinition> =

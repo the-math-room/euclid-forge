@@ -76,6 +76,7 @@ function pointLabelForNode(node: GeometryNode): string | null {
       return node.label;
 
     case "SEGMENT":
+    case "SEGMENT_MEASUREMENT":
     case "LINE":
     case "CIRCLE":
     case "TRIANGLE":

@@ -41,6 +41,9 @@ export function hitGeometryValue(
         : null;
     }
 
+    case "SEGMENT_MEASUREMENT":
+      return null;
+
     case "LINE": {
       const target = hitLineValue(value, context);
 

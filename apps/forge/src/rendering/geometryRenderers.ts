@@ -3,6 +3,7 @@ import { renderCircle } from "./circleRenderer";
 import { renderLine } from "./lineRenderer";
 import { renderPoint } from "./pointRenderer";
 import { renderSegment } from "./segmentRenderer";
+import { renderSegmentMeasurement } from "./segmentMeasurementRenderer";
 import { renderTriangle } from "./triangleRenderer";
 import type { GeometryRenderContext } from "./geometryRenderingContext";
 
@@ -19,6 +20,7 @@ export function renderLayerForGeometry(value: EvaluatedGeometry): RenderLayer {
       return "LINEAR";
 
     case "POINT":
+    case "SEGMENT_MEASUREMENT":
       return "POINT";
   }
 }
@@ -34,6 +36,15 @@ export function renderEvaluatedGeometry(
 
     case "SEGMENT":
       renderSegment(context.ctx, context.viewport, value, context.options);
+      return;
+
+    case "SEGMENT_MEASUREMENT":
+      renderSegmentMeasurement(
+        context.ctx,
+        context.viewport,
+        value,
+        context.options,
+      );
       return;
 
     case "LINE":
