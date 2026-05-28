@@ -1,4 +1,10 @@
 import type { ScreenPoint } from "@euclid-forge/core";
+import { appState } from "./appState";
+import {
+  createPinchGesture,
+  viewStateForPinchGesture,
+  type PinchGesture,
+} from "./pinchZoom";
 import {
   handleKeyDown,
   handlePointerCancel,
@@ -42,6 +48,8 @@ type PendingPointerMove = Readonly<{
 export function connectDomEvents(input: DomEventBindingsInput): void {
   let pendingPointerMove: PendingPointerMove | null = null;
   let pointerMoveFrame: number | null = null;
+  const activePointers = new Map<number, ScreenPoint>();
+  let pinchGesture: PinchGesture | null = null;
 
   const flushPendingPointerMove = (cancelScheduledFrame: boolean): void => {
     if (cancelScheduledFrame && pointerMoveFrame !== null) {
@@ -78,6 +86,84 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
     pointerMoveFrame = requestAnimationFrame(() => {
       flushPendingPointerMove(false);
     });
+  };
+
+  const updatePinchGesture = (): void => {
+    if (!pinchGesture) {
+      return;
+    }
+
+    const pointerA = activePointers.get(pinchGesture.pointerAId);
+    const pointerB = activePointers.get(pinchGesture.pointerBId);
+
+    if (!pointerA || !pointerB) {
+      pinchGesture = null;
+      return;
+    }
+
+    const currentState = input.runtime.getState();
+    const nextViewState = viewStateForPinchGesture(
+      pinchGesture,
+      pointerA,
+      pointerB,
+    );
+
+    if (nextViewState === currentState.viewState) {
+      return;
+    }
+
+    input.runtime.setState(
+      appState(
+        currentState.graph,
+        nextViewState,
+        null,
+        currentState.activeTool,
+      ),
+    );
+    input.runtime.requestRender();
+  };
+
+  const maybeStartPinchGesture = (): boolean => {
+    if (pinchGesture || activePointers.size !== 2) {
+      return pinchGesture !== null;
+    }
+
+    const entries = [...activePointers.entries()];
+    const first = entries[0];
+    const second = entries[1];
+
+    if (!first || !second) {
+      return false;
+    }
+
+    flushPendingPointerMove(true);
+
+    const currentState = input.runtime.getState();
+    const gesture = createPinchGesture(
+      first[0],
+      first[1],
+      second[0],
+      second[1],
+      viewportForCanvas(input.canvas, currentState.viewState),
+      currentState.viewState,
+    );
+
+    if (!gesture) {
+      return false;
+    }
+
+    pinchGesture = gesture;
+
+    input.runtime.setState(
+      appState(
+        currentState.graph,
+        currentState.viewState,
+        null,
+        currentState.activeTool,
+      ),
+    );
+
+    return true;
   };
 
   input.windowTarget.addEventListener("resize", () => {
@@ -152,13 +238,21 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   input.canvas.addEventListener("pointerdown", (event) => {
     flushPendingPointerMove(true);
 
+    const point = eventPoint(input.canvas, event);
+    activePointers.set(event.pointerId, point);
+
+    if (maybeStartPinchGesture()) {
+      event.preventDefault();
+      return;
+    }
+
     const state = input.runtime.getState();
 
     input.runtime.applyTransition(
       event,
       handlePointerDown(state, {
         pointerId: event.pointerId,
-        point: eventPoint(input.canvas, event),
+        point,
         viewport: viewportForCanvas(input.canvas, state.viewState),
         shiftKey: event.shiftKey,
       }),
@@ -166,10 +260,24 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
   });
 
   input.canvas.addEventListener("pointermove", (event) => {
+    const point = eventPoint(input.canvas, event);
+
+    if (activePointers.has(event.pointerId)) {
+      activePointers.set(event.pointerId, point);
+    }
+
+    if (pinchGesture || activePointers.size >= 2) {
+      if (maybeStartPinchGesture()) {
+        updatePinchGesture();
+        event.preventDefault();
+        return;
+      }
+    }
+
     pendingPointerMove = {
       event,
       pointerId: event.pointerId,
-      point: eventPoint(input.canvas, event),
+      point,
       shiftKey: event.shiftKey,
     };
 
@@ -179,6 +287,19 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
 
   input.canvas.addEventListener("pointerup", (event) => {
     flushPendingPointerMove(true);
+    activePointers.delete(event.pointerId);
+
+    if (pinchGesture) {
+      if (
+        event.pointerId === pinchGesture.pointerAId ||
+        event.pointerId === pinchGesture.pointerBId
+      ) {
+        pinchGesture = null;
+      }
+
+      event.preventDefault();
+      return;
+    }
 
     input.runtime.applyTransition(
       event,
@@ -188,6 +309,19 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
 
   input.canvas.addEventListener("pointercancel", (event) => {
     flushPendingPointerMove(true);
+    activePointers.delete(event.pointerId);
+
+    if (pinchGesture) {
+      if (
+        event.pointerId === pinchGesture.pointerAId ||
+        event.pointerId === pinchGesture.pointerBId
+      ) {
+        pinchGesture = null;
+      }
+
+      event.preventDefault();
+      return;
+    }
 
     input.runtime.applyTransition(
       event,
@@ -197,6 +331,8 @@ export function connectDomEvents(input: DomEventBindingsInput): void {
 
   input.canvas.addEventListener("pointerleave", (event) => {
     flushPendingPointerMove(true);
+    activePointers.delete(event.pointerId);
+    pinchGesture = null;
 
     input.runtime.applyTransition(
       event,
