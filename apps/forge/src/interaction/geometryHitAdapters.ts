@@ -74,8 +74,6 @@ export function hitGeometryValue(
         : null;
     }
 
-    case "POLYGON":
-      return null;
   }
 }
 
@@ -109,8 +107,6 @@ function bodyDragSourcePointIds(node: GraphNode): readonly NodeId[] | null {
     case "TRIANGLE":
       return Object.freeze([node.a, node.b, node.c]);
 
-    case "POLYGON":
-      return node.vertices;
 
     default:
       return null;

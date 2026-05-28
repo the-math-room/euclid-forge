@@ -8,7 +8,6 @@ export type GeometryNode =
   | LineNode
   | CircleNode
   | TriangleNode
-  | PolygonNode
   | MidpointNode
   | CentroidNode
   | SegmentIntersectionNode
@@ -65,12 +64,6 @@ export type TriangleNode = Readonly<{
   c: NodeId;
 }>;
 
-export type PolygonNode = Readonly<{
-  kind: "POLYGON";
-  id: NodeId;
-  zIndex?: number;
-  vertices: readonly NodeId[];
-}>;
 
 export type MidpointNode = Readonly<{
   kind: "MIDPOINT";
@@ -194,16 +187,6 @@ export function triangleNode(
   });
 }
 
-export function polygonNode(
-  id: NodeId,
-  vertices: readonly NodeId[],
-): PolygonNode {
-  return Object.freeze({
-    kind: "POLYGON",
-    id,
-    vertices: Object.freeze([...vertices]),
-  });
-}
 
 export function midpointNode(
   id: NodeId,

@@ -20,7 +20,6 @@ export function isAnnotationNode(node: GraphNode): node is AnnotationNode {
     case "LINE":
     case "CIRCLE":
     case "TRIANGLE":
-    case "POLYGON":
     case "MIDPOINT":
     case "CENTROID":
     case "SEGMENT_INTERSECTION":

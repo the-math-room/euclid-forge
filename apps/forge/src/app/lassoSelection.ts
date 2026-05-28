@@ -68,11 +68,6 @@ export function isGeometryFullyContained(
         polygon,
       );
 
-    case "POLYGON":
-      return polygonFullyContainedInPolygon(
-        value.points.map((point) => worldToScreen(viewport, point)),
-        polygon,
-      );
 
     case "CIRCLE": {
       const center = worldToScreen(viewport, value.center);

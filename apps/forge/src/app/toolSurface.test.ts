@@ -181,7 +181,6 @@ describe("app/toolSurface", () => {
       "Circle",
       "Triangle",
       "Delete",
-      "Face",
     ]);
 
     expect(

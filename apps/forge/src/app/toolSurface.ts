@@ -11,7 +11,6 @@ import {
 
 export type ToolSurfaceHandlers = Readonly<{
   onToolChange: (tool: ActiveTool) => void;
-  onCommand?: (key: string) => void;
 }>;
 
 export type ToolSurface = Readonly<{
@@ -124,17 +123,6 @@ export function installToolSurface(
     buttonRow.append(button);
   }
 
-  const faceButton = document.createElement("button");
-  faceButton.type = "button";
-  faceButton.className = "tool-surface__button";
-  faceButton.dataset.command = "create-polygon";
-  faceButton.title = "Create a polygon face from selected closed boundary segments (F)";
-  faceButton.textContent = "Face";
-  faceButton.addEventListener("click", () => {
-    handlers.onCommand?.("f");
-  });
-
-  buttonRow.append(faceButton);
 
   root.append(buttonRow, status);
   app.append(root);

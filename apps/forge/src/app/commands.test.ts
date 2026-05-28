@@ -33,7 +33,6 @@ describe("app/commands", () => {
     expect(appCommandForKey("J")?.id).toBe("join-selected-free-points");
     expect(appCommandForKey("j")?.id).toBe("join-selected-free-points");
     expect(appCommandForKey("q")?.id).toBe("toggle-segment-measurement");
-    expect(appCommandForKey("f")?.id).toBe("create-polygon");
     expect(appCommandForKey("ArrowLeft")?.id).toBe("pan-viewport-left");
     expect(appCommandForKey("unknown")).toBeNull();
   });
@@ -64,36 +63,6 @@ describe("app/commands", () => {
     expect(result?.state.graph.byId.get("S_A_B")).toEqual(
       segmentNode("S_A_B", "A", "B"),
     );
-    expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
-  });
-
-  test("creates a polygon from a selected closed segment cycle", () => {
-    const graph = createGraph([
-      freePoint("A", 0, 0, "A"),
-      freePoint("B", 1, 0, "B"),
-      freePoint("C", 1, 1, "C"),
-      freePoint("D", 0, 1, "D"),
-      segmentNode("AB", "A", "B"),
-      segmentNode("BC", "B", "C"),
-      segmentNode("CD", "C", "D"),
-      segmentNode("DA", "D", "A"),
-    ]);
-    const viewState = toggleSelectedNode(
-      toggleSelectedNode(
-        toggleSelectedNode(toggleSelectedNode(emptyViewState(), "AB"), "BC"),
-        "CD",
-      ),
-      "DA",
-    );
-
-    const result = appCommandForKey("f")?.run(appState(graph, viewState, null));
-
-    expect(result?.history).toBe("commit");
-    expect(result?.state.graph.byId.get("PG1")).toEqual({
-      kind: "POLYGON",
-      id: "PG1",
-      vertices: ["A", "B", "C", "D"],
-    });
     expect(result?.state.viewState.selectedNodeIds.size).toBe(0);
   });
 

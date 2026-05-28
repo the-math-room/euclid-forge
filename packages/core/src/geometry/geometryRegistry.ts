@@ -12,7 +12,6 @@ import { freePointDefinition } from "./definitions/freePoint";
 import { lineDefinition } from "./definitions/line";
 import { linearConstrainedPointDefinition } from "./definitions/linearConstrainedPoint";
 import { midpointDefinition } from "./definitions/midpoint";
-import { polygonDefinition } from "./definitions/polygon";
 import { segmentDefinition } from "./definitions/segment";
 import { segmentIntersectionDefinition } from "./definitions/segmentIntersection";
 import { segmentMeasurementDefinition } from "./definitions/segmentMeasurement";
@@ -29,7 +28,6 @@ const geometryDefinitions = Object.freeze([
   eraseGeometryDefinition(lineDefinition),
   eraseGeometryDefinition(circleDefinition),
   eraseGeometryDefinition(triangleDefinition),
-  eraseGeometryDefinition(polygonDefinition),
   eraseGeometryDefinition(midpointDefinition),
   eraseGeometryDefinition(centroidDefinition),
   eraseGeometryDefinition(segmentIntersectionDefinition),

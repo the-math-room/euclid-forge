@@ -73,21 +73,13 @@ export type EvaluatedTriangle = Readonly<{
   c: Vec2;
 }>;
 
-export type EvaluatedPolygon = Readonly<{
-  kind: "POLYGON";
-  sourceKind: "POLYGON";
-  zIndex?: number;
-  id: NodeId;
-  points: readonly Vec2[];
-}>;
 
 export type EvaluatedGeometry =
   | EvaluatedPoint
   | EvaluatedSegment
   | EvaluatedLine
   | EvaluatedCircle
-  | EvaluatedTriangle
-  | EvaluatedPolygon;
+  | EvaluatedTriangle;
 
 export type EvaluatedAnnotation = EvaluatedSegmentMeasurement;
 
@@ -102,7 +94,6 @@ export function isEvaluatedGeometry(
     case "LINE":
     case "CIRCLE":
     case "TRIANGLE":
-    case "POLYGON":
       return true;
 
     case "SEGMENT_MEASUREMENT":

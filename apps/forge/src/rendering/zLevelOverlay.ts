@@ -58,8 +58,6 @@ function zLevelAnchor(
     case "TRIANGLE":
       return worldToScreen(viewport, value.a);
 
-    case "POLYGON":
-      return worldToScreen(viewport, value.points[0] ?? { x: 0, y: 0 });
 
     case "SEGMENT_MEASUREMENT":
       return worldToScreen(viewport, {

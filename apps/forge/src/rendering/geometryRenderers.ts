@@ -2,7 +2,6 @@ import type { EvaluatedSceneItem } from "@euclid-forge/core/evaluation/evaluated
 import { renderCircle } from "./circleRenderer";
 import { renderLine } from "./lineRenderer";
 import { renderPoint } from "./pointRenderer";
-import { renderPolygon } from "./polygonRenderer";
 import { renderSegment } from "./segmentRenderer";
 import { renderSegmentMeasurement } from "./segmentMeasurementRenderer";
 import { renderTriangle } from "./triangleRenderer";
@@ -13,7 +12,6 @@ export type RenderLayer = "AREA" | "LINEAR" | "ANNOTATION" | "POINT";
 export function renderLayerForSceneItem(value: EvaluatedSceneItem): RenderLayer {
   switch (value.kind) {
     case "TRIANGLE":
-    case "POLYGON":
       return "AREA";
 
     case "SEGMENT":
@@ -63,8 +61,5 @@ export function renderEvaluatedSceneItem(
       renderTriangle(context.ctx, context.viewport, value, context.options);
       return;
 
-    case "POLYGON":
-      renderPolygon(context.ctx, context.viewport, value, context.options);
-      return;
   }
 }

@@ -18,7 +18,6 @@ export function isConstructibleCurveNode(
 
     case "FREE_POINT":
     case "TRIANGLE":
-    case "POLYGON":
     case "MIDPOINT":
     case "CENTROID":
     case "SEGMENT_INTERSECTION":
