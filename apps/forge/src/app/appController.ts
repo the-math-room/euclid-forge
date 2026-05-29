@@ -1,5 +1,8 @@
 import { deltaBetween } from "@euclid-forge/core";
-import { applyGraphEdit } from "@euclid-forge/core";
+import {
+  applyGraphEdit,
+  isConstrainedMovablePointNode,
+} from "@euclid-forge/core";
 import type { NodeId, ScreenPoint } from "@euclid-forge/core";
 import type { Viewport } from "@euclid-forge/core";
 import { evaluateGraph, visibleEvaluatedScene } from "@euclid-forge/core";
@@ -259,19 +262,17 @@ export function handlePointerMove(
 
     case "FREE_POINT": {
       const node = state.graph.byId.get(state.dragState.nodeId);
-      const edit =
-        node?.kind === "LINEAR_CONSTRAINED_POINT" ||
-        node?.kind === "POINT_ON_LINEAR"
-          ? {
-              kind: "MOVE_CONSTRAINED_POINT" as const,
-              id: state.dragState.nodeId,
-              point: world,
-            }
-          : {
-              kind: "MOVE_FREE_POINT" as const,
-              id: state.dragState.nodeId,
-              point: world,
-            };
+      const edit = isConstrainedMovablePointNode(node)
+        ? {
+            kind: "MOVE_CONSTRAINED_POINT" as const,
+            id: state.dragState.nodeId,
+            point: world,
+          }
+        : {
+            kind: "MOVE_FREE_POINT" as const,
+            id: state.dragState.nodeId,
+            point: world,
+          };
 
       return changed(
         appState(

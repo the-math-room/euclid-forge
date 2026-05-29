@@ -1,6 +1,7 @@
 import type { EvaluatedGeometry } from "@euclid-forge/core/evaluation/evaluated";
 import {
   evaluatedGeometryItems,
+  isDraggablePointNode,
   type EvaluatedScene,
   type NodeId,
   type ScreenPoint,
@@ -385,11 +386,7 @@ function isFreePoint(graph: Graph, id: NodeId): boolean {
 function isDraggablePoint(graph: Graph, id: NodeId): boolean {
   const node = graph.byId.get(id);
 
-  return (
-    node?.kind === "FREE_POINT" ||
-    node?.kind === "LINEAR_CONSTRAINED_POINT" ||
-    node?.kind === "POINT_ON_LINEAR"
-  );
+  return isDraggablePointNode(node);
 }
 
 function isBodyDraggableTriangle(graph: Graph, id: NodeId): boolean {

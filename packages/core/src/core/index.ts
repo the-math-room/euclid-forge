@@ -167,6 +167,12 @@ export {
 } from "../representation/deletePolicy";
 export { isConstructibleCurveNode } from "../representation/curveNode";
 export { isConstructiblePointNode } from "../representation/pointNode";
+export {
+  isConstrainedMovablePointNode,
+  isDraggablePointNode,
+  type ConstrainedMovablePointNode,
+  type DraggablePointNode,
+} from "../representation/pointCapabilities";
 
 export {
   nextFreePointId,
