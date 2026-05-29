@@ -15,7 +15,8 @@ export type EvaluatedPoint = Readonly<{
     | "CENTROID"
     | "SEGMENT_INTERSECTION"
     | "CURVE_INTERSECTION"
-    | "LINEAR_CONSTRAINED_POINT";
+    | "LINEAR_CONSTRAINED_POINT"
+    | "POINT_ON_LINEAR";
   zIndex?: number;
   id: NodeId;
   point: Vec2;

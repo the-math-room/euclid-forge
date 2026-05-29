@@ -2,6 +2,7 @@ import { constructionFactoryForGeometryKind } from "../geometry/geometryRegistry
 import {
   linearConstrainedPointNode,
   midpointNode,
+  pointOnLinearNode,
   segmentMeasurementNode,
   segmentNode,
 } from "./node";
@@ -10,6 +11,7 @@ import type {
   LinearConstraintMode,
   MidpointNode,
   NodeId,
+  PointOnLinearNode,
   SegmentNode,
   TriangleNode,
 } from "./node";
@@ -174,6 +176,40 @@ function linearConstrainedSegmentConstruction(
       nextSegmentId([...graph.nodes, endpoint], anchor, endpointId),
       anchor,
       endpointId,
+    ),
+  ]);
+}
+
+
+export function pointOnLinearConstruction(
+  graph: Graph,
+  reference: NodeId,
+  parameter: number,
+): readonly GraphNode[] {
+  const referenceNode = graph.byId.get(reference);
+
+  if (!referenceNode) {
+    throw new Error(`Cannot create point on missing linear reference: ${reference}`);
+  }
+
+  if (referenceNode.kind !== "SEGMENT" && referenceNode.kind !== "LINE") {
+    throw new Error(
+      `Cannot create point on non-linear reference: ${reference}`,
+    );
+  }
+
+  return Object.freeze([
+    pointOnLinearNode(
+      nextPointOnLinearId(graph.nodes, reference),
+      reference,
+      parameter,
+      nextAlphabeticLabel(
+        new Set(
+          graph.nodes
+            .filter((candidate) => "label" in candidate)
+            .map((candidate) => candidate.label),
+        ),
+      ),
     ),
   ]);
 }
@@ -430,6 +466,25 @@ function nextMidpointId(
   segment: NodeId,
 ): NodeId {
   const base = `M_${segment}`;
+
+  if (!nodes.some((node) => node.id === base)) {
+    return base;
+  }
+
+  let index = 1;
+
+  while (nodes.some((node) => node.id === `${base}_${index}`)) {
+    index += 1;
+  }
+
+  return `${base}_${index}`;
+}
+
+function nextPointOnLinearId(
+  nodes: readonly GraphNode[],
+  reference: NodeId,
+): NodeId {
+  const base = `P_ON_${reference}`;
 
   if (!nodes.some((node) => node.id === base)) {
     return base;

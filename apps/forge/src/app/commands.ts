@@ -6,6 +6,7 @@ import {
   lineConstruction,
   parallelSegmentConstruction,
   perpendicularSegmentConstruction,
+  pointOnLinearConstruction,
   segmentIntersectionConstruction,
   segmentMeasurementConstruction,
   segmentMidpointConstruction,
@@ -299,6 +300,34 @@ export const APP_COMMANDS: readonly AppCommand[] = Object.freeze([
 
       if (nodes.length === 0) {
         return ignore(state, "Perpendicular segment already exists.");
+      }
+
+      return commit(
+        appState(
+          applyGraphEdit(state.graph, {
+            kind: "ADD_NODES",
+            nodes,
+          }),
+          clearSelection(state.viewState),
+          state.dragState,
+        ),
+      );
+    },
+  }),
+
+  command({
+    id: "create-point-on-linear",
+    keys: ["n"],
+    disabledReason: pointOnLinearDisabledReason,
+    run: (state) => {
+      const reference = requireSelectedLinearReference(
+        state,
+        "Cannot run create-point-on-linear while disabled",
+      );
+      const nodes = pointOnLinearConstruction(state.graph, reference, 0.5);
+
+      if (nodes.length === 0) {
+        return ignore(state, "Point on linear reference already exists.");
       }
 
       return commit(
@@ -814,6 +843,45 @@ function linearConstrainedSegmentDisabledReason(state: AppState): string | null 
     ? null
     : "Select one segment or line and one point.";
 }
+
+
+function pointOnLinearDisabledReason(state: AppState): string | null {
+  return selectedLinearReference(state)
+    ? null
+    : "Select exactly one segment or line to create a point on it.";
+}
+
+function requireSelectedLinearReference(
+  state: AppState,
+  message: string,
+): NodeId {
+  const reference = selectedLinearReference(state);
+
+  if (!reference) {
+    throw new Error(message);
+  }
+
+  return reference;
+}
+
+function selectedLinearReference(state: AppState): NodeId | null {
+  const selected = [...state.viewState.selectedNodeIds];
+
+  if (selected.length !== 1) {
+    return null;
+  }
+
+  const id = selected[0];
+
+  if (!id) {
+    return null;
+  }
+
+  const node = state.graph.byId.get(id);
+
+  return node && (node.kind === "SEGMENT" || node.kind === "LINE") ? id : null;
+}
+
 
 function segmentMeasurementDisabledReason(state: AppState): string | null {
   return selectedSegmentTuple(state, 1)

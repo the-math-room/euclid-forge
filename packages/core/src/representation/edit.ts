@@ -1,5 +1,9 @@
 import { evaluateGraph } from "../evaluation/evaluateGraph";
 import { constrainedDirectionForLinearGeometry } from "../geometry/linearConstraint";
+import {
+  linearCarrierForEvaluatedGeometry,
+  projectPointToLinearCarrier,
+} from "../geometry/linearCarrier";
 import type { Vec2 } from "../meaning/vec2";
 import { createGraph, type Graph } from "./graph";
 import { freePoint, type GraphNode, type NodeId } from "./node";
@@ -123,40 +127,50 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
     throw new Error(`Cannot move missing node: ${id}`);
   }
 
-  if (node.kind !== "LINEAR_CONSTRAINED_POINT") {
-    throw new Error(`Cannot move non-constrained point: ${id}`);
-  }
+  switch (node.kind) {
+    case "LINEAR_CONSTRAINED_POINT":
+      return moveLinearConstrainedPoint(graph, node, point);
 
+    case "POINT_ON_LINEAR":
+      return movePointOnLinear(graph, node, point);
+
+    default:
+      throw new Error(`Cannot move non-constrained point: ${id}`);
+  }
+}
+
+function moveLinearConstrainedPoint(
+  graph: Graph,
+  node: Extract<GraphNode, { kind: "LINEAR_CONSTRAINED_POINT" }>,
+  point: Vec2,
+): Graph {
   const evaluated = evaluateGraph(graph);
   const reference = evaluated.values.get(node.reference);
   const anchor = evaluated.values.get(node.anchor);
 
   if (!reference) {
     throw new Error(
-      `Cannot move ${id}; missing evaluated reference: ${node.reference}`,
+      `Cannot move ${node.id}; missing evaluated reference: ${node.reference}`,
     );
   }
 
   if (reference.kind === "SEGMENT_MEASUREMENT") {
     throw new Error(
-      `Cannot move ${id}; reference ${node.reference} is not evaluated geometry`,
+      `Cannot move ${node.id}; reference ${node.reference} is not evaluated geometry`,
     );
   }
 
   if (!anchor || anchor.kind !== "POINT") {
     throw new Error(
-      `Cannot move ${id}; missing evaluated anchor: ${node.anchor}`,
+      `Cannot move ${node.id}; missing evaluated anchor: ${node.anchor}`,
     );
   }
 
-  const direction = constrainedDirectionForLinearGeometry(
-    reference,
-    node.mode,
-  );
+  const direction = constrainedDirectionForLinearGeometry(reference, node.mode);
 
   if (!direction) {
     throw new Error(
-      `Cannot move ${id}; reference ${node.reference} is not a non-degenerate line or segment`,
+      `Cannot move ${node.id}; reference ${node.reference} is not a non-degenerate line or segment`,
     );
   }
 
@@ -166,10 +180,52 @@ function moveConstrainedPoint(graph: Graph, id: NodeId, point: Vec2): Graph {
 
   return createGraph(
     graph.nodes.map((candidate) =>
-      candidate.id === id
+      candidate.id === node.id
         ? {
             ...node,
             offset,
+          }
+        : candidate,
+    ),
+  );
+}
+
+function movePointOnLinear(
+  graph: Graph,
+  node: Extract<GraphNode, { kind: "POINT_ON_LINEAR" }>,
+  point: Vec2,
+): Graph {
+  const evaluated = evaluateGraph(graph);
+  const reference = evaluated.values.get(node.reference);
+
+  if (!reference) {
+    throw new Error(
+      `Cannot move ${node.id}; missing evaluated reference: ${node.reference}`,
+    );
+  }
+
+  if (reference.kind === "SEGMENT_MEASUREMENT") {
+    throw new Error(
+      `Cannot move ${node.id}; reference ${node.reference} is not evaluated geometry`,
+    );
+  }
+
+  const carrier = linearCarrierForEvaluatedGeometry(reference);
+
+  if (!carrier) {
+    throw new Error(
+      `Cannot move ${node.id}; reference ${node.reference} is not a non-degenerate line or segment`,
+    );
+  }
+
+  const parameter = projectPointToLinearCarrier(carrier, point);
+
+  return createGraph(
+    graph.nodes.map((candidate) =>
+      candidate.id === node.id
+        ? {
+            ...node,
+            parameter,
           }
         : candidate,
     ),
@@ -320,7 +376,8 @@ function isPointLabelNode(
       | "CENTROID"
       | "SEGMENT_INTERSECTION"
       | "CURVE_INTERSECTION"
-      | "LINEAR_CONSTRAINED_POINT";
+      | "LINEAR_CONSTRAINED_POINT"
+      | "POINT_ON_LINEAR";
   }
 > {
   switch (node.kind) {
@@ -330,6 +387,7 @@ function isPointLabelNode(
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
     case "LINEAR_CONSTRAINED_POINT":
+    case "POINT_ON_LINEAR":
       return true;
 
     case "SEGMENT":

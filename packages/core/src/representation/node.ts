@@ -12,7 +12,8 @@ export type GeometryNode =
   | CentroidNode
   | SegmentIntersectionNode
   | CurveIntersectionNode
-  | LinearConstrainedPointNode;
+  | LinearConstrainedPointNode
+  | PointOnLinearNode;
 
 export type AnnotationNode = SegmentMeasurementNode;
 
@@ -112,6 +113,16 @@ export type LinearConstrainedPointNode = Readonly<{
   anchor: NodeId;
   mode: LinearConstraintMode;
   offset: number;
+  label: string;
+  labelOffsetPx?: Vec2;
+}>;
+
+export type PointOnLinearNode = Readonly<{
+  kind: "POINT_ON_LINEAR";
+  id: NodeId;
+  zIndex?: number;
+  reference: NodeId;
+  parameter: number;
   label: string;
   labelOffsetPx?: Vec2;
 }>;
@@ -270,6 +281,23 @@ export function linearConstrainedPointNode(
     anchor,
     mode,
     offset,
+    label,
+    ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
+  });
+}
+
+export function pointOnLinearNode(
+  id: NodeId,
+  reference: NodeId,
+  parameter: number,
+  label: string,
+  labelOffsetPx?: Vec2,
+): PointOnLinearNode {
+  return Object.freeze({
+    kind: "POINT_ON_LINEAR",
+    id,
+    reference,
+    parameter,
     label,
     ...(labelOffsetPx === undefined ? {} : { labelOffsetPx }),
   });

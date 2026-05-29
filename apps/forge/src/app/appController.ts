@@ -260,7 +260,8 @@ export function handlePointerMove(
     case "FREE_POINT": {
       const node = state.graph.byId.get(state.dragState.nodeId);
       const edit =
-        node?.kind === "LINEAR_CONSTRAINED_POINT"
+        node?.kind === "LINEAR_CONSTRAINED_POINT" ||
+        node?.kind === "POINT_ON_LINEAR"
           ? {
               kind: "MOVE_CONSTRAINED_POINT" as const,
               id: state.dragState.nodeId,

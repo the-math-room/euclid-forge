@@ -7,6 +7,7 @@ import {
   freePoint,
   segmentIntersectionNode,
   midpointNode,
+  pointOnLinearNode,
   segmentNode,
   triangleNode,
 } from "@euclid-forge/core";
@@ -69,6 +70,26 @@ describe("app/appController", () => {
     expect(transition.history).toBe("commit");
     expect(transition.state.graph.byId.get("S_A_B")).toEqual(
       segmentNode("S_A_B", "A", "B"),
+    );
+    expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
+  });
+
+
+  test("creates a point on one selected linear reference with N", () => {
+    const graph = createGraph([
+      freePoint("A", 0, 0, "A"),
+      freePoint("B", 2, 0, "B"),
+      segmentNode("AB", "A", "B"),
+    ]);
+    const viewState = toggleSelectedNode(emptyViewState(), "AB");
+
+    const transition = handleKeyDown(appState(graph, viewState, null), {
+      key: "n",
+    });
+
+    expect(transition.history).toBe("commit");
+    expect(transition.state.graph.byId.get("P_ON_AB")).toEqual(
+      pointOnLinearNode("P_ON_AB", "AB", 0.5, "C"),
     );
     expect(transition.state.viewState.selectedNodeIds.size).toBe(0);
   });

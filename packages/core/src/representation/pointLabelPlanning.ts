@@ -73,6 +73,7 @@ function pointLabelForNode(node: GraphNode): string | null {
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
     case "LINEAR_CONSTRAINED_POINT":
+    case "POINT_ON_LINEAR":
       return node.label;
 
     case "SEGMENT":

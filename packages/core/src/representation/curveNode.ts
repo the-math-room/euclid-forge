@@ -23,6 +23,7 @@ export function isConstructibleCurveNode(
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
     case "LINEAR_CONSTRAINED_POINT":
+    case "POINT_ON_LINEAR":
     case "SEGMENT_MEASUREMENT":
       return false;
   }

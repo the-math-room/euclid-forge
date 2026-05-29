@@ -25,6 +25,7 @@ export function isAnnotationNode(node: GraphNode): node is AnnotationNode {
     case "SEGMENT_INTERSECTION":
     case "CURVE_INTERSECTION":
     case "LINEAR_CONSTRAINED_POINT":
+    case "POINT_ON_LINEAR":
       return false;
   }
 }
